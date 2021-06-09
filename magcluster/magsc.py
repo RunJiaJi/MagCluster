@@ -182,8 +182,8 @@ def magene_screen(locus_tags, gbkfile_path):
 def magsc(args):
     print('[The protein file is screening...]')
     locus_tags = magpro_screen(faafile_path = args.faafile)
-    print("[A xlsx file named as 'magpro' is generated.]")
+    print("[A xlsx file named as 'magpro.xlsx' is generated.]")
     print('[The genbank file is screening...]')
     clean_gbk = magene_screen(locus_tags, gbkfile_path = args.gbkfile)
-    print("[A .gbk file named as 'clean_gbk' is produced.]")
+    print("[A .gbk file named as 'XXX_clean.gbk' is produced.]")
     print('[Thank you for using magash.]')

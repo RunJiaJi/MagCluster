@@ -24,5 +24,5 @@ magcluster magsc XXX.faa XXX.gbk
   
 Magnetosome gene cluster mapping:  
 ```
-magcluster magm XXX_screened.gbk
+magcluster magm XXX_clean.gbk
 ```
