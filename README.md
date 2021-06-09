@@ -3,12 +3,12 @@ Magnetosome gene cluster annotation, screening and mapping tool
 ## Installation
 We recommend creating a new environment for the magcluster release being installed through conda.
 ```bash
-wget https://github.com/RunJiaJi/magcluster/releases/download/0.0.6/magcluster-0.0.6.yml
+wget https://github.com/RunJiaJi/magcluster/releases/download/0.0.7/magcluster-0.0.7.yml
 
-conda env create -n magcluster --file magcluster-0.0.6.yml
+conda env create -n magcluster --file magcluster-0.0.7.yml
 
 # OPTIONAL CLEANUP
-rm magcluster-0.0.6.yml
+rm magcluster-0.0.7.yml
 ```
 
 ## General Usage
