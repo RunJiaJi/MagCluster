@@ -9,7 +9,7 @@ def main():
     args = get_magcluster_parser()
     controller(args, subparser_name=args.subparser_name)
 
-__all__ = [main]
+__all__ = []
 #############################################
 if __name__ == '__main__':
     main()

@@ -1,7 +1,5 @@
 #args.py handles arguments
 
-
-
 def get_magcluster_parser():
     import argparse
     
@@ -23,7 +21,7 @@ def get_magcluster_parser():
             
             "Runjia, 2021"
             )
-    parser.add_argument('-v', '--version', action='version', version='%(prog)s 1.0', help='show magcluster version number and exit')
+    parser.add_argument('-v', '--version', action='version', version='%(prog)s 0.0.7', help='show magcluster version number and exit')
     # parser.add_argument('-ascm', action='store_true', help='directly analyse from genome file to genecluster mapping.')
     #构建子命令
     subparsers = parser.add_subparsers(title='Subcommands', dest="subparser_name")
@@ -45,8 +43,8 @@ def get_magcluster_parser():
     Setup.add_argument('--depends', help='List all software dependencies', action="store_true")
 
     Outputs = parser_maga.add_argument_group('Outputs')
-    Outputs.add_argument('--outdir', type=str, help="Output folder [auto] (default '')")
-    Outputs.add_argument('--prefix', type=str, help='Filename output prefix [auto] (default '')')
+    Outputs.add_argument('--outdir', type=str, help="Output folder [auto] (default 'maga_annotation')")
+    Outputs.add_argument('--prefix', type=str, help='Filename output prefix [auto] (default "maga_")')
     Outputs.add_argument('--force', help='Force overwriting existing output folder (default OFF)', action="store_true")
     Outputs.add_argument('--addgenes', help="Add 'gene' features for each 'CDS' feature (default OFF)", action="store_true")
     Outputs.add_argument('--addmrna', help="Add 'mRNA' features for each 'CDS' feature (default OFF)", action="store_true")
@@ -162,3 +160,4 @@ def get_magcluster_parser():
 
     args = parser.parse_args()
     return args
+
