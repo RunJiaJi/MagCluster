@@ -45,10 +45,12 @@ def get_prokka_cmd(args):
     prokka_cmd_tmp.insert(0,'prokka')
     prokka_cmd = []
     for i in fafiles_:
+        tmp = prokka_cmd_tmp.copy()
         if '--outdir' not in prokka_cmd_tmp:
-            prokka_cmd_tmp.extend(['--outdir', get_outdir(i)])
+            tmp.extend(['--outdir', get_outdir(i)])
         if '--prefix' not in prokka_cmd_tmp:
-            prokka_cmd_tmp.extend(['--prefix', get_prefix(i)])
-        prokka_cmd.append(prokka_cmd_tmp + [i])
+            tmp.extend(['--prefix', get_prefix(i)])
+        prokka_cmd.append(tmp + [i])
+        
         
     return prokka_cmd
