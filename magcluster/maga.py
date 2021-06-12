@@ -1,16 +1,9 @@
 
 
-def maga():
-    from .capture_args import capture_args
+def maga(args):
     from subprocess import run
+    from .batch_proc import get_prokka_cmd
 
-    usr_args = capture_args()
-    del usr_args[0:2]
-    usr_args.insert(0, 'prokka')
-    if '--outdir' not in usr_args:
-        usr_args.append('--outdir')
-        usr_args.append('maga_annotation')
-    if '--prefix' not in usr_args:
-        usr_args.append('--prefix')
-        usr_args.append('maga_')
-    run(usr_args)
+    prokka_cmd = get_prokka_cmd(args)
+    for cmd in prokka_cmd:
+        run(cmd)

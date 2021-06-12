@@ -27,7 +27,7 @@ def get_magcluster_parser():
     subparsers = parser.add_subparsers(title='Subcommands', dest="subparser_name")
     #构建maga子命令
     parser_maga = subparsers.add_parser('maga', help='Magnetosome gene annotation with Prokka')
-    parser_maga.add_argument('fafile', type=str, help='Genome files need to be annotated')
+    parser_maga.add_argument('fafile', type=str, help='Genome files need to be annotated', nargs='+')
 
     General = parser_maga.add_argument_group('General')
     #General.add_argument('--version', help='Print version and exit', action="store_true")
