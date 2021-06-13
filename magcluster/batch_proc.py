@@ -24,10 +24,10 @@ def get_outdir(file):
     outdir = PurePath(file).parent.joinpath(get_prefix(file))
     return str(outdir)+'_annotation'
 
-def get_prokka_cmd(args):
+def get_prokka_cmd_(args):
     args_dic = args.__dict__
     del args_dic['subparser_name']
-    prokka_cmd_tmp = []
+    prokka_cmd__tmp = []
     fafile_arg = []
     extensions = ['*.fa', '*.fasta', '*.FASTA']
     # if len(args.fafile)
@@ -35,22 +35,22 @@ def get_prokka_cmd(args):
         if value:
             if value == True:
                 key_tmp = '--' + key
-                prokka_cmd_tmp.append(key_tmp)
+                prokka_cmd__tmp.append(key_tmp)
             elif key == 'fafile':
                 fafiles_ = get_files(value, extensions)
             else:
                 key_tmp = '--' + key
-                prokka_cmd_tmp.append(key_tmp)
-                prokka_cmd_tmp.append(value)
-    prokka_cmd_tmp.insert(0,'prokka')
-    prokka_cmd = []
+                prokka_cmd__tmp.append(key_tmp)
+                prokka_cmd__tmp.append(value)
+    prokka_cmd__tmp.insert(0,'prokka')
+    prokka_cmd_ = []
     for i in fafiles_:
-        tmp = prokka_cmd_tmp.copy()
-        if '--outdir' not in prokka_cmd_tmp:
+        tmp = prokka_cmd__tmp.copy()
+        if '--outdir' not in prokka_cmd__tmp:
             tmp.extend(['--outdir', get_outdir(i)])
-        if '--prefix' not in prokka_cmd_tmp:
+        if '--prefix' not in prokka_cmd__tmp:
             tmp.extend(['--prefix', get_prefix(i)])
-        prokka_cmd.append(tmp + [i])
-        
-        
+        prokka_cmd_.append(tmp + [i])
+    
+    prokka_cmd = [str(i) for i in prokka_cmd_]        
     return prokka_cmd
