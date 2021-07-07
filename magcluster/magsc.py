@@ -31,7 +31,7 @@ def magene_screen(gbkfile_path, limit = 1):
     for mag_contig in mag_contigs:
         mag_contig_split = mag_contig.split('gene')
         for i in mag_contig_split:
-            if 'Magnetosome' in i_:
+            if 'Magnetosome' in i:
                 locus_tag = re.search(r'/locus_tag="(.+)"', i).group(1)
                 locus_tags.append(locus_tag)
 
