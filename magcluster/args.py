@@ -5,7 +5,7 @@ def get_magcluster_parser():
     
     parser = argparse.ArgumentParser(
              prog="Magcluster", 
-             description='Magnetosome gene cluster anaylise', 
+             description='Magnetosome gene cluster anaylze', 
              usage='%(prog)s [options]', 
              formatter_class=argparse.RawTextHelpFormatter, 
              epilog=
@@ -24,9 +24,9 @@ def get_magcluster_parser():
     parser.add_argument('-v', '--version', action='version', version='%(prog)s 0.0.7', help='show magcluster version number and exit')
     # parser.add_argument('-ascm', action='store_true', help='directly analyse from genome file to genecluster mapping.')
     #构建子命令
-    subparsers = parser.add_subparsers(title='Subcommands', dest="subparser_name")
+    subparsers = parser.add_subparsers(title='Options', dest="subparser_name")
     #构建maga子命令
-    parser_maga = subparsers.add_parser('maga', help='Magnetosome gene annotation with Prokka')
+    parser_maga = subparsers.add_parser('prokka', help='Genome annotation with Prokka')
     parser_maga.add_argument('fafile', type=str, help='Genome files need to be annotated', nargs='+')
 
     General = parser_maga.add_argument_group('General')
@@ -86,11 +86,11 @@ def get_magcluster_parser():
     Computation.add_argument('--rnammer', help="Prefer RNAmmer over Barrnap for rRNA prediction (default OFF)", action="store_true")
     
     #构建magsc子命令
-    parser_magsc = subparsers.add_parser('magsc', help='Magnetosome gene screening with magscreen')
-    parser_magsc.add_argument('-faa', '--faafile', required=True, type=str, help='.faa file to analyse')
-    parser_magsc.add_argument('-gbk', '--gbkfile', required=True, type=str, help='.gbk/.gbf file to analyse')
+    parser_magsc = subparsers.add_parser('mgc_screen', help='Magnetosome gene cluster screening with magscreen')
+    parser_magsc.add_argument('gbkfile', type=str, help='.gbk/.gbf file to analyse')
+    parser_magsc.add_argument('--threshold', type=int, default=1, help="The minimum number of magnetosome genes in one contig/scaffold to screening (default '1')")
     #构建magm子命令
-    parser_magm = subparsers.add_parser('magm', help='Magnetosome gene cluster mapping with Clinker')
+    parser_magm = subparsers.add_parser('clinker', help='Magnetosome gene cluster mapping with Clinker')
     inputs = parser_magm.add_argument_group("Input options")
     inputs.add_argument('gbkfiles', help="Gene cluster GenBank files", nargs="*")
     inputs.add_argument("-r", "--ranges", 

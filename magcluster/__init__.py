@@ -1,7 +1,5 @@
 #!/usr/bin/env python3
 
-
-
 def main():
     from .controller import controller
     from .args import get_magcluster_parser
