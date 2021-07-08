@@ -20,10 +20,6 @@ setup(
     ],
     long_description=long_description,
     long_description_content_type="text/markdown",
-    install_requires=[
-        "clinker",
-        'pandas',
-    ]
     entry_points={
         'console_scripts':[
             'magcluster = magcluster:main'

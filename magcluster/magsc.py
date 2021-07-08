@@ -35,7 +35,7 @@ def magene_screen(gbkfile_path, limit = 1):
                 locus_tag = re.search(r'/locus_tag="(.+)"', i).group(1)
                 locus_tags.append(locus_tag)
 
-                protein_name = re.search(r'/product="Magnetosome protein (.+) ', i).group(1)
+                protein_name = re.search(r'/product="(.+) Magnetosome protein ([a-zA-Z0-9-]+)', i).group(2)
                 protein_names.append(protein_name)
 
                 protein_seq = re.search(r'/translation="([\s\w]+)"', i, re.M).group(1).replace('\n', '').replace(' ','')

@@ -10,7 +10,7 @@ def controller(args, subparser_name=None):
     if subparser_name:
         if subparser_name == 'maga':
             maga(args)
-        elif subparser_name == 'magsc':
+        elif subparser_name == 'mgc_screen':
             magsc(args)
         elif subparser_name == 'magm':
             magm()
