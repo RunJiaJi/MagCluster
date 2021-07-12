@@ -51,7 +51,8 @@ def magene_screen(gbkfile_path, limit = 1):
     mag_df = pd.DataFrame(
             mag_pro_dic
         )
-    mag_df.to_excel('magpro.xlsx', sheet_name = 'magpro', index = False)
+    magpro_xlsx = gbkfile_path.rstrip('.gbk')+'_magpro.xlsx'
+    mag_df.to_excel(magpro_xlsx, sheet_name = 'magpro', index = False)
 
 def magsc(args):
     print('[The protein file is screening...]')

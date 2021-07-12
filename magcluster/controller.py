@@ -8,11 +8,11 @@ def controller(args, subparser_name=None):
     from .magm import magm
     
     if subparser_name:
-        if subparser_name == 'maga':
+        if subparser_name == 'prokka':
             maga(args)
         elif subparser_name == 'mgc_screen':
             magsc(args)
-        elif subparser_name == 'magm':
+        elif subparser_name == 'clinker':
             magm()
     else:
         usr_arg1 = ['magcluster', '-h']
