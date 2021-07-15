@@ -1,8 +1,23 @@
 #magnetosome gene and protein screening
 
-def magene_screen(gbkfile_path, limit = 1):
+def contig_len(contig):
+    len = 0
+    for i in contig:
+        if i.islower():
+            len += 1
+    return len
+
+def magene_screen(gbkfile_path, threshold = 1, length = 2000):
     import re
     import pandas as pd
+    import os
+
+    #解析路径，创建文件夹
+    mgc_folder = os.path.dirname(gbkfile_path) + '/mgc_screen/'
+    if not os.path.exists(mgc_folder):
+        os.mkdir(mgc_folder)
+    clean_gbk = mgc_folder + os.path.basename(gbkfile_path).rstrip('.gbk') + '_clean.gbk'
+    magpro = mgc_folder + os.path.basename(gbkfile_path).rstrip('.gbk') + '_magpro.xlsx'
 
     #读入gbk文件
     with open(gbkfile_path,'r') as f:
@@ -13,13 +28,13 @@ def magene_screen(gbkfile_path, limit = 1):
 
     #筛选含有mag基因的contig
     for contig in allcontigs:
-        if contig.count('Magnetosome') >= limit:
-            mag_contig = 'LOCUS' + contig
-            mag_contigs.append(mag_contig)
+        if contig_len(contig) >= length:
+            if contig.count('agnetosome') >= threshold:
+                mag_contig = 'LOCUS' + contig
+                mag_contigs.append(mag_contig)
+    magtext = ''.join(mag_contigs)
 
-    #使用join将所有mag_contigs整合成一个string/text,写出magene.gbk文件
-    magtext = ''.join(mag_contigs)    
-    clean_gbk = gbkfile_path.rstrip('.gbk')+'_clean.gbk'
+    #写出clean_gbk
     with open(clean_gbk,'w') as f:
         f.write(magtext)
 
@@ -31,11 +46,11 @@ def magene_screen(gbkfile_path, limit = 1):
     for mag_contig in mag_contigs:
         mag_contig_split = mag_contig.split('gene')
         for i in mag_contig_split:
-            if 'Magnetosome' in i:
+            if 'agnetosome' in i:
                 locus_tag = re.search(r'/locus_tag="(.+)"', i).group(1)
                 locus_tags.append(locus_tag)
 
-                protein_name = re.search(r'/product=".*?Magnetosome protein ([a-zA-Z0-9-]+)', i).group(1)
+                protein_name = re.search(r'/product=".*?[Mm]agnetosome protein ([a-zA-Z0-9-]+)', i).group(1)
                 protein_names.append(protein_name)
 
                 protein_seq = re.search(r'/translation="([\s\w]+)"', i, re.M).group(1).replace('\n', '').replace(' ','')
@@ -51,13 +66,12 @@ def magene_screen(gbkfile_path, limit = 1):
     mag_df = pd.DataFrame(
             mag_pro_dic
         )
-    magpro_xlsx = gbkfile_path.rstrip('.gbk')+'_magpro.xlsx'
-    mag_df.to_excel(magpro_xlsx, sheet_name = 'magpro', index = False)
+    mag_df.to_excel(magpro, sheet_name = 'magpro', index = False)
 
 def magsc(args):
     print('[The protein file is screening...]')
     print("[A xlsx file named as 'magpro.xlsx' is generated.]")
     print('[The genbank file is screening...]')
-    magene_screen(gbkfile_path = args.gbkfile, limit=args.threshold)
+    magene_screen(gbkfile_path = args.gbkfile, threshold=args.threshold, length=args.length)
     print("[A .gbk file named as 'XXX_clean.gbk' is produced.]")
     print('[Thank you for using magash.]')

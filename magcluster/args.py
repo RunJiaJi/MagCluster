@@ -88,8 +88,9 @@ def get_magcluster_parser():
     #构建magsc子命令
     parser_magsc = subparsers.add_parser('mgc_screen', help='Magnetosome gene cluster screening with magscreen')
     parser_magsc.add_argument('gbkfile', type=str, help='.gbk/.gbf file to analyse')
-    parser_magsc.add_argument('--threshold', type=int, default=1, help="The minimum number of magnetosome genes in one contig/scaffold to screening (default '1')")
-    parser_magsc.add_argument('--outdir', type=str, default='mgc_screen_XXX', help="Output folder")
+    parser_magsc.add_argument('-th','--threshold', type=int, default=2, help="The minimum number of magnetosome genes in one contig/scaffold to screening (default '1')")
+    parser_magsc.add_argument('-o','--outdir', type=str, default='mgc_screen_XXX', help="Output folder")
+    parser_magsc.add_argument('-l', '--length', type=int, default=2000, help="Minimum length of contigs to be considered (default '2000bp')")
     #构建magm子命令
     parser_magm = subparsers.add_parser('clinker', help='Magnetosome gene cluster mapping with Clinker')
     inputs = parser_magm.add_argument_group("Input options")
