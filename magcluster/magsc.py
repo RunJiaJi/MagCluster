@@ -69,9 +69,14 @@ def magene_screen(gbkfile_path, threshold = 1, length = 2000):
     mag_df.to_excel(magpro, sheet_name = 'magpro', index = False)
 
 def magsc(args):
+    from .batch_proc import get_files
+
+    gbkfiles = get_files(args.gbkfile)
+    for gbkfile in gbkfiles:
+        magene_screen(gbkfile, threshold=args.threshold, length=args.length)
     print('[The protein file is screening...]')
     print("[A xlsx file named as 'magpro.xlsx' is generated.]")
     print('[The genbank file is screening...]')
-    magene_screen(gbkfile_path = args.gbkfile, threshold=args.threshold, length=args.length)
+    
     print("[A .gbk file named as 'XXX_clean.gbk' is produced.]")
     print('[Thank you for using magash.]')

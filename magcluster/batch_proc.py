@@ -30,7 +30,7 @@ def get_prokka_cmd(args):
     del args_dic['subparser_name']
     prokka_cmd_tmp = []
     fafiles_ = []
-    extensions = ['*.fa', '*.fasta', '*.FASTA']
+    extensions = ['*.fa', '*.fasta', '*.FASTA', '*.fna']
     # if len(args.fafile)
     for key, value in args_dic.items():
         if value:
