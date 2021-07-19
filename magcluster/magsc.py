@@ -7,7 +7,7 @@ def contig_len(contig):
             len += 1
     return len
 
-def magene_screen(gbkfile_path, threshold = 1, length = 2000, force=False):
+def magene_screen(gbkfile_path, threshold = 2, length = 2000, force=False):
     import re
     import pandas as pd
     import os
