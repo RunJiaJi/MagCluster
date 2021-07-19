@@ -8,15 +8,30 @@ def get_files(paths, extensions):
         p_ = Path(p)
         if p_.is_dir():
             for ext in extensions:
-                all_files.extend(p_.glob('**/' + ext))
+                all_files.extend(p_.glob(ext))
         else:
             all_files.append(p_)
     files_ = [str(i) for i in all_files]
+    tmp = []
+    rmo = []
+    for i in files_:
+        i__ = Path(i)
+        if i__.is_file():
+            rmo.append(i)
+            i_ = './' + i
+            tmp.append(i_)
+    for i in rmo:
+        files_.remove(i)
+    files_.extend(tmp)
     return files_
 
 def get_prefix(file):
     from pathlib import PurePath
-    prefix = PurePath(file).name
+    prefix_ = PurePath(file).name
+    extensions = ['.fa', '.fasta', '.FASTA', '.fna']
+    for i in extensions:
+        if i in prefix_:
+            prefix = prefix_.replace(i, '')
     return prefix
 
 def get_outdir(file):
@@ -52,6 +67,10 @@ def get_prokka_cmd(args):
             tmp.extend(['--outdir', get_outdir(i)])
         if '--prefix' not in prokka_cmd_tmp:
             tmp.extend(['--prefix', get_prefix(i)])
+        if '--locustag' not in prokka_cmd_tmp:
+            tmp.extend(['--locustag', get_prefix(i)])
+        if '--compliant' not in prokka_cmd_tmp:
+            tmp.append('--compliant')
         prokka_cmd.append(tmp + [i])
 
     return prokka_cmd

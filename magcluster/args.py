@@ -27,7 +27,7 @@ def get_magcluster_parser():
     subparsers = parser.add_subparsers(title='Options', dest="subparser_name")
     #构建maga子命令
     parser_maga = subparsers.add_parser('prokka', help='Genome annotation with Prokka')
-    parser_maga.add_argument('fafile(s)', type=str, help='Genome files need to be annotated', nargs='+')
+    parser_maga.add_argument('fafile', type=str, help='Genome files need to be annotated', nargs='+')
 
     General = parser_maga.add_argument_group('General')
     #General.add_argument('--version', help='Print version and exit', action="store_true")
@@ -87,10 +87,12 @@ def get_magcluster_parser():
     
     #构建magsc子命令
     parser_magsc = subparsers.add_parser('mgc_screen', help='Magnetosome gene cluster screening with magscreen')
-    parser_magsc.add_argument('gbkfile(s)', type=str, help='.gbk/.gbf files to analyse', nargs='+')
+    parser_magsc.add_argument('gbkfile', type=str, help='.gbk/.gbf files to analyse', nargs='+')
     parser_magsc.add_argument('-th','--threshold', type=int, default=2, help="The minimum number of magnetosome genes in one contig/scaffold to screening (default '1')")
     parser_magsc.add_argument('-o','--outdir', type=str, default='mgc_screen_XXX', help="Output folder")
     parser_magsc.add_argument('-l', '--length', type=int, default=2000, help="Minimum length of contigs to be considered (default '2000bp')")
+    parser_magsc.add_argument('-f', '--force', help='Force overwriting existing output files (default OFF)', action="store_true")
+    
     #构建magm子命令
     parser_magm = subparsers.add_parser('clinker', help='Magnetosome gene cluster mapping with Clinker')
     inputs = parser_magm.add_argument_group("Input options")

@@ -7,7 +7,7 @@ def contig_len(contig):
             len += 1
     return len
 
-def magene_screen(gbkfile_path, threshold = 1, length = 2000):
+def magene_screen(gbkfile_path, threshold = 1, length = 2000, force=False):
     import re
     import pandas as pd
     import os
@@ -16,8 +16,9 @@ def magene_screen(gbkfile_path, threshold = 1, length = 2000):
     mgc_folder = os.path.dirname(gbkfile_path) + '/mgc_screen/'
     if not os.path.exists(mgc_folder):
         os.mkdir(mgc_folder)
-    clean_gbk = mgc_folder + os.path.basename(gbkfile_path).rstrip('.gbk') + '_clean.gbk'
-    magpro = mgc_folder + os.path.basename(gbkfile_path).rstrip('.gbk') + '_magpro.xlsx'
+    gbkfile_prefix = os.path.basename(gbkfile_path).rstrip('.gbk')
+    clean_gbk = mgc_folder + gbkfile_prefix + '_clean.gbk'
+    magpro = mgc_folder + gbkfile_prefix + '_magpro.xlsx'
 
     #读入gbk文件
     with open(gbkfile_path,'r') as f:
@@ -35,6 +36,11 @@ def magene_screen(gbkfile_path, threshold = 1, length = 2000):
     magtext = ''.join(mag_contigs)
 
     #写出clean_gbk
+    if os.path.exists(clean_gbk):
+        if not force:
+            raise FileExistsError(gbkfile_prefix + ' _clean.gbk' + 'already exists! Please change --outdir or use --force')
+        # elif force:
+        #     continue
     with open(clean_gbk,'w') as f:
         f.write(magtext)
 
@@ -66,14 +72,20 @@ def magene_screen(gbkfile_path, threshold = 1, length = 2000):
     mag_df = pd.DataFrame(
             mag_pro_dic
         )
+
+    if os.path.exists(magpro):
+        if not force:
+            raise FileExistsError(gbkfile_prefix + ' _magpro.xlsx' + 'already exists! Please change --outdir or use --force')
+        # elif force:
+        #     continue
     mag_df.to_excel(magpro, sheet_name = 'magpro', index = False)
 
 def magsc(args):
     from .batch_proc import get_files
 
-    gbkfiles = get_files(args.gbkfile)
+    gbkfiles = get_files(args.gbkfile, extensions=['*.gbk', '*.gbf'])
     for gbkfile in gbkfiles:
-        magene_screen(gbkfile, threshold=args.threshold, length=args.length)
+        magene_screen(gbkfile, threshold=args.threshold, length=args.length, force=args.force)
     print('[The protein file is screening...]')
     print("[A xlsx file named as 'magpro.xlsx' is generated.]")
     print('[The genbank file is screening...]')
