@@ -3,19 +3,19 @@ Magnetosome gene cluster annotation, screening and mapping tool
 ## Installation
 We recommend creating a ***new environment*** for the magcluster release being installed through conda.
 ```bash
-wget https://github.com/RunJiaJi/magcluster/releases/download/0.1.3/magcluster-0.1.3.yml
+wget https://github.com/RunJiaJi/magcluster/releases/download/0.1.4/magcluster-0.1.4.yml
 ```
 ```bash
-conda env create -n magcluster --file magcluster-0.1.3.yml
+conda env create -n magcluster --file magcluster-0.1.4.yml
 ```
 ```bash
 # OPTIONAL CLEANUP
-rm magcluster-0.1.3.yml
+rm magcluster-0.1.4.yml
 ```
 Alternatively, you can install magcluster through pip in an existing environment. In this way, please make sure you have prokka installed.
 ```bash
 #Prokka installation
-conda install -c conda-forge -c bioconda -c defaults prokka
+conda install -c conda-forge -c bioconda -c defaults prokka=1.13.4
 ```
 ```bash
 pip install magcluster
