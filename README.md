@@ -1,28 +1,50 @@
 # magcluster
 Magnetosome gene cluster annotation, screening and mapping tool
 ## Installation
-We recommend creating a new environment for the magcluster release being installed through conda.
+We recommend creating a ***new environment*** for the magcluster release being installed through conda.
 ```bash
-wget https://github.com/RunJiaJi/magcluster/releases/download/0.0.7/magcluster-0.0.7.yml
+wget https://github.com/RunJiaJi/magcluster/releases/download/0.1.5/magcluster-0.1.5.yml
 
-conda env create -n magcluster --file magcluster-0.0.7.yml
+conda env create -n magcluster --file magcluster-0.1.5.yml
 
 # OPTIONAL CLEANUP
-rm magcluster-0.0.7.yml
+rm magcluster-0.1.5.yml
+```
+Alternatively, you can install magcluster through pip in an existing environment. In this way, please make sure you have prokka installed.
+```bash
+#Prokka installation
+conda install -c conda-forge -c bioconda -c defaults prokka
+```
+```bash
+pip install magcluster
 ```
 
 ## General Usage
-Magnetosome gene annotation:  
-```
-magcluster maga XXX.fa
-```
-  
-Magnetosome gene screen:  
-```
-magcluster magsc XXX.faa XXX.gbk
-```
-  
-Magnetosome gene cluster mapping:  
-```
-magcluster magm XXX_clean.gbk
+```bash
+usage: magcluster [options]
+
+Magnetosome Gene Cluster Analysis Tool
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -v, --version         show magcluster version number and exit
+
+Options:
+  {prokka,mgc_screen,clinker}
+    prokka              Genome annotation with Prokka
+    mgc_screen          Magnetosome gene cluster screening with magscreen
+    clinker             Magnetosome gene cluster mapping with Clinker
+
+General usage
+-------------
+Magnetosome gene annotation:
+  $ magcluster prokka XXX.fa
+
+Magnetosome gene screen:
+  $ magcluster mgc_screen XXX.gbk
+
+Magnetosome gene cluster mapping:
+  $ magcluster clinker XXX_screened.gbk
+
+Runjia, 2021
 ```

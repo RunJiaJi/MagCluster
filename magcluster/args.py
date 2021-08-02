@@ -4,20 +4,18 @@ def get_magcluster_parser():
     import argparse
     
     parser = argparse.ArgumentParser(
-             prog="Magcluster", 
-             description='Magnetosome gene cluster anaylze', 
+             prog="magcluster", 
+             description='Magnetosome Gene Cluster Analysis Tool', 
              usage='%(prog)s [options]', 
              formatter_class=argparse.RawTextHelpFormatter, 
              epilog=
             "General usage\n-------------\n"
             "Magnetosome gene annotation:\n"
-            "  $ magcluster maga XXX.fa\n\n"
+            "  $ magcluster prokka XXX.fa\n\n"
             "Magnetosome gene screen:\n"
-            "  $ magcluster magsc XXX.faa XXX.gbk\n\n"
+            "  $ magcluster mgc_screen XXX.gbk\n\n"
             "Magnetosome gene cluster mapping:\n"
-            "  $ magcluster magm XXX_screened.gbk\n\n"
-            # "Direct analyse:\n"
-            # "  $ magcluster -ascm XXX.fa\n\n"
+            "  $ magcluster clinker XXX_screened.gbk\n\n"
             
             "Runjia, 2021"
             )
@@ -43,8 +41,8 @@ def get_magcluster_parser():
     Setup.add_argument('--depends', help='List all software dependencies', action="store_true")
 
     Outputs = parser_maga.add_argument_group('Outputs')
-    Outputs.add_argument('--outdir', type=str, help="Output folder [auto] (default 'maga_annotation')")
-    Outputs.add_argument('--prefix', type=str, help='Filename output prefix [auto] (default "maga_")')
+    Outputs.add_argument('--outdir', type=str, help="Output folder [auto] (default 'XXX_annotation')")
+    Outputs.add_argument('--prefix', type=str, help='Filename output prefix [auto] (default "XXX_")')
     Outputs.add_argument('--force', help='Force overwriting existing output folder (default OFF)', action="store_true")
     Outputs.add_argument('--addgenes', help="Add 'gene' features for each 'CDS' feature (default OFF)", action="store_true")
     Outputs.add_argument('--addmrna', help="Add 'mRNA' features for each 'CDS' feature (default OFF)", action="store_true")
@@ -87,9 +85,9 @@ def get_magcluster_parser():
     
     #构建magsc子命令
     parser_magsc = subparsers.add_parser('mgc_screen', help='Magnetosome gene cluster screening with magscreen')
-    parser_magsc.add_argument('gbkfile', type=str, help='.gbk/.gbf files to analyse', nargs='+')
-    parser_magsc.add_argument('-th','--threshold', type=int, default=2, help="The minimum number of magnetosome genes in one contig/scaffold to screening (default '2')")
-    parser_magsc.add_argument('-o','--outdir', type=str, default='mgc_screen_XXX', help="Output folder")
+    parser_magsc.add_argument('gbkfile', type=str, help='.gbk/.gbf files to analyzed. Multiple files or files-containing folder is acceptable.', nargs='+')
+    parser_magsc.add_argument('-th','--threshold', type=int, default=2, help="The minimum number of magnetosome genes in one contig/scaffold to screen (default '2')")
+    parser_magsc.add_argument('-o','--outdir', type=str, help="Output folder (default 'mgc_screen')")
     parser_magsc.add_argument('-l', '--length', type=int, default=2000, help="Minimum length of contigs to be considered (default '2000bp')")
     parser_magsc.add_argument('-f', '--force', help='Force overwriting existing output files (default OFF)', action="store_true")
     
