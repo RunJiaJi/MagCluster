@@ -19,7 +19,7 @@ def get_magcluster_parser():
             
             "Runjia, 2021"
             )
-    parser.add_argument('-v', '--version', action='version', version='%(prog)s 0.0.7', help='show magcluster version number and exit')
+    parser.add_argument('-v', '--version', action='version', version='%(prog)s 0.1.6', help='show magcluster version number and exit')
     # parser.add_argument('-ascm', action='store_true', help='directly analyse from genome file to genecluster mapping.')
     #构建子命令
     subparsers = parser.add_subparsers(title='Options', dest="subparser_name")
@@ -86,10 +86,10 @@ def get_magcluster_parser():
     #构建magsc子命令
     parser_magsc = subparsers.add_parser('mgc_screen', help='Magnetosome gene cluster screening with magscreen')
     parser_magsc.add_argument('gbkfile', type=str, help='.gbk/.gbf files to analyzed. Multiple files or files-containing folder is acceptable.', nargs='+')
-    parser_magsc.add_argument('-th','--threshold', type=int, default=2, help="The minimum number of magnetosome genes in one contig/scaffold to screen (default '2')")
+    parser_magsc.add_argument('-th','--threshold', type=int, default=2, help="The minimum number of magnetosome genes existed in a single contig/scaffold to screen (default '2')")
     parser_magsc.add_argument('-o','--outdir', type=str, help="Output folder (default 'mgc_screen')")
-    parser_magsc.add_argument('-l', '--length', type=int, default=2000, help="Minimum length of contigs to be considered (default '2000bp')")
-    parser_magsc.add_argument('-f', '--force', help='Force overwriting existing output files (default OFF)', action="store_true")
+    parser_magsc.add_argument('-min', '--minlength', type=int, default=2000, help="Minimum length of contigs to be considered (default '2000bp')")
+    parser_magsc.add_argument('-max', '--maxlength', type=int, default=10000, help="Maximum length of contigs containing magnetosome gene (default '10000bp')")
     
     #构建magm子命令
     parser_magm = subparsers.add_parser('clinker', help='Magnetosome gene cluster mapping with Clinker')

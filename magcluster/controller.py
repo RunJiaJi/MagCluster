@@ -4,7 +4,7 @@ def controller(args, subparser_name=None):
     """user args to run magcluster"""
     from subprocess import run 
     from .maga import maga
-    from .magsc import magsc
+    from .magsc_new import magsc
     from .magm import magm
     
     if subparser_name:
