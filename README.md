@@ -93,3 +93,9 @@ $ magcluster clinker -o MGCs_alignment_result -p /MGCs_files_folder/*.gbk
 ## Citation
 The manuscript is in preparation.
 
+## Contact us
+If you have any questions or suggestions, feel free to contact us.
+
+**weilin0408@gmail.com**
+or 
+**jirunjia@gmail.com**
