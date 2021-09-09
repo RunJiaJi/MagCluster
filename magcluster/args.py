@@ -5,7 +5,7 @@ def get_magcluster_parser():
     
     parser = argparse.ArgumentParser(
              prog="magcluster", 
-             description='Magnetosome Gene Cluster Analysis Tool', 
+             description='Magnetosome Gene Clusters Analyzer', 
              usage='%(prog)s [options]', 
              formatter_class=argparse.RawTextHelpFormatter, 
              epilog=
@@ -19,7 +19,7 @@ def get_magcluster_parser():
             
             "Runjia, 2021"
             )
-    parser.add_argument('-v', '--version', action='version', version='%(prog)s 0.1.6', help='show magcluster version number and exit')
+    parser.add_argument('-v', '--version', action='version', version='%(prog)s 0.1.7', help='show magcluster version number and exit')
     # parser.add_argument('-ascm', action='store_true', help='directly analyse from genome file to genecluster mapping.')
     #构建子命令
     subparsers = parser.add_subparsers(title='Options', dest="subparser_name")
@@ -66,7 +66,7 @@ def get_magcluster_parser():
     Annotations.add_argument('--gcode', type=int, help="Genetic code / Translation table (set if --kingdom is set) (default '0')")
     Annotations.add_argument('--gram', type=str, help="Gram: -/neg +/pos (default '')")
     Annotations.add_argument('--usegenus', help='Use genus-specific BLAST databases (needs --genus) (default OFF)', action="store_true")
-    Annotations.add_argument('--proteins', type=str, help='Fasta file of trusted proteins to first annotate from (default '')')
+    Annotations.add_argument('--proteins', type=str, help='Fasta file of trusted proteins to first annotate from (default "Magnetosome_protein_data.fasta")')
     Annotations.add_argument('--hmms', type=str, help="Trusted HMM to first annotate from (default '')")
     Annotations.add_argument('--metagenome', help='Improve gene predictions for highly fragmented genomes (default OFF)', action="store_true")
     Annotations.add_argument('--rawproduct', help='Do not clean up /product annotation (default OFF)', action="store_true")
@@ -86,10 +86,10 @@ def get_magcluster_parser():
     #构建magsc子命令
     parser_magsc = subparsers.add_parser('mgc_screen', help='Magnetosome gene cluster screening with magscreen')
     parser_magsc.add_argument('gbkfile', type=str, help='.gbk/.gbf files to analyzed. Multiple files or files-containing folder is acceptable.', nargs='+')
-    parser_magsc.add_argument('-th','--threshold', type=int, default=2, help="The minimum number of magnetosome genes existed in a single contig/scaffold to screen (default '2')")
-    parser_magsc.add_argument('-o','--outdir', type=str, help="Output folder (default 'mgc_screen')")
-    parser_magsc.add_argument('-min', '--minlength', type=int, default=2000, help="Minimum length of contigs to be considered (default '2000bp')")
-    parser_magsc.add_argument('-max', '--maxlength', type=int, default=10000, help="Maximum length of contigs containing magnetosome gene (default '10000bp')")
+    parser_magsc.add_argument('-l', '--contiglength', type=int, default=2000, help="The minimum length of contigs/scaffolds to be considered for MAGs, SAGs and metagenomic assemblies (default '2000bp')")
+    parser_magsc.add_argument('-win', '--windowsize', type=int, default=10000, help="The window size in the text mining of magnetosome proteins (default '10kp')")
+    parser_magsc.add_argument('-th','--threshold', type=int, default=2, help="The minimum number of magnetosome genes existed in a window size (default '3')")
+    #parser_magsc.add_argument('-o','--outdir', type=str, help="Output folder (default 'mgc_screen')")
     
     #构建magm子命令
     parser_magm = subparsers.add_parser('clinker', help='Magnetosome gene cluster mapping with Clinker')

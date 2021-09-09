@@ -4,8 +4,8 @@ with open("README.md", "r") as fh:
     long_description = fh.read()
 setup(
     name='magcluster',
-    version='0.1.5',
-    description="Magnetosome gene cluster annotation, screening and mapping tool",
+    version='0.1.7',
+    description="Magnetosome Gene Clusters Analyzer",
     url="https://github.com/RunJiaJi/magcluster",
     author='Runjia Ji',
     author_email='jirunjia@gmail.com',
@@ -17,14 +17,13 @@ setup(
         "Programming Language :: Python :: 3.6",
         "Programming Language :: Python :: 3.7",
         "License :: OSI Approved :: GNU General Public License v2 or later (GPLv2+)",
-        "Operating System :: OS Independent",
+        "Operating System :: POSIX :: Linux",
     ],
     long_description=long_description,
     long_description_content_type="text/markdown",
     install_requires=[
         "clinker",
         'pandas',
-        'openpyxl',
     ],
     entry_points={
         'console_scripts':[

@@ -28,15 +28,15 @@ def get_gap(mag_loci):
         gap.append(mag_loci[i+1][0] - mag_loci[i][1])
     return gap
 
-def cut_ctg(contig, max_len):
-    if len(contig) <= max_len:
+def cut_ctg(contig, windowsize):
+    if len(contig) <= windowsize:
         return [contig]
     
     mag_loci = get_loci(contig)
     start, end = mag_loci[0][0], mag_loci[-1][1]
     distance = end - start
     
-    if distance <= max_len:
+    if distance <= windowsize:
         return [contig[start:end]]
     
     gap = get_gap(mag_loci)
@@ -52,8 +52,8 @@ def cut_ctg(contig, max_len):
     sub_cotig_right = contig[right_cut_start:right_cut_end]
 
     ctg_list = []
-    ctg_list.extend(cut_ctg(sub_cotig_left, max_len))
-    ctg_list.extend(cut_ctg(sub_cotig_right, max_len))
+    ctg_list.extend(cut_ctg(sub_cotig_left, windowsize))
+    ctg_list.extend(cut_ctg(sub_cotig_right, windowsize))
     return ctg_list
 
 def mag_count(contig):
@@ -63,7 +63,7 @@ def mag_count(contig):
             mag_count += 1
     return mag_count
 
-def mag_ctg_sc(gbk_file_path, min_len = 2000, max_len=10000, threshold = 2, outdir=None):
+def mag_ctg_sc(gbk_file_path, contiglength=2000, windowsize=10000, threshold = 2, outdir=None):
     '''Parse gbk_file
     Screening for magnetosome gene containing contigs with certain minimum length.'''
 
@@ -79,18 +79,20 @@ def mag_ctg_sc(gbk_file_path, min_len = 2000, max_len=10000, threshold = 2, outd
     magpro = mgc_folder + gbkfile_prefix + '_magpro.csv'
 
     log.info("Your file is " + os.path.basename(gbk_file_path))
-    log.info("The minimum length of contigs to be considered is " + str(min_len))
-    log.info("The maxmum length of contigs to be considered is " + str(max_len))
+    log.info("The minimum length of contigs to be considered is " + str(contiglength))
+    log.info("The maxmum length of contigs to be considered is " + str(windowsize))
     log.info("The threshold of magnetosome genes in one contig is " + str(threshold))
     log.info("The output directory is " + mgc_folder)
     log.info("Opening your file...")
 
     records = SeqIO.parse(gbk_file_path, 'gb')
+    MAG_ctg = []
     contigs_list_tmp = []
     log.info("Starting magnetosome genes screening...")
     for record in records:#one contig in all contigs
-        if mag_count(record) >= threshold and len(record) >= min_len:
-            contig_list = cut_ctg(record, max_len)
+        if mag_count(record) >= threshold and len(record) >= contiglength:
+            MAG_ctg.append(record)
+            contig_list = cut_ctg(record, windowsize)
             contigs_list_tmp.extend(contig_list)
     contigs_list = [contig for contig in contigs_list_tmp if mag_count(contig) >= threshold]
     if len(contigs_list)==0:
@@ -105,7 +107,7 @@ def mag_ctg_sc(gbk_file_path, min_len = 2000, max_len=10000, threshold = 2, outd
     elif os.path.exists(mgc_folder):
         log.info(mgc_folder + " folder already exists! Skip to next step")
     log.info("Writing clean.gbk file...")
-    SeqIO.write(contigs_list, clean_gbk_outpath, "genbank")
+    SeqIO.write(MAG_ctg, clean_gbk_outpath, "genbank")
     # return len(contigs_list)
 
     locus_tags = []
@@ -137,5 +139,5 @@ def mag_ctg_sc(gbk_file_path, min_len = 2000, max_len=10000, threshold = 2, outd
 def magsc(args):
     gbkfiles = get_files(args.gbkfile, extensions=['*.gbk'])
     for gbkfile in gbkfiles:
-        mag_ctg_sc(gbkfile, min_len=args.minlength, max_len=args.maxlength, threshold=args.threshold, outdir=args.outdir)
+        mag_ctg_sc(gbkfile, contiglength=args.contiglength, windowsize=args.windowsize, threshold=args.threshold, outdir=args.outdir)
     log.info("Done! Thank you!")

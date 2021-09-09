@@ -1,4 +1,4 @@
-
+from .data import fasta_path
 
 
 def get_files(paths, extensions):
@@ -71,6 +71,8 @@ def get_prokka_cmd(args):
             tmp.extend(['--locustag', get_prefix(i)])
         if '--compliant' not in prokka_cmd_tmp:
             tmp.append('--compliant')
+        if '--proteins' not in prokka_cmd_tmp:
+            tmp.extend(['--proteins', fasta_path()])
         prokka_cmd.append(tmp + [i])
 
     return prokka_cmd
