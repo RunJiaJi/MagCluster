@@ -10,12 +10,12 @@ def get_magcluster_parser():
              formatter_class=argparse.RawTextHelpFormatter, 
              epilog=
             "General usage\n-------------\n"
-            "Magnetosome gene annotation:\n"
-            "  $ magcluster prokka XXX.fa\n\n"
-            "Magnetosome gene screen:\n"
-            "  $ magcluster mgc_screen XXX.gbk\n\n"
-            "Magnetosome gene cluster mapping:\n"
-            "  $ magcluster clinker XXX_screened.gbk\n\n"
+            "Genome annotation:\n"
+            "  $ magcluster prokka genome.fasta\n\n"
+            "MGCs screening:\n"
+            "  $ magcluster mgc_screen genbank.gbk\n\n"
+            "MGCs alignment and mapping:\n"
+            "  $ magcluster clinker genbank_mgc.gbk\n\n"
             
             "Runjia, 2021"
             )
@@ -28,9 +28,9 @@ def get_magcluster_parser():
     parser_maga.add_argument('fafile', type=str, help='Genome files need to be annotated', nargs='+')
 
     General = parser_maga.add_argument_group('General')
-    #General.add_argument('--version', help='Print version and exit', action="store_true")
-    #General.add_argument('--docs', help='Show full manual/documentation', action="store_true")
-    #General.add_argument('--citation', help='Print citation for referencing Prokka', action="store_true")
+    General.add_argument('--version', help='Print version and exit', action="store_true")
+    General.add_argument('--docs', help='Show full manual/documentation', action="store_true")
+    General.add_argument('--citation', help='Print citation for referencing Prokka', action="store_true")
     General.add_argument('--quiet', help='No screen output (default OFF)', action="store_true")
     General.add_argument('--debug', help='Debug mode: keep all temporary files (default OFF)', action="store_true")
 
@@ -84,12 +84,12 @@ def get_magcluster_parser():
     Computation.add_argument('--rnammer', help="Prefer RNAmmer over Barrnap for rRNA prediction (default OFF)", action="store_true")
     
     #构建magsc子命令
-    parser_magsc = subparsers.add_parser('mgc_screen', help='Magnetosome gene cluster screening with magscreen')
-    parser_magsc.add_argument('gbkfile', type=str, help='.gbk/.gbf files to analyzed. Multiple files or files-containing folder is acceptable.', nargs='+')
+    parser_magsc = subparsers.add_parser('mgc_screen', help='Magnetosome gene cluster screening')
+    parser_magsc.add_argument('gbkfile', type=str, help='.gbk/.gbf files to be analyzed. Multiple files or files-containing folder is acceptable.', nargs='+')
     parser_magsc.add_argument('-l', '--contiglength', type=int, default=2000, help="The minimum length of contigs/scaffolds to be considered for MAGs, SAGs and metagenomic assemblies (default '2000bp')")
-    parser_magsc.add_argument('-win', '--windowsize', type=int, default=10000, help="The window size in the text mining of magnetosome proteins (default '10kp')")
-    parser_magsc.add_argument('-th','--threshold', type=int, default=2, help="The minimum number of magnetosome genes existed in a window size (default '3')")
-    #parser_magsc.add_argument('-o','--outdir', type=str, help="Output folder (default 'mgc_screen')")
+    parser_magsc.add_argument('-w', '--windowsize', type=int, default=10000, help="The window size in text mining of magnetosome proteins (default '10,000 bp')")
+    parser_magsc.add_argument('-th','--threshold', type=int, default=3, help="The minimum number of magnetosome genes existed in a window size (default '3')")
+    parser_magsc.add_argument('-o','--outdir', type=str, help="Output folder (default 'mgc_screen')")
     
     #构建magm子命令
     parser_magm = subparsers.add_parser('clinker', help='Magnetosome gene cluster mapping with Clinker')

@@ -63,7 +63,7 @@ def mag_count(contig):
             mag_count += 1
     return mag_count
 
-def mag_ctg_sc(gbk_file_path, contiglength=2000, windowsize=10000, threshold = 2, outdir=None):
+def mag_ctg_sc(gbk_file_path, contiglength=2000, windowsize=10000, threshold=3, outdir=None):
     '''Parse gbk_file
     Screening for magnetosome gene containing contigs with certain minimum length.'''
 
@@ -75,7 +75,7 @@ def mag_ctg_sc(gbk_file_path, contiglength=2000, windowsize=10000, threshold = 2
         mgc_folder = os.path.dirname(gbk_file_path) + '/mgc_screen/'
 
     gbkfile_prefix = os.path.basename(gbk_file_path).rstrip('.gbk')
-    clean_gbk_outpath = mgc_folder + gbkfile_prefix + '_clean.gbk'
+    clean_gbk_outpath = mgc_folder + gbkfile_prefix + '_mgc.gbk'
     magpro = mgc_folder + gbkfile_prefix + '_magpro.csv'
 
     log.info("Your file is " + os.path.basename(gbk_file_path))
@@ -106,7 +106,7 @@ def mag_ctg_sc(gbk_file_path, contiglength=2000, windowsize=10000, threshold = 2
         log.info("Creating output folder: " + mgc_folder)
     elif os.path.exists(mgc_folder):
         log.info(mgc_folder + " folder already exists! Skip to next step")
-    log.info("Writing clean.gbk file...")
+    log.info("Writing mgc.gbk file...")
     SeqIO.write(MAG_ctg, clean_gbk_outpath, "genbank")
     # return len(contigs_list)
 

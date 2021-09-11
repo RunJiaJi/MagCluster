@@ -12,11 +12,11 @@ def get_clinker_cmd(args):
     if args_dic['plot']:
         if args_dic['plot'] == True: #user have -p but no file.html
             if '-p' in usr_args:
-                usr_args.insert(usr_args.index('-p')+1, 'genome_align.html')
+                usr_args.insert(usr_args.index('-p')+1, 'MGC_align.html')
             if '--plot' in usr_args:
-                usr_args.insert(usr_args.index('--plot')+1, 'genome_align.html')
+                usr_args.insert(usr_args.index('--plot')+1, 'MGC_align.html')
     else:
-        usr_args.extend(['-p', 'genome_align.html'])
+        usr_args.extend(['-p', 'MGC_align.html'])
     return usr_args
 
 def magm(usr_args):

@@ -1,8 +1,8 @@
 from .data import fasta_path
-
+from pathlib import Path, PurePath
 
 def get_files(paths, extensions):
-    from pathlib import Path
+
     all_files = []
     for p in paths:
         p_ = Path(p)
@@ -12,21 +12,21 @@ def get_files(paths, extensions):
         else:
             all_files.append(p_)
     files_ = [str(i) for i in all_files]
-    tmp = []
-    rmo = []
-    for i in files_:
-        i__ = Path(i)
-        if i__.is_file():
-            rmo.append(i)
-            i_ = './' + i
-            tmp.append(i_)
-    for i in rmo:
-        files_.remove(i)
-    files_.extend(tmp)
+    # tmp = []
+    # rmo = []
+    # for i in files_:
+    #     i__ = Path(i)
+    #     if i__.is_file():
+    #         rmo.append(i)
+    #         i_ = './' + i
+    #         tmp.append(i_)
+    # for i in rmo:
+    #     files_.remove(i)
+    # files_.extend(tmp)
     return files_
 
 def get_prefix(file):
-    from pathlib import PurePath
+
     prefix_ = PurePath(file).name
     extensions = ['.fa', '.fasta', '.FASTA', '.fna']
     for i in extensions:
@@ -35,7 +35,7 @@ def get_prefix(file):
     return prefix
 
 def get_outdir(file):
-    from pathlib import PurePath
+
     outdir = PurePath(file).parent.joinpath(get_prefix(file))
     return str(outdir)+'_annotation'
 
@@ -60,9 +60,8 @@ def get_prokka_cmd(args):
                 prokka_cmd_tmp.append(value)
     prokka_cmd_tmp.insert(0,'prokka')    
     prokka_cmd = []
+    tmp = [str(i) for i in prokka_cmd_tmp]
     for i in fafiles_:
-        tmp_ = prokka_cmd_tmp.copy()
-        tmp = [str(i) for i in tmp_]
         if '--outdir' not in prokka_cmd_tmp:
             tmp.extend(['--outdir', get_outdir(i)])
         if '--prefix' not in prokka_cmd_tmp:
