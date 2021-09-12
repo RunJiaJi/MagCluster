@@ -9,7 +9,7 @@ MagCluster is a tool for identification, annotation and visualization of magneto
   - [Genome annotation](#genome-annotation)
   - [MGCs screening](#MGCs-screening)
   - [MGCs alignment and visualization](#MGCs-alignment-and-visualization)
-- [Tutorials](https://github.com/RunJiaJi/magcluster/blob/main/Tutorials.md)
+- [Tutorials](https://github.com/RunJiaJi/magcluster/blob/main/Tutorials.ipynb)
 - [Citation](#Citation)
 - [Contact us](#contact-us)
 ---
