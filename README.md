@@ -1,24 +1,23 @@
 # MagCluster
 MagCluster is a tool for identification, annotation and visualization of magnetosome gene clusters (MGCs) from genomes of magnetotactic bacteria (MTB).
 
-## Table of Contents
+## Contents
 - [Installation](#installation)
   - [Conda](#conda)
   - [Pip](#pip)
 - [Usage](#usage)
   - [Genome annotation](#genome-annotation)
   - [MGCs screening](#MGCs-screening)
-  - [MGCs alignment and mapping](#MGCs-alignment-and-mapping)
-- [Getting Started](https://github.com/RunJiaJi/magcluster/blob/main/Getting_started.md)
+  - [MGCs alignment and visualization](#MGCs-alignment-and-visualization)
+- [Tutorials](https://github.com/RunJiaJi/magcluster/blob/main/Getting_started.md)
 - [Citation](#Citation)
 - [Contact us](#contact-us)
 ---
 
 ## Installation
-MagCluster requires a working **[Conda](https://www.anaconda.com/products/individual)** installation.
 
 ### Conda
-MagCluster can be installed through conda. We recommend creating a ***new environment*** for MagCluster.
+MagCluster can be installed through [Conda](https://www.anaconda.com/products/individual). We recommend creating a ***new environment*** for MagCluster to avoid dependency conflicts.
 ```bash
 # Create magcluster environment
 conda create -n magcluster
@@ -33,7 +32,7 @@ conda install -c conda-forge -c bioconda -c defaults magcluster
 magcluster -h
 ```
 ### Pip
-Alternatively, you can install magcluster through pip in an existing environment. In this way, please make sure you have [prokka](https://github.com/tseemann/prokka) installed.
+Alternatively, you can install MagCluster through pip in an existing environment. In this way, please make sure you have [Prokka](https://github.com/tseemann/prokka) installed.
 
 ```bash
 # Install MagCluster through pip
@@ -47,9 +46,9 @@ magcluster -h
 
 
 MagCluster comprises three modules for MGCs batch processing: 
-(i) MTB genome annotation with **[Prokka](https://github.com/tseemann/prokka)**
-(ii) MGCs screening with **MGC_Screen**
-(iii) MGCs mapping with **[Clinker](https://github.com/gamcil/clinker)**
+(i) MTB genomes annotation with [Prokka](https://github.com/tseemann/prokka)
+(ii) MGCs screening with MGC_Screen
+(iii) MGCs visualization with [Clinker](https://github.com/gamcil/clinker)
 
 
 ```bash
@@ -59,14 +58,14 @@ Options:
   {prokka,mgc_screen,clinker}
     prokka              Genome annotation with Prokka
     mgc_screen          Magnetosome gene cluster screening with MGC_Screen
-    clinker             Magnetosome gene cluster mapping with Clinker
+    clinker             Magnetosome gene cluster visualization with Clinker
 ```
 #### Genome annotation
-MagCluster allows users to input **multiple genome files** or **genome-containing folder(s)** in one command for batch annotation. The general usage is same as Prokka yet some parameters are set with default value for MTB genome batch annotation.
+ **Multiple genome files** or **genome-containing folder(s)** are accepted as input for batch annotation. The general usage is same as Prokka yet some parameters are set with default value for genomes batch annotation.
 
-To avoid confusion, the name of each genome is used as the output folder’s name (**--outdir** GENOME_NAME), output files’ prefix (**--prefix** GENOME_NAME), and GenBank file’s locus_tag (**--locustag** GENOME_NAME) by default. The ‘**--compliant**’ parameter is also used by default to ensure the standard GenBank files. 
+To avoid confusion, the name of each genome is used as the output folder’s name (`--outdir GENOME_NAME`), output files’ prefix (`--prefix GENOME_NAME`), and GenBank file’s locus_tag (`--locustag GENOME_NAME`) by default. The `--compliant` parameter is also used by default to ensure standard GenBank files. 
 
-For MGCs annotation, we provide a **[reference MGCs file](https://github.com/RunJiaJi/magcluster/releases/download/v1.0/Magnetosome_protein_data.fasta.faa)** containing magnetosome protein sequences from representative MTB strains which is used by default. The value of '**--evalue**' is recommended to set to 1e-05.
+For MGCs annotation, we provide a [reference MGCs file](https://github.com/RunJiaJi/magcluster/releases/download/v1.0/Magnetosome_protein_data.fasta.faa) containing magnetosome protein sequences from representative MTB strains which is attached to MagCluster and used by default. The value of `--evalue` is recommended to set to 1e-05.
 ```bash
 example usage: 
 
@@ -78,8 +77,8 @@ $ magcluster prokka --evalue 1e-05 --proteins Magnetosome_protein_data.fasta /MT
 ```
 #### MGCs screening
 MGC_Screen module retrieves MGC-containing contigs/scaffolds in GenBank files. As magnetosome genes are always physically clustered in MTB genomes, MGC_Screen identify MGC based on the number of magnetosome genes gathered. 
-Three parameters involved in MGC screening: '**--contiglength**', '**--windowsize**' and '**--threshold**' (see below). Users can adjust them according to needs. 
-For each genome, MGC_Screen produces two files as output: a **GenBank file of MGCs containing contigs** and a **csv file summarizing all magnetosome proteins sequences**.
+Three parameters involved in MGC screening, `--contiglength`, `--windowsize` and `--threshold` (see below). You can adjust them according to needs. 
+For each genome, MGC_Screen produces two files as output: a *GenBank file of MGCs containing contigs* and a *csv file summarizing all magnetosome protein sequences*.
 ```bash
 
 usage: magcluster mgc_screen [-h] [-l CONTIGLENGTH] [-win WINDOWSIZE] [-th THRESHOLD] [-o OUTDIR] gbkfile [gbkfile ...]
@@ -107,8 +106,8 @@ $ magcluster mgc_screen --threshold 3 --contiglength 2000 --windowsize 10000 fil
 # MGCs screening with GenBank files containing folder as input
 $ magcluster mgc_screen --threshold 3 --contiglength 2000 --windowsize 10000 /gbkfiles_folder
 ```
-#### MGCs alignment and mapping
-We use [Clinker](https://github.com/gamcil/clinker) for MGCs alignment and visualization. Note that the '**-p**' parameter is used by default to generate an interactive HTML web page where you can modify the MGCs figure and export it as publication-quality file.
+#### MGCs alignment and visualization
+We use [Clinker](https://github.com/gamcil/clinker) for MGCs alignment and visualization. Note that the `-p` parameter is used by default to generate an interactive HTML web page where you can modify the MGCs figure and export it as a publication-quality file.
 
 ```bash
 example usage: 
@@ -122,7 +121,5 @@ The manuscript is in preparation.
 ## Contact us
 If you have any questions or suggestions, feel free to contact us.
 
-**jirunjia@gmail.com**
-or 
-**weilin@mail.iggcas.ac.cn**
+jirunjia@gmail.com or weilin@mail.iggcas.ac.cn
 
