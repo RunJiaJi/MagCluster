@@ -1,7 +1,5 @@
 # MagCluster
-![Anaconda.org](
-https://anaconda.org/bioconda/magcluster/badges/version.svg) ![License](https://anaconda.org/bioconda/magcluster/badges/license.svg) ![Downloads](https://anaconda.org/bioconda/magcluster/badges/downloads.svg) ![Install](https://anaconda.org/bioconda/magcluster/badges/installer/conda.svg) ![Last update](
-https://anaconda.org/bioconda/magcluster/badges/latest_release_date.svg)
+[![Anaconda-Server Badge](https://anaconda.org/bioconda/magcluster/badges/version.svg)](https://anaconda.org/bioconda/magcluster) [![Anaconda-Server Badge](https://anaconda.org/bioconda/magcluster/badges/license.svg)](https://anaconda.org/bioconda/magcluster) [![Anaconda-Server Badge](https://anaconda.org/bioconda/magcluster/badges/downloads.svg)](https://anaconda.org/bioconda/magcluster) [![Anaconda-Server Badge](https://anaconda.org/bioconda/magcluster/badges/installer/conda.svg)](https://conda.anaconda.org/bioconda) [![Anaconda-Server Badge](https://anaconda.org/bioconda/magcluster/badges/latest_release_date.svg)](https://anaconda.org/bioconda/magcluster) 
 
 MagCluster is a tool for identification, annotation and visualization of magnetosome gene clusters (MGCs) from genomes of magnetotactic bacteria (MTB).
 
