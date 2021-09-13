@@ -158,7 +158,7 @@ magcluster -v
      
 
 
-## Step 1: Obtaining data
+## Step 1: Obtain data
 You can download genome data from NCBI.
 - HCH-1 [LNQR00000000](https://www.ncbi.nlm.nih.gov/Traces/wgs/LNQR01?display=download)
 - IT-1 [LVJN00000000](https://www.ncbi.nlm.nih.gov/Traces/wgs/LVJN01?display=download)
@@ -252,7 +252,7 @@ ls
 
 
 
-## Step 2: Genome annotation
+## Step 2: Genomes annotation
 We recommand the `evalue` to be set as 1e-05. Note that the `--outdir`, `--prefix`, `--locustag` and `--compliant` parameters are used by default. The reference MGCs file that we provide is also used with `--proteins`.
 
 This step should take a while and you can check the log file for details.
