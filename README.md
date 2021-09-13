@@ -8,9 +8,10 @@ MagCluster is a tool for identification, annotation and visualization of magneto
 ## Contents
 - [Installation](#installation)
   - [Conda](#conda)
+  - [Bioconda](#bioconda)
   - [Pip](#pip)
 - [Usage](#usage)
-  - [Genome annotation](#genome-annotation)
+  - [Genomes annotation](#genomes-annotation)
   - [MGCs screening](#MGCs-screening)
   - [MGCs alignment and visualization](#MGCs-alignment-and-visualization)
 - [Tutorials](https://github.com/RunJiaJi/magcluster/blob/main/Tutorials.ipynb)
@@ -22,6 +23,21 @@ MagCluster is a tool for identification, annotation and visualization of magneto
 
 ### Conda
 MagCluster can be installed through [Conda](https://www.anaconda.com/products/individual). We recommend creating a ***new environment*** for MagCluster to avoid dependency conflicts.
+
+```bash
+wget https://github.com/RunJiaJi/magcluster/releases/download/0.1.8/magcluster-0.1.8.yml
+conda env create -n magcluster --file magcluster-0.1.8.yml
+
+# Optinal cleanup
+rm magcluster-0.1.8.yml
+
+# Activate magcluster environment
+conda activate magcluster
+
+# Check for the usage of MagCluster
+magcluster -h
+```
+### Bioconda
 ```bash
 # Create magcluster environment
 conda create -n magcluster
@@ -30,7 +46,7 @@ conda create -n magcluster
 conda activate magcluster
 
 # Install MagCluster through bioconda channel
-conda install -c conda-forge -c bioconda -c defaults magcluster
+conda install -c conda-forge -c bioconda -c defaults blast=2.9 prokka=1.13.4 magcluster=0.1.8
 
 # Check for the usage of MagCluster
 magcluster -h
@@ -64,7 +80,7 @@ Options:
     mgc_screen          Magnetosome gene cluster screening with MGC_Screen
     clinker             Magnetosome gene cluster visualization with Clinker
 ```
-#### Genome annotation
+#### Genomes annotation
  **Multiple genome files** or **genome-containing folder(s)** are accepted as input for batch annotation. The general usage is same as Prokka yet some parameters are set with default value for genomes batch annotation.
 
 To avoid confusion, the name of each genome is used as the output folder’s name (`--outdir GENOME_NAME`), output files’ prefix (`--prefix GENOME_NAME`), and GenBank file’s locus_tag (`--locustag GENOME_NAME`) by default. The `--compliant` parameter is also used by default to ensure standard GenBank files. 
