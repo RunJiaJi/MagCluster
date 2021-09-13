@@ -20,7 +20,7 @@ MagCluster is a tool for identification, annotation and visualization of magneto
 ---
 
 ## Installation
-
+**MagCluster has been checked by bioconda on Linux and MacOS. It is currently not supported on Windows, try [WSL](https://docs.microsoft.com/en-us/windows/wsl/install-win10) instead if you are using Win10.**
 ### Conda
 MagCluster can be installed through [Conda](https://www.anaconda.com/products/individual). We recommend creating a ***new environment*** for MagCluster to avoid dependency conflicts.
 
@@ -66,7 +66,7 @@ magcluster -h
 
 
 MagCluster comprises three modules for MGCs batch processing: 
-(i) MTB genomes annotation with [Prokka](https://github.com/tseemann/prokka)
+(i) genomes annotation with [Prokka](https://github.com/tseemann/prokka)
 (ii) MGCs screening with MGC_Screen
 (iii) MGCs visualization with [Clinker](https://github.com/gamcil/clinker)
 
@@ -98,8 +98,12 @@ $ magcluster prokka --evalue 1e-05 --proteins Magnetosome_protein_data.fasta /MT
 ```
 
 #### MGCs screening
-MGC_Screen module retrieves MGC-containing contigs/scaffolds in GenBank files. As magnetosome genes are always physically clustered in MTB genomes, MGC_Screen identify MGC based on the number of magnetosome genes gathered. 
+MGC_Screen module retrieves MGC-containing contigs/scaffolds in GenBank files.
+
+ As magnetosome genes are always physically clustered in MTB genomes, MGC_Screen uses ‘magnetosome’ as the keyword searching for magnetosome genes in the ‘product’ column under ‘CDS’ field of a GenBank file and identify MGC based on the number of magnetosome genes gathered.
+
 Three parameters involved in MGC screening, `--contiglength`, `--windowsize` and `--threshold` (see below). You can adjust them according to needs. 
+
 For each genome, MGC_Screen produces two files as output: a *GenBank file of putative MGCs containing contigs* and a *csv file summarizing all putative magnetosome protein sequences*.
 ```bash
 
@@ -113,9 +117,9 @@ optional arguments:
   -l CONTIGLENGTH, --contiglength CONTIGLENGTH
                         The minimum size of a contig for screening (default '2,000 bp')
   -w WINDOWSIZE, --windowsize WINDOWSIZE
-                        The window size in the text mining of magnetosome proteins (default '10,000 bp')
+                        The window size applied for the text mining of "magnetosome" in protein product names (default '10,000 bp')
   -th THRESHOLD, --threshold THRESHOLD
-                        The minimum number of magnetosome genes existed in a window size (default '3')
+                        The minimum number of magnetosome genes existed in a given window size (default '3')
   -o OUTDIR, --outdir OUTDIR
                         Output folder (default 'mgc_screen')
 ```
