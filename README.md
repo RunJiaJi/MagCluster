@@ -138,7 +138,7 @@ example usage:
 # MGCs screening with multiple GenBank files as input
 $ magcluster clinker -p MGC_align.html /MGCs_files_folder/*.gbk
 ```
-**Attention**: Although MagCluster is very efficient, there may be some magnetosome genes that are not capatured or some other genes wrongly designated as magnetosome genes. Therefore, ***putative MGCs* obtained by MagCluster should be mannually checked**.
+**Attention: Although MagCluster is efficient, we strongly recommend that putative MGCs identified by MagCluster must be manually checked.**
 
 # Tutorials
 This is a simple example to help you quickly start MagCluster journey. We use the genomes of ***Candidatus* Magnetominusculus xianensis strain HCH-1** ([see the paper](https://www.pnas.org/content/pnas/114/9/2171.full.pdf)) and ***Magnetofaba australis* IT-1** ([see the paper](https://www.frontiersin.org/articles/10.3389/fmicb.2014.00072/full)) to show how it works.
