@@ -85,7 +85,8 @@ Options:
 
 To avoid confusion, the name of each genome is used as the output folder’s name (`--outdir GENOME_NAME`), output files’ prefix (`--prefix GENOME_NAME`), and GenBank file’s locus_tag (`--locustag GENOME_NAME`) by default. The `--compliant` parameter is also used by default to ensure standard GenBank files. 
 
-For MGCs annotation, we provide a [reference MGCs file](https://github.com/RunJiaJi/magcluster/releases/download/v1.0/Magnetosome_protein_data.fasta.faa) containing magnetosome protein sequences from representative MTB strains which is attached to MagCluster and used by default. The value of `--evalue` is recommended to set to 1e-05.
+ For MGCs annotation, MagCluster requires a [mandatory file](https://github.com/RunJiaJi/magcluster/releases/download/v1.0/Magnetosome_protein_data.fasta.faa) containing magnetosome protein sequences from representative MTB strains, which is attached to MagCluster and used by default.
+The value of `--evalue` is recommended to set to 1e-05.
 ```bash
 example usage: 
 
@@ -95,10 +96,11 @@ $ magcluster prokka --evalue 1e-05 --proteins Magnetosome_protein_data.fasta MTB
 # MGCs annotation with MTB genomes containing folder as input
 $ magcluster prokka --evalue 1e-05 --proteins Magnetosome_protein_data.fasta /MTB_genomes_folder
 ```
+
 #### MGCs screening
 MGC_Screen module retrieves MGC-containing contigs/scaffolds in GenBank files. As magnetosome genes are always physically clustered in MTB genomes, MGC_Screen identify MGC based on the number of magnetosome genes gathered. 
 Three parameters involved in MGC screening, `--contiglength`, `--windowsize` and `--threshold` (see below). You can adjust them according to needs. 
-For each genome, MGC_Screen produces two files as output: a *GenBank file of MGCs containing contigs* and a *csv file summarizing all magnetosome protein sequences*.
+For each genome, MGC_Screen produces two files as output: a *GenBank file of putative MGCs containing contigs* and a *csv file summarizing all putative magnetosome protein sequences*.
 ```bash
 
 usage: magcluster mgc_screen [-h] [-l CONTIGLENGTH] [-win WINDOWSIZE] [-th THRESHOLD] [-o OUTDIR] gbkfile [gbkfile ...]
@@ -126,6 +128,7 @@ $ magcluster mgc_screen --threshold 3 --contiglength 2000 --windowsize 10000 fil
 # MGCs screening with GenBank files containing folder as input
 $ magcluster mgc_screen --threshold 3 --contiglength 2000 --windowsize 10000 /gbkfiles_folder
 ```
+
 #### MGCs alignment and visualization
 We use [Clinker](https://github.com/gamcil/clinker) for MGCs alignment and visualization. Note that the `-p` parameter is used by default to generate an interactive HTML web page where you can modify the MGCs figure and export it as a publication-quality file.
 
@@ -135,6 +138,7 @@ example usage:
 # MGCs screening with multiple GenBank files as input
 $ magcluster clinker -p MGC_align.html /MGCs_files_folder/*.gbk
 ```
+**Attention**: Although MagCluster is very efficient, there may be some magnetosome genes that are not capatured or some other genes wrongly designated as magnetosome genes. Therefore, ***putative MGCs* obtained by MagCluster should be mannually checked**.
 
 # Tutorials
 This is a simple example to help you quickly start MagCluster journey. We use the genomes of ***Candidatus* Magnetominusculus xianensis strain HCH-1** ([see the paper](https://www.pnas.org/content/pnas/114/9/2171.full.pdf)) and ***Magnetofaba australis* IT-1** ([see the paper](https://www.frontiersin.org/articles/10.3389/fmicb.2014.00072/full)) to show how it works.
