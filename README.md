@@ -82,7 +82,7 @@ Options:
     clinker             Magnetosome gene cluster visualization with Clinker
 ```
 #### Genomes annotation
- **Multiple genome files**(.fasta/.fna/.fa/.FASTA) or **genome-containing folder(s)** are accepted as input for batch annotation. The general usage is the same as Prokka, but some parameters are set with default values for genomes batch annotation.
+ **Multiple genome files** (.fasta/.fna/.fa/.FASTA) or **genome-containing folder(s)** are accepted as input for batch annotation. The general usage is the same as Prokka, but some parameters are set with default values for genomes batch annotation.
 
 To avoid confusion, the name of each genome is used as the output folder’s name (`--outdir GENOME_NAME`), output files’ prefix (`--prefix GENOME_NAME`), and GenBank file’s locus_tag (`--locustag GENOME_NAME`) by default. The `--compliant` parameter is also used by default to ensure standard GenBank files. 
 
