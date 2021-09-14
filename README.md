@@ -23,10 +23,12 @@ MagCluster is a tool for identification, annotation and visualization of magneto
 MagCluster can be installed through [Conda](https://www.anaconda.com/products/individual). We recommend creating a ***new environment*** for MagCluster to avoid dependency conflicts.
 
 ```bash
+# Download yml file
 wget https://github.com/RunJiaJi/magcluster/releases/download/0.1.8/magcluster-0.1.8.yml
+# Install MagCluster
 conda env create -n magcluster --file magcluster-0.1.8.yml
 
-# Optinal cleanup
+# Optional cleanup
 rm magcluster-0.1.8.yml
 
 # Activate magcluster environment
@@ -79,7 +81,7 @@ Options:
     clinker             Magnetosome gene cluster visualization with Clinker
 ```
 #### Genomes annotation
- **Multiple genome files** or **genome-containing folder(s)** are accepted as input for batch annotation. The general usage is same as Prokka yet some parameters are set with default value for genomes batch annotation.
+ **Multiple genome files**(.fasta/.fna/.fa/.FASTA) or **genome-containing folder(s)** are accepted as input for batch annotation. The general usage is the same as Prokka, but some parameters are set with default values for genomes batch annotation.
 
 To avoid confusion, the name of each genome is used as the output folder’s name (`--outdir GENOME_NAME`), output files’ prefix (`--prefix GENOME_NAME`), and GenBank file’s locus_tag (`--locustag GENOME_NAME`) by default. The `--compliant` parameter is also used by default to ensure standard GenBank files. 
 
@@ -89,18 +91,18 @@ The value of `--evalue` is recommended to set to 1e-05.
 example usage: 
 
 # MGCs annotation with multiple MTB genomes as input
-$ magcluster prokka --evalue 1e-05 --proteins Magnetosome_protein_data.fasta MTB_genome1.fasta MTB_genome2.fasta MTB_genome3.fasta
+$ magcluster prokka --evalue 1e-05 MTB_genome1.fasta MTB_genome2.fasta MTB_genome3.fasta
 
 # MGCs annotation with MTB genomes containing folder as input
-$ magcluster prokka --evalue 1e-05 --proteins Magnetosome_protein_data.fasta /MTB_genomes_folder
+$ magcluster prokka --evalue 1e-05 ./MTB_genomes_folder
 ```
 
 #### MGCs screening
 MGC_Screen module retrieves MGC-containing contigs/scaffolds in GenBank files.
 
- As magnetosome genes are always physically clustered in MTB genomes, MGC_Screen uses ‘magnetosome’ as the keyword searching for magnetosome genes in the ‘product’ column under ‘CDS’ field of a GenBank file and identify MGC based on the number of magnetosome genes gathered.
+ As magnetosome genes are always physically clustered together in MTB genomes, MGC_Screen uses ‘magnetosome’ as the keyword searching for magnetosome genes in the ‘product’ column under ‘CDS’ field of a GenBank file and identify MGC based on the number of magnetosome genes gathered.
 
-Three parameters involved in MGC screening, `--contiglength`, `--windowsize` and `--threshold` (see below). You can adjust them according to needs. 
+Three parameters involved in MGCs screening, `--contiglength`, `--windowsize` and `--threshold` (see below). You can adjust them according to needs. 
 
 For each genome, MGC_Screen produces two files as output: a *GenBank file of putative MGCs containing contigs* and a *csv file summarizing all putative magnetosome protein sequences*.
 ```bash
@@ -128,7 +130,7 @@ example usage:
 $ magcluster mgc_screen --threshold 3 --contiglength 2000 --windowsize 10000 file1.gbk file2.gbk file3.gbk
 
 # MGCs screening with GenBank files containing folder as input
-$ magcluster mgc_screen --threshold 3 --contiglength 2000 --windowsize 10000 /gbkfiles_folder
+$ magcluster mgc_screen --threshold 3 --contiglength 2000 --windowsize 10000 ./gbkfiles_folder
 ```
 
 #### MGCs alignment and visualization
@@ -138,14 +140,14 @@ We use [Clinker](https://github.com/gamcil/clinker) for MGCs alignment and visua
 example usage: 
 
 # MGCs screening with multiple GenBank files as input
-$ magcluster clinker -p MGC_align.html /MGCs_files_folder/*.gbk
+$ magcluster clinker -p MGC_align.html ./MGCs_files_folder/*.gbk
 ```
 **Attention: Although MagCluster is efficient, we strongly recommend that putative MGCs identified by MagCluster must be manually checked.**
 
 # Tutorials
 This is a simple example to help you quickly start MagCluster journey. We use the genomes of ***Candidatus* Magnetominusculus xianensis strain HCH-1** ([see the paper](https://www.pnas.org/content/pnas/114/9/2171.full.pdf)) and ***Magnetofaba australis* IT-1** ([see the paper](https://www.frontiersin.org/articles/10.3389/fmicb.2014.00072/full)) to show how it works.
 ## Step 0: Prepare MagCluster
-To start our journey, make sure you have a working MagCluster in your system.
+To start your journey, make sure you have a working MagCluster in your system.
 
 For installation informations, please check [Installation](https://github.com/RunJiaJi/MagCluster#installation).
 
