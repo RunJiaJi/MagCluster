@@ -25,6 +25,7 @@ MagCluster can be installed through [Conda](https://www.anaconda.com/products/in
 ```bash
 # Download yml file
 wget https://github.com/RunJiaJi/magcluster/releases/download/0.1.8/magcluster-0.1.8.yml
+
 # Install MagCluster
 conda env create -n magcluster --file magcluster-0.1.8.yml
 
