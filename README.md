@@ -266,7 +266,7 @@ This step should take a while and you can check the log file for details.
 <font size=2 color="red">In [7]:</font>
 
 ```bash
-magcluster prokka --evalue 1e-05 . 
+magcluster prokka --evalue 1e-05 ./*.fasta 
 ```
 
     
