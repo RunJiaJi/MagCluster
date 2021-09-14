@@ -239,7 +239,7 @@ ls
 ```
 <font size=2 color="red">Out:</font>
 
-    LNQR01.1.fsa_n LVJN01.1.fsa_nt
+    LNQR01.1.fsa_nt LVJN01.1.fsa_nt
      
 
 
