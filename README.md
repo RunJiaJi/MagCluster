@@ -118,7 +118,7 @@ optional arguments:
   -l CONTIGLENGTH, --contiglength CONTIGLENGTH
                         The minimum size of a contig for screening (default '2,000 bp')
   -w WINDOWSIZE, --windowsize WINDOWSIZE
-                        The window size applied for the text mining of "magnetosome" in protein product names (default '10,000 bp')
+                        The width of the putative MGCs screening window (default '10,000 bp')
   -th THRESHOLD, --threshold THRESHOLD
                         The minimum number of magnetosome genes existed in a given window size (default '3')
   -o OUTDIR, --outdir OUTDIR
