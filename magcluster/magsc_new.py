@@ -80,8 +80,8 @@ def mag_ctg_sc(gbk_file_path, contiglength=2000, windowsize=10000, threshold=3, 
 
     log.info("Your file is " + os.path.basename(gbk_file_path))
     log.info("The minimum length of contigs to be considered is " + str(contiglength))
-    log.info("The maxmum length of contigs to be considered is " + str(windowsize))
-    log.info("The threshold of magnetosome genes in one contig is " + str(threshold))
+    log.info("The window size for MGCs screening is " + str(windowsize))
+    log.info("The threshold of magnetosome genes in a given screening window is " + str(threshold))
     log.info("The output directory is " + mgc_folder)
     log.info("Opening your file...")
 
