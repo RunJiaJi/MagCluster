@@ -3,7 +3,7 @@
 
 MagCluster is a tool for identification, annotation and visualization of magnetosome gene clusters (MGCs) from genomes of magnetotactic bacteria (MTB). MagCluster leverages the physical cluster property of magnetosome genes on the chromosome to identify MGCs, which are otherwise difficult to accurately identify based solely on sequence identity.
 
-![MagCluster Pipeline](docs/_static/pipeline.svg)
+![MagCluster Pipeline](docs/_static/pipeline.png)
 **MagCluster workflow schematic** (a) Genomes are annotated using Prokka with a mandatory reference file of magnetosome proteins database via --proteins. (b) Putative MGC-containing contigs are retrieved by MGC_Screen module from GenBank files: (b1) contigs shorter than 2000 bp (by default) are discarded; (b2) magnetosome genes are identified through a text-mining strategy using the keyword ‘magnetosome’ in protein names, and contigs containing less than 3 (by default) magnetosome genes are discarded; (b3) putative MGCs are screened under a 10,000-bp (by default) window, and the minimum number of magnetosome genes (3 by default) in each window size is re-checked. (c) Putative MGCs are aligned and visualized using Clinker.
 
 ## Contents
