@@ -3,6 +3,8 @@
 
 MagCluster is a tool for identification, annotation and visualization of magnetosome gene clusters (MGCs) from genomes of magnetotactic bacteria (MTB). MagCluster leverages the physical cluster property of magnetosome genes on the chromosome to identify MGCs, which are otherwise difficult to accurately identify based solely on sequence identity.
 
+![MagCluster Pipeline](docs/_static/pipeline.pdf)
+
 ## Contents
 - [Installation](#installation)
   - [Conda](#conda)
