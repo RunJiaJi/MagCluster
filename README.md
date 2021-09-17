@@ -153,7 +153,7 @@ This is a simple example to help you quickly start MagCluster journey. We use th
 ## Step 0: Prepare MagCluster
 To start your journey, make sure you have a working MagCluster in your system.
 
-For installation informations, please check [Installation](https://github.com/RunJiaJi/MagCluster#installation).
+For installation informations, please check [Installation](#installation).
 
 <font size=2 color="red">In [1]:</font>
 
