@@ -27,13 +27,13 @@ MagCluster can be installed through [Conda](https://www.anaconda.com/products/in
 
 ```bash
 # Download yml file
-wget https://github.com/RunJiaJi/magcluster/releases/download/0.1.8/magcluster-0.1.8.yml
+wget https://github.com/RunJiaJi/magcluster/releases/download/0.1.9/magcluster-0.1.9.yml
 
 # Install MagCluster
-conda env create -n magcluster --file magcluster-0.1.8.yml
+conda env create -n magcluster --file magcluster-0.1.9.yml
 
 # Optional cleanup
-rm magcluster-0.1.8.yml
+rm magcluster-0.1.9.yml
 
 # Activate magcluster environment
 conda activate magcluster
@@ -50,7 +50,7 @@ conda create -n magcluster
 conda activate magcluster
 
 # Install MagCluster through bioconda channel
-conda install -c conda-forge -c bioconda -c defaults blast=2.9 prokka=1.13.4 magcluster=0.1.8
+conda install -c conda-forge -c bioconda -c defaults blast=2.9 prokka=1.13.4 magcluster=0.1.9
 
 # Check for the usage of MagCluster
 magcluster -h
@@ -119,7 +119,7 @@ positional arguments:
 optional arguments:
   -h, --help            show this help message and exit
   -l CONTIGLENGTH, --contiglength CONTIGLENGTH
-                        The minimum size of a contig for screening (default '2,000 bp')
+                        The minimum length of contigs to be considered (default '2,000 bp')
   -w WINDOWSIZE, --windowsize WINDOWSIZE
                         The length of MGCs screening window (default '10,000 bp')
   -th THRESHOLD, --threshold THRESHOLD
@@ -165,7 +165,7 @@ magcluster -v
 ```
 <font size=2 color="red">Out:</font>
 
-    magcluster 0.1.8
+    magcluster 0.1.9
 
      
 
@@ -307,8 +307,8 @@ magcluster mgc_screen gbkfolder -o mgcfolder
     [22:30:40] INFO - Starting mgc_screen...
     [22:30:40] INFO - Your file is HCH-1.gbk
     [22:30:40] INFO - The minimum length of contigs to be considered is 2000
-    [22:30:40] INFO - The maxmum length of contigs to be considered is 10000
-    [22:30:40] INFO - The threshold of magnetosome genes in one contig is 3
+    [22:30:40] INFO - The window size for MGCs screening is 10000
+    [22:30:40] INFO - The threshold of magnetosome genes in a given contig and a given length of screening window is 3
     [22:30:40] INFO - The output directory is /mnt/c/Users/edith/Desktop/test/magtest/mgcfolder/
     [22:30:40] INFO - Opening your file...
     [22:30:40] INFO - Starting magnetosome genes screening...

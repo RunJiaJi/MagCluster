@@ -4,7 +4,7 @@ with open("README.md", "r") as fh:
     long_description = fh.read()
 setup(
     name='magcluster',
-    version='0.1.8',
+    version='0.1.9',
     description="Magnetosome Gene Clusters Analyzer",
     url="https://github.com/RunJiaJi/magcluster",
     author='Runjia Ji',

@@ -19,7 +19,7 @@ def get_magcluster_parser():
             
             "Runjia, 2021"
             )
-    parser.add_argument('-v', '--version', action='version', version='%(prog)s 0.1.8', help='show magcluster version number and exit')
+    parser.add_argument('-v', '--version', action='version', version='%(prog)s 0.1.9', help='show magcluster version number and exit')
     # parser.add_argument('-ascm', action='store_true', help='directly analyse from genome file to genecluster mapping.')
     #构建子命令
     subparsers = parser.add_subparsers(title='Options', dest="subparser_name")
@@ -86,9 +86,9 @@ def get_magcluster_parser():
     #构建magsc子命令
     parser_magsc = subparsers.add_parser('mgc_screen', help='Magnetosome gene cluster screening')
     parser_magsc.add_argument('gbkfile', type=str, help='.gbk/.gbf files to be analyzed. Multiple files or files-containing folder is acceptable.', nargs='+')
-    parser_magsc.add_argument('-l', '--contiglength', type=int, default=2000, help="The minimum length of contigs/scaffolds to be considered for MAGs, SAGs and metagenomic assemblies (default '2000bp')")
-    parser_magsc.add_argument('-w', '--windowsize', type=int, default=10000, help="The window size in text mining of magnetosome proteins (default '10,000 bp')")
-    parser_magsc.add_argument('-th','--threshold', type=int, default=3, help="The minimum number of magnetosome genes existed in a window size (default '3')")
+    parser_magsc.add_argument('-l', '--contiglength', type=int, default=2000, help="The minimum length of contigs to be considered (default '2,000 bp')")
+    parser_magsc.add_argument('-w', '--windowsize', type=int, default=10000, help="The length of MGCs screening window (default '10,000 bp')")
+    parser_magsc.add_argument('-th','--threshold', type=int, default=3, help="The minimum number of magnetosome genes in a given contig and a given length of screening window (default '3')")
     parser_magsc.add_argument('-o','--outdir', type=str, help="Output folder (default 'mgc_screen')")
     
     #构建magm子命令
