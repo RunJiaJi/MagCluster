@@ -19,7 +19,7 @@ def get_magcluster_parser():
             
             "Runjia, 2021"
             )
-    parser.add_argument('-v', '--version', action='version', version='%(prog)s 0.1.9', help='show magcluster version number and exit')
+    parser.add_argument('-v', '--version', action='version', version='%(prog)s 0.2.0', help='show magcluster version number and exit')
     # parser.add_argument('-ascm', action='store_true', help='directly analyse from genome file to genecluster mapping.')
     #构建子命令
     subparsers = parser.add_subparsers(title='Options', dest="subparser_name")
@@ -28,17 +28,17 @@ def get_magcluster_parser():
     parser_maga.add_argument('fafile', type=str, help='Genome files need to be annotated', nargs='+')
 
     General = parser_maga.add_argument_group('General')
-    General.add_argument('--version', help='Print version and exit', action="store_true")
-    General.add_argument('--docs', help='Show full manual/documentation', action="store_true")
-    General.add_argument('--citation', help='Print citation for referencing Prokka', action="store_true")
+    # General.add_argument('--version', help='Print version and exit', action="store_true")
+    # General.add_argument('--docs', help='Show full manual/documentation', action="store_true")
+    # General.add_argument('--citation', help='Print citation for referencing Prokka', action="store_true")
     General.add_argument('--quiet', help='No screen output (default OFF)', action="store_true")
     General.add_argument('--debug', help='Debug mode: keep all temporary files (default OFF)', action="store_true")
 
-    Setup = parser_maga.add_argument_group('Setup')
-    Setup.add_argument('--listdb', help='List all configured databases', action="store_true")
-    Setup.add_argument('--setupdb', help='Index all installed databases', action="store_true")
-    Setup.add_argument('--cleandb', help='Remove all database indices', action="store_true")
-    Setup.add_argument('--depends', help='List all software dependencies', action="store_true")
+    # Setup = parser_maga.add_argument_group('Setup')
+    # Setup.add_argument('--listdb', help='List all configured databases', action="store_true")
+    # Setup.add_argument('--setupdb', help='Index all installed databases', action="store_true")
+    # Setup.add_argument('--cleandb', help='Remove all database indices', action="store_true")
+    # Setup.add_argument('--depends', help='List all software dependencies', action="store_true")
 
     Outputs = parser_maga.add_argument_group('Outputs')
     Outputs.add_argument('--outdir', type=str, help="Output folder [auto] (default 'XXX_annotation')")

@@ -72,7 +72,11 @@ def mag_ctg_sc(gbk_file_path, contiglength=2000, windowsize=10000, threshold=3, 
     if outdir:
         mgc_folder = os.path.abspath(outdir) + '/'
     else:
-        mgc_folder = os.path.dirname(gbk_file_path) + '/mgc_screen/'
+        dir_path = os.path.dirname(gbk_file_path)
+        if len(dir_path) == 0:
+            mgc_folder = '.' + '/mgc_screen/'
+        else:
+            mgc_folder = dir_path + '/mgc_screen/'
 
     gbkfile_prefix = os.path.basename(gbk_file_path).rstrip('.gbk')
     clean_gbk_outpath = mgc_folder + gbkfile_prefix + '_mgc.gbk'
