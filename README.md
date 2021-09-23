@@ -50,7 +50,7 @@ conda create -n magcluster
 conda activate magcluster
 
 # Install MagCluster through bioconda channel
-conda install -c conda-forge -c bioconda -c defaults blast=2.9 prokka=1.13.4 magcluster=0.2.0
+conda install -c conda-forge -c bioconda magcluster
 
 # Check for the usage of MagCluster
 magcluster -h
