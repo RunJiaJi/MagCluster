@@ -27,13 +27,13 @@ MagCluster can be installed through [Conda](https://www.anaconda.com/products/in
 
 ```bash
 # Download yml file
-wget https://github.com/RunJiaJi/magcluster/releases/download/0.1.8/magcluster-0.1.8.yml
+wget https://github.com/RunJiaJi/magcluster/releases/download/0.2.0/magcluster-0.2.0.yml
 
 # Install MagCluster
-conda env create -n magcluster --file magcluster-0.1.8.yml
+conda env create -n magcluster --file magcluster-0.2.0.yml
 
 # Optional cleanup
-rm magcluster-0.1.8.yml
+rm magcluster-0.2.0.yml
 
 # Activate magcluster environment
 conda activate magcluster
@@ -50,7 +50,7 @@ conda create -n magcluster
 conda activate magcluster
 
 # Install MagCluster through bioconda channel
-conda install -c conda-forge -c bioconda -c defaults blast=2.9 prokka=1.13.4 magcluster=0.1.8
+conda install -c conda-forge -c bioconda -c defaults blast=2.9 prokka=1.13.4 magcluster=0.2.0
 
 # Check for the usage of MagCluster
 magcluster -h
@@ -165,7 +165,7 @@ magcluster -v
 ```
 <font size=2 color="red">Out:</font>
 
-    magcluster 0.1.8
+    magcluster 0.2.0
 
      
 
