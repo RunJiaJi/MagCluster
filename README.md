@@ -152,9 +152,9 @@ $ magcluster clinker -p MGC_align.html ./MGCs_files_folder/*.gbk
 # Tutorials
 This is a simple example to help you quickly start MagCluster journey. We use the genomes of ***Candidatus* Magnetominusculus xianensis strain HCH-1** ([see the paper](https://www.pnas.org/content/pnas/114/9/2171.full.pdf)) and ***Magnetofaba australis* IT-1** ([see the paper](https://www.frontiersin.org/articles/10.3389/fmicb.2014.00072/full)) to show how it works.
 
-<figure class="video_container">
-  <iframe src="https://www.youtube.com/embed/4c_nbpHh1_4?controls=0" frameborder="0" allowfullscreen="true"> </iframe>
-</figure>
+You can see the **video tutorial** here or follow the detailed tutorial below.
+
+[![Video](docs/_static/thumbnail_en.png)](https://youtu.be/4c_nbpHh1_4)
 
 ## Step 0: Prepare MagCluster
 To start your journey, make sure you have a working MagCluster in your system.
