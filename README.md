@@ -385,7 +385,9 @@ Congratulations! Now you should have an interactive html opened in your browser.
 ![MGCs.html](docs/_static/MGCs_figure.PNG)
 
 ## Citation
-The manuscript is in preparation.
+If you found MagCluster useful to your research, please cite us:
+
+Ji, R., Zhang, W., Pan, Y., Lin, W. **MagCluster: a Tool for Identification, Annotation, and Visualization of Magnetosome Gene Clusters.** *Microbiology Resource Announcements* [doi:10.1128/mra.01031-21](https://journals.asm.org/doi/10.1128/mra.01031-21)
 
 ## Contact us
 If you have any questions or suggestions, feel free to contact us.
