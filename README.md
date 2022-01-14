@@ -384,11 +384,21 @@ Congratulations! Now you should have an interactive html opened in your browser.
 
 ![MGCs.html](docs/_static/MGCs_figure.PNG)
 
-## Citation
+## Citations
 If you found MagCluster useful to your research, please cite us:
 
 Runjia Ji, Wensi Zhang, Yongxin Pan, and Wei Lin. 2022. **MagCluster: a Tool for Identification, Annotation, and Visualization of Magnetosome Gene Clusters.** *Microbiology Resource Announcements*. 11:e01031-21.
  [doi:10.1128/mra.01031-21](https://journals.asm.org/doi/10.1128/mra.01031-21)
+
+**MagCluster** uses **[Prokka](https://github.com/tseemann/prokka)** for genome annotation and **[Clinker](https://github.com/gamcil/clinker)** for gene cluster visualization. Please include the following citations to credit their work:
+
+Torsten Seemann. 2014. **Prokka: rapid prokaryotic genome annotation.** *Bioinformatics*. 30:2068-2069. [doi:10.1093/bioinformatics/btu153](https://doi.org/10.1093/bioinformatics/btu153)
+
+Cameron L M Gilchrist, Yit-Heng Chooi. 2020. **clinker & clustermap.js: Automatic generation of gene cluster comparison figures.** *Bioinformatics*. 37:2473–2475. [doi:10.1101/2020.11.08.370650](https://doi.org/10.1093/bioinformatics/btab007)
+
+
+
+
 
 ## Contact us
 If you have any questions or suggestions, feel free to contact us.
