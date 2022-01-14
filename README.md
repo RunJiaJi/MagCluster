@@ -5,7 +5,7 @@
 MagCluster is a tool for identification, annotation and visualization of magnetosome gene clusters (MGCs) from genomes of magnetotactic bacteria (MTB). MagCluster leverages the physical cluster property of magnetosome genes on the chromosome to identify MGCs, which are otherwise difficult to accurately identify based solely on sequence identity.
 
 ![MagCluster Pipeline](docs/_static/pipeline.png)
-**MagCluster workflow schematic** (a) Genomes are annotated using Prokka with a mandatory reference file of magnetosome proteins database via --proteins. (b) Putative MGC-containing contigs are retrieved by MGC_Screen module from GenBank files: (b1) contigs shorter than 2000 bp (by default) are discarded; (b2) magnetosome genes are identified through a text-mining strategy using the keyword ‘magnetosome’ in protein names, and contigs containing less than 3 (by default) magnetosome genes are discarded; (b3) putative MGCs are screened under a 10,000-bp (by default) window, and the minimum number of magnetosome genes (3 by default) in each window size is re-checked. (c) Putative MGCs are aligned and visualized using Clinker.
+**MagCluster workflow schematic** (a) Genomes are annotated using Prokka with a mandatory reference file of magnetosome proteins database via --proteins. (b) Putative MGC-containing contigs are retrieved by MGC_Screen module from GenBank files: (b1) contigs shorter than 2000 bp (by default) are discarded; (b2) magnetosome genes are identified through a text-mining strategy using the keyword ‘magnetosome’ in protein names, and contigs containing less than 3 (by default) magnetosome genes are discarded; (b3) putative MGCs are screened under a 10,000-bp (by default) window, and the minimum number of magnetosome genes (3 by default) in each window size is re-checked. (c) Putative MGCs are aligned and visualized using clinker.
 
 ## Contents
 - [Installation](#installation)
@@ -73,7 +73,7 @@ magcluster -h
 MagCluster comprises three modules for MGCs batch processing: 
 (i) genomes annotation with [Prokka](https://github.com/tseemann/prokka)
 (ii) MGCs screening with MGC_Screen
-(iii) MGCs visualization with [Clinker](https://github.com/gamcil/clinker)
+(iii) MGCs visualization with [clinker](https://github.com/gamcil/clinker)
 
 
 ```bash
@@ -83,7 +83,7 @@ Options:
   {prokka,mgc_screen,clinker}
     prokka              Genome annotation with Prokka
     mgc_screen          Magnetosome gene cluster screening with MGC_Screen
-    clinker             Magnetosome gene cluster visualization with Clinker
+    clinker             Magnetosome gene cluster visualization with clinker
 ```
 #### Genomes annotation
  **Multiple genome files** (.fasta/.fna/.fa/.FASTA) or **genome-containing folder(s)** are accepted as input for batch annotation. The general usage is the same as Prokka, but some parameters are set with default values for genomes batch annotation.
@@ -139,7 +139,7 @@ $ magcluster mgc_screen --threshold 3 --contiglength 2000 --windowsize 10000 ./g
 ```
 
 #### MGCs alignment and visualization
-We use [Clinker](https://github.com/gamcil/clinker) for MGCs alignment and visualization. Note that the `-p` parameter is used by default to generate an interactive HTML web page where you can modify the MGCs figure and export it as a publication-quality file.
+We use [clinker](https://github.com/gamcil/clinker) for MGCs alignment and visualization. Note that the `-p` parameter is used by default to generate an interactive HTML web page where you can modify the MGCs figure and export it as a publication-quality file.
 
 ```bash
 example usage: 
@@ -356,7 +356,7 @@ Good job! Now you can open the `.csv` files to check the magnetosome protein seq
 ## Step 4: MGCs visualization
 Final step! We are almost there! 
 
-Use Clinker to generate a MGCs figure. We recommand to use the `-o` parameter to generate a MGCs alignment file where you can browse the homologous gene similarities among genomes.
+Use clinker to generate a MGCs figure. We recommand to use the `-o` parameter to generate a MGCs alignment file where you can browse the homologous gene similarities among genomes.
 
 Be Careful! If there is complete genome(s) in your dataset, the alignment process will take unreasonable time. In that case, we recommand you skip the alignment process with `-na` (no alignment) parameter.
 
@@ -390,7 +390,8 @@ If you found MagCluster useful to your research, please cite us:
 Runjia Ji, Wensi Zhang, Yongxin Pan, and Wei Lin. 2022. **MagCluster: a Tool for Identification, Annotation, and Visualization of Magnetosome Gene Clusters.** *Microbiology Resource Announcements*. 11:e01031-21.
  [doi:10.1128/mra.01031-21](https://journals.asm.org/doi/10.1128/mra.01031-21)
 
-**MagCluster** uses **[Prokka](https://github.com/tseemann/prokka)** for genome annotation and **[Clinker](https://github.com/gamcil/clinker)** for gene cluster visualization. Please include the following citations to credit their work:
+
+MagCluster uses [Prokka](https://github.com/tseemann/prokka) for genomes annotation and [clinker](https://github.com/gamcil/clinker) for gene clusters comparison and visualization. Please include the following citations when using MagCluster:
 
 Torsten Seemann. 2014. **Prokka: rapid prokaryotic genome annotation.** *Bioinformatics*. 30:2068-2069. [doi:10.1093/bioinformatics/btu153](https://doi.org/10.1093/bioinformatics/btu153)
 
