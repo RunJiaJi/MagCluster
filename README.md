@@ -17,7 +17,7 @@ MagCluster is a tool for identification, annotation and visualization of magneto
   - [MGCs screening](#MGCs-screening)
   - [MGCs alignment and visualization](#MGCs-alignment-and-visualization)
 - [Tutorials](#tutorials)
-- [Citation](#Citations)
+- [Citations](#Citations)
 - [Contact us](#contact-us)
 ---
 
