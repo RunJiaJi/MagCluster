@@ -56,6 +56,7 @@ conda install -c conda-forge -c bioconda magcluster
 # Check for the usage of MagCluster
 magcluster -h
 ```
+\*cough\* *If conda takes too long on solving environment, Ctrl+C and try [mamba](https://github.com/mamba-org/mamba)* \*cough\*
 ### Pip
 Alternatively, you can install MagCluster through pip in an existing environment. In this way, please make sure you have [Prokka](https://github.com/tseemann/prokka) installed.
 
