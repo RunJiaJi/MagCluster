@@ -28,7 +28,7 @@ def get_gap(mag_loci):
         gap.append(mag_loci[i+1][0] - mag_loci[i][1])
     return gap
 
-def cut_ctg(contig, windowsize):
+def cut_ctg(contig, windowsize, threshold):
     if len(contig) <= windowsize:
         return [contig]
     
@@ -39,22 +39,26 @@ def cut_ctg(contig, windowsize):
     if distance <= windowsize:
         return [contig[start:end]]
     
-    gap = get_gap(mag_loci)
-    max_gap = max(gap)
-    max_gap_index = gap.index(max_gap)
+    if len(mag_loci)>= threshold:
+        gap = get_gap(mag_loci)
+        max_gap = max(gap)
+        max_gap_index = gap.index(max_gap)
 
-    left_cut_start = start
-    left_cut_end = mag_loci[max_gap_index][1]
-    sub_cotig_left = contig[left_cut_start:left_cut_end]
+        left_cut_start = start
+        left_cut_end = mag_loci[max_gap_index][1]
+        sub_cotig_left = contig[left_cut_start:left_cut_end]
 
-    right_cut_start = mag_loci[max_gap_index+1][0]
-    right_cut_end = mag_loci[-1][1]
-    sub_cotig_right = contig[right_cut_start:right_cut_end]
+        right_cut_start = mag_loci[max_gap_index+1][0]
+        right_cut_end = mag_loci[-1][1]
+        sub_cotig_right = contig[right_cut_start:right_cut_end]
 
-    ctg_list = []
-    ctg_list.extend(cut_ctg(sub_cotig_left, windowsize))
-    ctg_list.extend(cut_ctg(sub_cotig_right, windowsize))
-    return ctg_list
+        ctg_list = []
+        if len(get_loci(sub_cotig_left))>= threshold:
+            ctg_list.extend(cut_ctg(sub_cotig_left, windowsize, threshold))
+        if len(get_loci(sub_cotig_right))>= threshold:   
+            ctg_list.extend(cut_ctg(sub_cotig_right, windowsize, threshold))
+            
+        return ctg_list
 
 def mag_count(contig):
     mag_count = 0
@@ -96,7 +100,7 @@ def mag_ctg_sc(gbk_file_path, contiglength=2000, windowsize=10000, threshold=3, 
     for record in records:#one contig in all contigs
         if mag_count(record) >= threshold and len(record) >= contiglength:
             MAG_ctg.append(record)
-            contig_list = cut_ctg(record, windowsize)
+            contig_list = cut_ctg(record, windowsize, threshold)
             contigs_list_tmp.extend(contig_list)
     contigs_list = [contig for contig in contigs_list_tmp if mag_count(contig) >= threshold]
     if len(contigs_list)==0:
