@@ -99,9 +99,11 @@ def mag_ctg_sc(gbk_file_path, contiglength=2000, windowsize=10000, threshold=3, 
     log.info("Starting magnetosome genes screening...")
     for record in records:#one contig in all contigs
         if mag_count(record) >= threshold and len(record) >= contiglength:
-            MAG_ctg.append(record)
+            # MAG_ctg.append(record)
             contig_list = cut_ctg(record, windowsize, threshold)
-            contigs_list_tmp.extend(contig_list)
+            if contig_list:
+                MAG_ctg.append(record)
+                contigs_list_tmp.extend(contig_list)
     contigs_list = [contig for contig in contigs_list_tmp if mag_count(contig) >= threshold]
     if len(contigs_list)==0:
         log.info('No magnetosome genes were found in your file!')
