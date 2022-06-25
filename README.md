@@ -155,7 +155,9 @@ This is a simple example to help you quickly start MagCluster journey. We use th
 
 You can see the **video tutorial** here or follow the detailed tutorial below.
 
-[![Video](docs/_static/thumbnail_en.png)](https://youtu.be/4c_nbpHh1_4)
+<a href='https://youtu.be/4c_nbpHh1_4' target='_blank'>
+  <img src='docs/_static/thumbnail_en.png' width='700' alt='Viedo' align='center'></img>
+</a>
 
 ## Step 0: Prepare MagCluster
 To start your journey, make sure you have a working MagCluster in your system.
