@@ -11,6 +11,8 @@ def gene_class(gene_name):
         return 'mad'
     if 'man' in gene_name or 'Man' in gene_name:
         return 'man'
+    if 'iron transporter' in gene_name:
+        return 'iron metabolism'
     return None
 
 
@@ -23,6 +25,8 @@ def colour(gene_name):
         return '#34A853'
     if 'man' == gene_class(gene_name):
         return '#4385F4'
+    if 'iron metabolism':
+        return '#ffff3f'
     return '#FFFF00'
 
 def get_html_path(usr_args):
@@ -56,27 +60,35 @@ def change_data(html_path):
     g_mms = get_groups('mms')
     g_mad = get_groups('mad')
     g_man = get_groups('man')
+    g_feo = get_groups('iron metabolism')
 
     #每一个contig
     for genome in data['clusters']:
         for contig in genome['loci']:
             for gene in contig['genes']:
                 product = gene['names']['product']
-                if 'agnetosome' in product:
-                    gc = gene_class(product)
-                    if gc == 'mam':
-                        g_mam['genes'].append(gene['uid'])
-                    elif gc == 'mms':
-                        g_mms['genes'].append(gene['uid'])
-                    elif gc == 'mad':
-                        g_mad['genes'].append(gene['uid'])
-                    elif gc == 'man':
-                        g_man['genes'].append(gene['uid'])
-                    # gene['colour'] = colour(product)
+                # if 'agnetosome' in product:
+                gc = gene_class(product)
+                if gc == 'mam':
                     gene['label'] = product
+                    g_mam['genes'].append(gene['uid'])
+                elif gc == 'mms':
+                    gene['label'] = product
+                    g_mms['genes'].append(gene['uid'])
+                elif gc == 'mad':
+                    gene['label'] = product
+                    g_mad['genes'].append(gene['uid'])
+                elif gc == 'man':
+                    gene['label'] = product
+                    g_man['genes'].append(gene['uid'])
+                elif gc == 'iron metabolism':
+                    gene['label'] = product
+                    g_feo['genes'].append(gene['uid'])
+                # gene['colour'] = colour(product)
+                # gene['label'] = product
                 else:
                     gene['label'] = ' '
-    groups = [g_mam, g_mms, g_mad, g_man]
+    groups = [g_mam, g_mms, g_mad, g_man, g_feo]
     data['groups'] = groups
     html = html.replace(data_str, json.dumps(data))
 

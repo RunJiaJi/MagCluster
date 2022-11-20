@@ -1,6 +1,7 @@
 from Bio import SeqIO
 import logging
 from .batch_proc import get_files
+from .slice_contig import slice_gbk
 import os
 import pandas as pd
 
@@ -63,11 +64,12 @@ def cut_ctg(contig, windowsize, threshold):
 def mag_count(contig):
     mag_count = 0
     for feature in contig.features:#one gene of all genes in one contig
-        if  feature.type == 'CDS' and 'agnetosome' in feature.qualifiers['product'][0]:
-            mag_count += 1
+        if 'product' in feature.qualifiers:
+            if  feature.type == 'CDS' and 'agnetosome' in feature.qualifiers['product'][0]:
+                mag_count += 1
     return mag_count
 
-def mag_ctg_sc(gbk_file_path, contiglength=2000, windowsize=10000, threshold=3, outdir=None):
+def mag_ctg_sc(gbk_file_path, contiglength=2000, windowsize=10000, threshold=3, outdir=None, unmag_num=3):
     '''Parse gbk_file
     Screening for magnetosome gene containing contigs with certain minimum length.'''
 
@@ -83,7 +85,8 @@ def mag_ctg_sc(gbk_file_path, contiglength=2000, windowsize=10000, threshold=3, 
             mgc_folder = dir_path + '/mgc_screen/'
 
     gbkfile_prefix = os.path.basename(gbk_file_path).rstrip('.gbk')
-    clean_gbk_outpath = mgc_folder + gbkfile_prefix + '_mgc.gbk'
+    tmp_gbk_outpath = mgc_folder +'tmp/'+ gbkfile_prefix + '_mgc.gbk'
+    slice_gbk_outpath = mgc_folder + gbkfile_prefix + '_sliced_mgc.gbk'
     magpro = mgc_folder + gbkfile_prefix + '_magpro.csv'
 
     log.info("Your file is " + os.path.basename(gbk_file_path))
@@ -116,10 +119,39 @@ def mag_ctg_sc(gbk_file_path, contiglength=2000, windowsize=10000, threshold=3, 
         log.info("Creating output folder: " + mgc_folder)
     elif os.path.exists(mgc_folder):
         log.info(mgc_folder + " folder already exists! Skip to next step")
+    if not os.path.exists(mgc_folder+'tmp/'):
+        os.mkdir(mgc_folder+'tmp/')
     log.info("Writing mgc.gbk file...")
-    SeqIO.write(MAG_ctg, clean_gbk_outpath, "genbank")
-    # return len(contigs_list)
+    SeqIO.write(MAG_ctg, tmp_gbk_outpath, "genbank")
+    
+    # return all proteins in a putative MGCs containing contig inferred above
+    tmp_gbk_faa_outpath = mgc_folder +'tmp/'+ gbkfile_prefix + '_mgc.faa'
+    for ctg in MAG_ctg:
+        pros = []
+        for f in ctg.features:
+            if f.type =='CDS':
+                pro = '>' + f.qualifiers['locus_tag'][0]+' '+f.qualifiers['product'][0] + '\n' +f.qualifiers['translation'][0]
+                pros.append(pro)
+        with open (tmp_gbk_faa_outpath, 'w') as f:
+            pros_str = '\n'.join(pros)
+            f.write(pros_str)
+            
+    # return sliced genbank file
+    list_sub_records = slice_gbk(MAG_ctg, slice_gbk_outpath, unmag_num)
 
+    # return all proteins in sliced genbank file
+    slice_gbk_faa_outpath = mgc_folder + gbkfile_prefix + '_sliced_mgc.faa'
+    for ctg in list_sub_records:
+        pros = []
+        for f in ctg.features:
+            if f.type =='CDS':
+                pro = '>' + f.qualifiers['locus_tag'][0]+' '+f.qualifiers['product'][0] + '\n' +f.qualifiers['translation'][0]
+                pros.append(pro)
+        with open (slice_gbk_faa_outpath, 'w') as f:
+            pros_str = '\n'.join(pros)
+            f.write(pros_str)
+    
+    # return the predicted putative magnetosome proteins' csv file
     locus_tags = []
     products = []
     translations = []
@@ -146,8 +178,20 @@ def mag_ctg_sc(gbk_file_path, contiglength=2000, windowsize=10000, threshold=3, 
     log.info("Writing magpro.csv file(s)...")
     mag_df.to_csv(magpro, index = False)
 
+    # return the predicted putative magnetosome proteins
+    magpros = []
+    for i in range(len(locus_tags)):
+        pro = '>' + locus_tags[i] + ' ' + products[i] + '\n' + translations[i]
+        magpros.append(pro)
+    magpro_faa = mgc_folder + gbkfile_prefix + '_magpro.faa'
+    with open(magpro_faa, 'w') as f:
+        magpros_str = '\n'.join(magpros)
+        f.write(magpros_str)
+
+
 def magsc(args):
     gbkfiles = get_files(args.gbkfile, extensions=['*.gbk'])
     for gbkfile in gbkfiles:
-        mag_ctg_sc(gbkfile, contiglength=args.contiglength, windowsize=args.windowsize, threshold=args.threshold, outdir=args.outdir)
+        mag_ctg_sc(gbkfile, contiglength=args.contiglength, windowsize=args.windowsize, threshold=args.threshold, outdir=args.outdir, unmag_num=args.unmag_num)
     log.info("Done! Thank you!")
+

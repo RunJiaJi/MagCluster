@@ -19,7 +19,7 @@ def get_magcluster_parser():
             
             "Runjia, 2021"
             )
-    parser.add_argument('-v', '--version', action='version', version='%(prog)s 0.2.0', help='show magcluster version number and exit')
+    parser.add_argument('-v', '--version', action='version', version='%(prog)s 0.2.11', help='show magcluster version number and exit')
     # parser.add_argument('-ascm', action='store_true', help='directly analyse from genome file to genecluster mapping.')
     #构建子命令
     subparsers = parser.add_subparsers(title='Options', dest="subparser_name")
@@ -90,6 +90,7 @@ def get_magcluster_parser():
     parser_magsc.add_argument('-w', '--windowsize', type=int, default=10000, help="The length of MGCs screening window (default '10,000 bp')")
     parser_magsc.add_argument('-th','--threshold', type=int, default=3, help="The minimum number of magnetosome genes in a given contig and a given length of screening window (default '3')")
     parser_magsc.add_argument('-o','--outdir', type=str, help="Output folder (default 'mgc_screen')")
+    parser_magsc.add_argument('-un','--unmag_num', type=int, default=3, help="The number of un-magnetosome genes reserved around magnetosome gene cluster (default '3')")
     
     #构建magm子命令
     parser_magm = subparsers.add_parser('clinker', help='Magnetosome gene cluster mapping with Clinker')
