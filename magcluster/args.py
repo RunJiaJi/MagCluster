@@ -19,7 +19,7 @@ def get_magcluster_parser():
             
             "Runjia, 2021"
             )
-    parser.add_argument('-v', '--version', action='version', version='%(prog)s 0.2.11', help='show magcluster version number and exit')
+    parser.add_argument('-v', '--version', action='version', version='%(prog)s 0.2.12', help='show magcluster version number and exit')
     # parser.add_argument('-ascm', action='store_true', help='directly analyse from genome file to genecluster mapping.')
     #构建子命令
     subparsers = parser.add_subparsers(title='Options', dest="subparser_name")
