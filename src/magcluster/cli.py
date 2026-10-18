@@ -13,7 +13,7 @@ from .core.predict import GenePredictor
 from .core.scoring import ClusterScorer
 from .core.search import MagnetosomeSearcher
 from .data import get_hmm_path, get_profiles_summary_path, load_rules
-from .utils.io import export_combined_magnetosome_fasta, write_cluster_tables
+from .utils.io import export_all_genome_fastas, write_all_genome_tables
 from .utils.logger import console, log
 from .viz.clinker_export import export_all_clusters_for_clinker, run_clinker_visualization
 from .viz.static_plot import plot_all_clusters
@@ -226,6 +226,8 @@ def run_pipeline(
         "mgc_clusters.tsv",
         "presence_absence.tsv",
         "summary.tsv",
+        "mgc_genes.tsv",
+        "magnetosome_proteins.faa",
     ]:
         p = outdir / old_file
         if p.exists():
@@ -245,6 +247,7 @@ def run_pipeline(
     all_hits = {}
     all_genes_lookup = {}
     contigs_lookup = {}
+    processed_genomes: List[str] = []
 
     for idx, f_path in enumerate(expanded_files, 1):
         console.print(f"[{idx}/{len(expanded_files)}] Processing [bold green]{f_path.name}[/bold green]...")
@@ -279,6 +282,9 @@ def run_pipeline(
         if not hits:
             continue
 
+        if genome_name not in processed_genomes:
+            processed_genomes.append(genome_name)
+
         # 4. Cluster
         if not parsed.has_coordinates:
             console.print(f"  [yellow]! Input protein FASTA lacks genomic coordinates (contig/start/end).[/yellow]")
@@ -301,9 +307,9 @@ def run_pipeline(
             console.print(f"  [dim]-> No syntenic MGC clusters met the threshold criteria (>= {threshold} distinct magnetosome families).[/dim]")
 
     # 5. Export results
-    console.print("\n[bold cyan]Writing reports and magnetosome sequences...[/bold cyan]")
-    write_cluster_tables(all_clusters, all_scores, all_hits, outdir, genes_lookup=all_genes_lookup)
-    export_combined_magnetosome_fasta(all_clusters, all_hits, outdir, filename="magnetosome_proteins.faa", genes_lookup=all_genes_lookup)
+    console.print("\n[bold cyan]Writing per-genome reports and magnetosome sequences...[/bold cyan]")
+    written_tsvs = write_all_genome_tables(processed_genomes, all_clusters, all_scores, all_hits, outdir, genes_lookup=all_genes_lookup)
+    written_faas = export_all_genome_fastas(processed_genomes, all_clusters, all_hits, outdir, genes_lookup=all_genes_lookup)
 
     # 6. Clinker visualization
     if all_clusters:
@@ -330,9 +336,12 @@ def run_pipeline(
 
     elapsed = time.time() - start_time
     console.print(f"\n[bold green]✓ Done in {elapsed:.1f}s![/bold green] Results saved to: [bold]{outdir.resolve()}[/bold]")
-    if all_hits:
-        console.print(f"  • Magnetosome Genes: [underline]{outdir}/mgc_genes.tsv[/underline]")
-        console.print(f"  • Combined Proteins: [underline]{outdir}/magnetosome_proteins.faa[/underline]")
+    if written_tsvs:
+        for tsv_p in written_tsvs:
+            console.print(f"  • Magnetosome Genes: [underline]{tsv_p}[/underline]")
+    if written_faas:
+        for faa_p in written_faas:
+            console.print(f"  • Magnetosome Proteins: [underline]{faa_p}[/underline]")
     if all_clusters and not no_plot:
         console.print(f"  • Clinker Visualization: [underline]{outdir}/MGC_align.html[/underline]")
 

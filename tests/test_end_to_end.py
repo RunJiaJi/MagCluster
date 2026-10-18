@@ -53,3 +53,37 @@ def test_protein_fasta_without_coords(tmp_path):
     assert len(parsed.genes) == 2
     assert parsed.genes[0].contig_id == "unplaced"
     assert parsed.genes[0].start == 0
+
+def test_per_genome_exports(tmp_path):
+    from magcluster.utils.io import write_all_genome_tables, export_all_genome_fastas
+    from magcluster.core.search import MagnetosomeHit
+    from magcluster.core.predict import PredictedGene
+
+    gene1 = PredictedGene(gene_id="g1", contig_id="c1", start=100, end=500, strand=1, gene_index=0, translation="MTEST")
+    gene1.genome_name = "genomeA"
+    gene2 = PredictedGene(gene_id="g2", contig_id="c2", start=200, end=600, strand=-1, gene_index=0, translation="MTEST2")
+    gene2.genome_name = "genomeB"
+
+    hits = {
+        "g1": MagnetosomeHit(
+            gene_id="g1", contig_id="c1", profile="MamA", parent_family="MamA",
+            score=100.0, evalue=1e-20, role="core", lineage="Alpha", color="#E63946",
+            start=100, end=500, strand=1, gene_index=0, translation="MTEST"
+        ),
+        "g2": MagnetosomeHit(
+            gene_id="g2", contig_id="c2", profile="MamB", parent_family="MamB",
+            score=80.0, evalue=1e-15, role="core", lineage="Alpha", color="#E63946",
+            start=200, end=600, strand=-1, gene_index=0, translation="MTEST2"
+        ),
+    }
+    lookup = {"g1": gene1, "g2": gene2}
+
+    tsvs = write_all_genome_tables(["genomeA", "genomeB"], [], {}, hits, tmp_path, genes_lookup=lookup)
+    faas = export_all_genome_fastas(["genomeA", "genomeB"], [], hits, tmp_path, genes_lookup=lookup)
+
+    assert len(tsvs) == 2
+    assert (tmp_path / "genomeA_mgc_genes.tsv").exists()
+    assert (tmp_path / "genomeB_mgc_genes.tsv").exists()
+    assert len(faas) == 2
+    assert (tmp_path / "genomeA_magnetosome_proteins.faa").exists()
+    assert (tmp_path / "genomeB_magnetosome_proteins.faa").exists()
