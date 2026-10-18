@@ -33,6 +33,9 @@ Examples:
 
   # Inspect built-in Magnetosome HMM database and reference family summary:
   $ magcluster db
+
+  # View all available Clinker visualization options:
+  $ magcluster clinker-help
 """
 
 app = typer.Typer(
@@ -47,6 +50,61 @@ app = typer.Typer(
 def version_callback(value: bool):
     if value:
         console.print(f"[bold cyan]MagCluster[/bold cyan] version [bold green]{__version__}[/bold green]")
+        raise typer.Exit()
+
+def show_clinker_help():
+    """Display Clinker options guide and native clinker --help output."""
+    import shutil
+    import subprocess
+    import sys
+
+    console.print("[bold cyan]=== Clinker Options Guide (for use with --clinker-opts) ===[/bold cyan]\n")
+
+    table = Table(title="Recommended Clinker Options for MagCluster", show_header=True)
+    table.add_column("Option", style="bold green")
+    table.add_column("Description", style="white")
+    table.add_column("Example Usage in MagCluster", style="cyan")
+
+    table.add_row(
+        "-na, --no_align",
+        "Do not align clusters (only plot gene tracks, fast & clean).",
+        '--clinker-opts "-na"'
+    )
+    table.add_row(
+        "-ufo, --use_file_order",
+        "Display clusters in the exact order of input files (no tree reordering).",
+        '--clinker-opts "-ufo"'
+    )
+    table.add_row(
+        "-mo, --matrix_out <file>",
+        "Save cluster similarity distance matrix to a file.",
+        '--clinker-opts "-mo matrix.tsv"'
+    )
+    table.add_row(
+        "-o, --output <file>",
+        "Save pairwise protein alignment details to a file.",
+        '--clinker-opts "-o alignments.tsv"'
+    )
+    table.add_row(
+        "-dc, --decimals <int>",
+        "Number of decimal places in alignment scores [default: 2].",
+        '--clinker-opts "-dc 4"'
+    )
+    console.print(table)
+    console.print("\n[bold dim]--- Full Clinker Native Help (clinker --help) ---[/bold dim]\n")
+
+    clinker_bin = shutil.which("clinker")
+    if clinker_bin:
+        subprocess.run([clinker_bin, "--help"])
+    else:
+        try:
+            subprocess.run([sys.executable, "-m", "clinker.main", "--help"])
+        except Exception:
+            console.print("[yellow]Could not invoke clinker binary directly.[/yellow]")
+
+def clinker_help_callback(value: bool):
+    if value:
+        show_clinker_help()
         raise typer.Exit()
 
 @app.callback()
@@ -133,7 +191,14 @@ def run_pipeline(
     clinker_opts: Optional[str] = typer.Option(
         None,
         "--clinker-opts",
-        help="Additional options passed directly to clinker (e.g. '--clinker-opts \"-na -ufo\"')."
+        help="Additional options passed directly to clinker (e.g. '--clinker-opts \"-na -ufo\"'). Tip: use '--clinker-help' to see available clinker options."
+    ),
+    clinker_help: Optional[bool] = typer.Option(
+        None,
+        "--clinker-help",
+        help="Display help and available options for Clinker, then exit.",
+        callback=clinker_help_callback,
+        is_eager=True,
     ),
     static_plot: bool = typer.Option(
         False,
@@ -322,6 +387,11 @@ def db_info():
             )
 
         console.print(table)
+
+@app.command(name="clinker-help")
+def clinker_help_cmd():
+    """Display help and available options for Clinker (for use with --clinker-opts)."""
+    show_clinker_help()
 
 if __name__ == "__main__":
     app()
