@@ -1,410 +1,299 @@
-# MagCluster <img src='docs/_static/logo_new.svg' align='right' width=250 />
-[![Anaconda-Server Badge](https://anaconda.org/bioconda/magcluster/badges/version.svg)](https://anaconda.org/bioconda/magcluster) [![Conda](https://img.shields.io/conda/dn/bioconda/magcluster?logo=anaconda&style=flat-square)](https://anaconda.org/bioconda/magcluster) [![PyPI](https://img.shields.io/pypi/v/magcluster?style=flat-square)](https://pypi.org/project/magcluster/) [![PyPI - Downloads](https://img.shields.io/pypi/dm/magcluster?logo=pypi&style=flat-square)](https://pypi.org/project/magcluster/)
-[![Anaconda-Server Badge](https://anaconda.org/bioconda/magcluster/badges/latest_release_date.svg)](https://anaconda.org/bioconda/magcluster) [![Anaconda-Server Badge](https://anaconda.org/bioconda/magcluster/badges/license.svg)](https://anaconda.org/bioconda/magcluster) 
+# MagCluster <img src='docs/_static/logo_new.svg' align='right' width=240 alt="MagCluster Logo" />
 
-MagCluster is a tool for identification, annotation and visualization of magnetosome gene clusters (MGCs) from genomes of magnetotactic bacteria (MTB). MagCluster leverages the physical cluster property of magnetosome genes on the chromosome to identify MGCs, which are otherwise difficult to accurately identify based solely on sequence identity.
+[![Python Version](https://img.shields.io/badge/python-3.10%20%7C%203.11%20%7C%203.12-blue?style=flat-square&logo=python)](https://www.python.org/)
+[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-green.svg?style=flat-square)](https://www.gnu.org/licenses/gpl-3.0)
+[![Version](https://img.shields.io/badge/version-1.0.0-orange?style=flat-square)](https://github.com/RunJiaJi/magcluster)
+[![Bioconda](https://img.shields.io/badge/install%20with-bioconda-brightgreen.svg?style=flat-square)](https://bioconda.github.io/recipes/magcluster/README.html)
 
-![MagCluster Pipeline](docs/_static/pipeline.png)
-**MagCluster workflow schematic** (a) Genomes are annotated using Prokka with a mandatory reference file of magnetosome proteins database via --proteins. (b) Putative MGC-containing contigs are retrieved by MGC_Screen module from GenBank files: (b1) contigs shorter than 2000 bp (by default) are discarded; (b2) magnetosome genes are identified through a text-mining strategy using the keyword ‘magnetosome’ in protein names, and contigs containing less than 3 (by default) magnetosome genes are discarded; (b3) putative MGCs are screened under a 10,000-bp (by default) window, and the minimum number of magnetosome genes (3 by default) in each window size is re-checked. (c) Putative MGCs are aligned and visualized using clinker.
+**MagCluster** is a high-performance, standalone bioinformatics tool for the **identification, annotation, classification, and interactive visualization** of Magnetosome Gene Clusters (MGCs) across magnetotactic bacteria (MTB) and environmental metagenomic datasets.
 
-## Contents
-- [Installation](#installation)
-  - [Conda](#conda)
-  - [Bioconda](#bioconda)
-  - [Pip](#pip)
-- [Usage](#usage)
-  - [Genomes annotation](#genomes-annotation)
-  - [MGCs screening](#MGCs-screening)
-  - [MGCs alignment and visualization](#MGCs-alignment-and-visualization)
-- [Tutorials](#tutorials)
-- [Citations](#Citations)
-- [Contact us](#contact-us)
 ---
 
-## Installation
-**MagCluster has been checked by bioconda on Linux and MacOS. It is currently not supported on Windows, try [WSL](https://docs.microsoft.com/en-us/windows/wsl/install-win10) instead if you are using Win10.**
-### Conda
-MagCluster can be installed through [Conda](https://www.anaconda.com/products/individual). We recommend creating a ***new environment*** for MagCluster to avoid dependency conflicts.
+## 🌟 What's New in MagCluster v1.0
+
+MagCluster v1.0 is a complete architectural redesign built for speed, accuracy, and ease of use:
+
+- ⚡ **One-Step End-to-End Execution (`magcluster run`)**: Replaces the old multi-step workflow (`prokka` &rarr; `mgc_screen` &rarr; `clinker`) with a single, streamlined command.
+- 🧬 **Prokka-Free Native Gene Calling**: Powered by [Pyrodigal](https://github.com/althonos/pyrodigal) (native C/Cython binding of Prodigal). No Perl dependencies, BLAST indexing, or external binaries required.
+- 🔍 **Curated 92-Profile HMM Library**: Replaces heuristic keyword matching with **92 profile-HMMs** built from 817 representative magnetosome proteins across 8 major families (`Mam`, `Mms`, `Mad`, `Man`, `Mae`, `Maq`, `Mca`, `Feo`), searched via [PyHMMER](https://github.com/althonos/pyhmmer) (~20&times; faster than standard HMMER3).
+- 📂 **Multi-Format Input Flexibility**: Supports pre-annotated GenBank (`.gbff`/`.gbk`), unannotated nucleotide contigs (`.fasta`/`.fna`), and protein FASTA (`.faa`), with transparent `.gz` decompression.
+- 💎 **Synteny Clustering & Mineral Crystal Typing**: Groups magnetosome genes based on chromosome synteny and intergenic distances, automatically predicting the mineral type (**Magnetite** $\text{Fe}_3\text{O}_4$ vs. **Greigite** $\text{Fe}_3\text{S}_4$).
+- 🎨 **Publication-Ready Interactive Visualization**: Generates an interactive web alignment (`MGC_align.html`) powered by Clinker with:
+  - Specific domain and sub-profile labels (e.g., `MamE_Cter`, `MamE_Nter`, `MamQ_greigite`, `MamO_domain`).
+  - Standard clean naming for full-length proteins without redundant suffixes (`MamE`, `MamO`, `Man5`).
+  - Unified family color palettes (`mam` red, `mms` yellow, `mad` green, `man` blue, etc.).
+  - Pass-through support for native Clinker options (`--clinker-opts`).
+- 📁 **Per-Genome Clean Deliverables**: Generates `{genome}_mgc_genes.tsv` and `{genome}_magnetosome_proteins.faa` per genome without mixed files.
+- 🛡️ **Overwrite Protection**: Safeguards existing non-empty output directories using `--force` (`-f`).
+
+---
+
+## 📋 Table of Contents
+
+- [Installation](#-installation)
+- [Quick Start](#-quick-start)
+- [Input Formats](#-input-formats)
+- [Commands & Options](#-commands--options)
+  - [`magcluster run`](#magcluster-run)
+  - [`magcluster db`](#magcluster-db)
+- [Output Files & Interpretation](#-output-files--interpretation)
+- [Clinker Customization Options](#-clinker-customization-options)
+- [Citation](#-citation)
+- [Contact & Support](#-contact--support)
+
+---
+
+## 📦 Installation
+
+### Option 1: Conda Environment (Recommended)
+
+Create a clean Conda environment with Python 3.10+:
 
 ```bash
-# Download yml file
-wget https://github.com/RunJiaJi/magcluster/releases/download/0.2.0/magcluster-0.2.0.yml
+# Create and activate environment
+conda create -n magcluster -c conda-forge -c bioconda python=3.12 pip
+conda activate magcluster
 
 # Install MagCluster
-conda env create -n magcluster --file magcluster-0.2.0.yml
-
-# Optional cleanup
-rm magcluster-0.2.0.yml
-
-# Activate magcluster environment
-conda activate magcluster
-
-# Check for the usage of MagCluster
-magcluster -h
+pip install git+https://github.com/RunJiaJi/magcluster.git
 ```
-### Bioconda
+
+Or install from source repository:
 ```bash
-# Create magcluster environment
-conda create -n magcluster
-
-# Activate magcluster environment
-conda activate magcluster
-
-# Install MagCluster through bioconda channel
-conda install -c conda-forge -c bioconda magcluster
-
-# Check for the usage of MagCluster
-magcluster -h
+git clone https://github.com/RunJiaJi/magcluster.git
+cd MagCluster
+pip install -e .
 ```
-\*cough\* *If conda takes too long on solving environment, Ctrl+C and try [mamba](https://github.com/mamba-org/mamba)* \*cough\*
-### Pip
-Alternatively, you can install MagCluster through pip in an existing environment. In this way, please make sure you have [Prokka](https://github.com/tseemann/prokka) installed.
+
+### Verification
+
+Check that MagCluster is installed correctly:
+```bash
+magcluster --version
+magcluster --help
+```
+
+---
+
+## 🚀 Quick Start
+
+### 1. Analyze an Annotated GenBank / GBFF Genome
 
 ```bash
-# Install MagCluster through pip
-pip install magcluster
-
-# Check for the usage of MagCluster
-magcluster -h
+magcluster run MSR-1_genome.gbff -o results/
 ```
 
-## Usage
+### 2. Analyze Unannotated FASTA Contigs (with Multi-threading)
 
-
-MagCluster comprises three modules for MGCs batch processing: 
-(i) genomes annotation with [Prokka](https://github.com/tseemann/prokka)
-(ii) MGCs screening with MGC_Screen
-(iii) MGCs visualization with [clinker](https://github.com/gamcil/clinker)
-
+MagCluster will automatically predict genes using Pyrodigal and analyze syntenic clusters across all CPU cores:
 
 ```bash
-usage: magcluster [options]
-
-Options:
-  {prokka,mgc_screen,clinker}
-    prokka              Genome annotation with Prokka
-    mgc_screen          Magnetosome gene cluster screening with MGC_Screen
-    clinker             Magnetosome gene cluster visualization with clinker
-```
-#### Genomes annotation
- **Multiple genome files** (.fasta/.fna/.fa/.FASTA) or **genome-containing folder(s)** are accepted as input for batch annotation. The general usage is the same as Prokka, but some parameters are set with default values for genomes batch annotation.
-
-To avoid confusion, the name of each genome is used as the output folder’s name (`--outdir GENOME_NAME`), output files’ prefix (`--prefix GENOME_NAME`), and GenBank file’s locus_tag (`--locustag GENOME_NAME`) by default. The `--compliant` parameter is also used by default to ensure standard GenBank files. 
-
- For MGCs annotation, MagCluster requires a [mandatory file](https://github.com/RunJiaJi/magcluster/releases/download/v1.0/Magnetosome_protein_data.fasta.faa) containing magnetosome protein sequences from representative MTB strains, which is attached to MagCluster and used by default.
-The value of `--evalue` is recommended to set to 1e-05.
-```bash
-example usage: 
-
-# MGCs annotation with multiple MTB genomes as input
-$ magcluster prokka --evalue 1e-05 MTB_genome1.fasta MTB_genome2.fasta MTB_genome3.fasta
-
-# MGCs annotation with MTB genomes containing folder as input
-$ magcluster prokka --evalue 1e-05 ./MTB_genomes_folder
+magcluster run contigs.fasta -o results/ -t 8
 ```
 
-#### MGCs screening
-MGC_Screen module retrieves MGC-containing contigs/scaffolds in GenBank files.
-
- As magnetosome genes are always physically clustered together in MTB genomes, MGC_Screen uses ‘magnetosome’ as the keyword searching for product names in GenBank files generated by above Prokka module and identifies putative MGCs based on the existence of multiple magnetosome genes in a given contig and a given length of screening window.
-
-Three parameters involved in MGCs screening, `--contiglength`, `--windowsize` and `--threshold` (see below). You can adjust them according to needs. 
-
-For each genome, MGC_Screen produces two files as output: a *GenBank file of putative MGCs containing contigs* and a *csv file summarizing all putative magnetosome protein sequences*.
-```bash
-
-usage: magcluster mgc_screen [-h] [-l CONTIGLENGTH] [-win WINDOWSIZE] [-th THRESHOLD] [-o OUTDIR] gbkfile [gbkfile ...]
-
-positional arguments:
-  gbkfile               .gbk/.gbf files to analyzed. Multiple files or files-containing folder is acceptable.
-
-optional arguments:
-  -h, --help            show this help message and exit
-  -l CONTIGLENGTH, --contiglength CONTIGLENGTH
-                        The minimum length of contigs to be considered (default '2,000 bp')
-  -w WINDOWSIZE, --windowsize WINDOWSIZE
-                        The length of MGCs screening window (default '10,000 bp')
-  -th THRESHOLD, --threshold THRESHOLD
-                        The minimum number of magnetosome genes in a given contig and a given length of screening window (default '3')
-  -o OUTDIR, --outdir OUTDIR
-                        Output folder (default 'mgc_screen')
-```
-```bash
-example usage: 
-
-# MGCs screening with multiple GenBank files as input
-$ magcluster mgc_screen --threshold 3 --contiglength 2000 --windowsize 10000 file1.gbk file2.gbk file3.gbk
-
-# MGCs screening with GenBank files containing folder as input
-$ magcluster mgc_screen --threshold 3 --contiglength 2000 --windowsize 10000 ./gbkfiles_folder
-```
-
-#### MGCs alignment and visualization
-We use [clinker](https://github.com/gamcil/clinker) for MGCs alignment and visualization. Note that the `-p` parameter is used by default to generate an interactive HTML web page where you can modify the MGCs figure and export it as a publication-quality file.
+### 3. Batch Process Multiple Genomes in a Directory
 
 ```bash
-example usage: 
-
-# MGCs screening with multiple GenBank files as input
-$ magcluster clinker -p MGC_align.html ./MGCs_files_folder/*.gbk
+magcluster run genomes_dir/ -o results/ --force
 ```
-**Attention: Although MagCluster is efficient, we strongly recommend that putative MGCs identified by MagCluster must be manually checked.**
 
-# Tutorials
-This is a simple example to help you quickly start MagCluster journey. We use the genomes of ***Candidatus* Magnetominusculus xianensis strain HCH-1** ([see the paper](https://www.pnas.org/content/pnas/114/9/2171.full.pdf)) and ***Magnetofaba australis* IT-1** ([see the paper](https://www.frontiersin.org/articles/10.3389/fmicb.2014.00072/full)) to show how it works.
+### 4. Analyze Protein FASTA Sequences (`.faa`)
 
-You can see the **video tutorial** here or follow the detailed tutorial below.
-
-<a href='https://youtu.be/4c_nbpHh1_4' target="_blank">
-  <img src='docs/_static/thumbnail_en.png' width='700' alt='Viedo' align='center'></img>
-</a>
-
-## Step 0: Prepare MagCluster
-To start your journey, make sure you have a working MagCluster in your system.
-
-For installation informations, please check [Installation](#installation).
-
-<font size=2 color="red">In [1]:</font>
+When providing protein sequences without genomic coordinates, MagCluster performs HMM annotation and exports per-genome TSV and FASTA files while cleanly bypassing syntenic cluster mapping:
 
 ```bash
-# Activate magcluster environment
-conda activate magcluster
-# Check MagCluster version
-magcluster -v
+magcluster run proteins.faa -o results/
 ```
-<font size=2 color="red">Out:</font>
 
-    magcluster 0.2.0
+---
 
-     
+## 📄 Input Formats
 
+MagCluster automatically detects input formats based on file extension and headers:
 
-## Step 1: Obtain data
-You can download genome data from NCBI.
-- HCH-1 [LNQR00000000](https://www.ncbi.nlm.nih.gov/Traces/wgs/LNQR01?display=download)
-- IT-1 [LVJN00000000](https://www.ncbi.nlm.nih.gov/Traces/wgs/LVJN01?display=download)
+| File Type | Supported Extensions | Processing Pipeline |
+| :--- | :--- | :--- |
+| **GenBank / GBFF** | `.gbk`, `.gbff`, `.gbf`, `.gb` (or `.gz`) | Extracts pre-annotated CDS coordinates and translations directly. |
+| **FASTA Contigs** | `.fasta`, `.fna`, `.fa`, `.fsa` (or `.gz`) | Predicts genes and translates proteins natively using Pyrodigal. |
+| **Protein FASTA** | `.faa`, `.pep` (or `.gz`) | Annotates magnetosome proteins via HMM; exports tabular and sequence results. |
 
-<font size=2 color="red">In [2]:</font>
+---
+
+## 🛠 Commands & Options
+
+### `magcluster run`
+
+Run the end-to-end MagCluster analysis pipeline:
 
 ```bash
-# Make a new folder
-mkdir magtest
-# Open magtest folder
-cd magtest
+magcluster run [OPTIONS] INPUTS...
 ```
 
-     
+#### Available Options
 
+| Option | Flag | Default | Description |
+| :--- | :--- | :--- | :--- |
+| `--outdir` | `-o` | `magcluster_results` | Output directory path. |
+| `--force` | `-f` | `False` | Overwrite existing files if the output directory already exists and is non-empty. |
+| `--threads` | `-t` | `0` | Number of CPU threads (0 = utilize all available cores). |
+| `--evalue` | `-e` | `1e-5` | HMM search E-value cutoff. |
+| `--score` | `-s` | `25.0` | Minimum bit score threshold for HMM hits. |
+| `--max-gap` | | `5` | Maximum intergenic non-MGC genes allowed between cluster hits. |
+| `--threshold` | `-th` | `3` | Minimum number of distinct magnetosome families required to define an MGC. |
+| `--flank` | `-un` | `3` | Number of flanking non-MGC genes to reserve on each side of the cluster. |
+| `--meta / --single` | | Auto | Force metagenomic mode vs single-genome mode in Pyrodigal. |
+| `--identity` | `-i` | `0.3` | Minimum sequence identity cutoff for Clinker alignments (0.0–1.0). |
+| `--clinker-opts` | | `None` | Pass custom arguments directly to Clinker (e.g. `--clinker-opts "-na -ufo"`). |
+| `--clinker-help` | | | Display available Clinker native options and usage guide, then exit. |
+| `--static-plot` | | `False` | Also render static publication-quality SVG figures via pyGenomeViz. |
+| `--no-plot` | | `False` | Skip Clinker alignment and visualization (faster headless execution). |
 
-<font size=2 color="red">In [3]:</font>
+---
+
+### `magcluster db`
+
+Inspect the built-in reference database, version, defining core families, and all 92 HMM profiles sorted by reference sequence count:
 
 ```bash
-# Download genomes from NCBI
-wget https://sra-download.ncbi.nlm.nih.gov/traces/wgs03/wgs_aux/LN/QR/LNQR01/LNQR01.1.fsa_nt.gz
-wget https://sra-download.ncbi.nlm.nih.gov/traces/wgs03/wgs_aux/LV/JN/LVJN01/LVJN01.1.fsa_nt.gz
+magcluster db
 ```
 
-<font size=2 color="red">Out:</font>
+*Example output:*
+```text
+=== MagCluster Reference Database Info ===
+Rules version: 1.0.0
+HMM database path: .../src/magcluster/data/hmms/magnetosome.hmm
+Total HMM profiles: 92
+Core defining families (10): MamA, MamB, MamE, MamI, MamK, MamL, MamM, MamO, MamP, MamQ
 
-    Will not apply HSTS. The HSTS database must be a regular and non-world-writable file.
-    --2021-09-12 22:21:45--  https://sra-download.ncbi.nlm.nih.gov/traces/wgs03/wgs_aux/LN/QR/LNQR01/LNQR01.1.fsa_nt.gz
-    Resolving sra-download.ncbi.nlm.nih.gov (sra-download.ncbi.nlm.nih.gov)... 130.14.250.25, 130.14.250.24, 130.14.250.27
-    Connecting to sra-download.ncbi.nlm.nih.gov (sra-download.ncbi.nlm.nih.gov)|130.14.250.25|:443... connected.
-    HTTP request sent, awaiting response... 200 OK
-    Length: 1119868 (1.1M) [application/octet-stream]
-    Saving to: ‘LNQR01.1.fsa_nt.gz’
-    
-    LNQR01.1.fsa_nt.gz  100%[===================>]   1.07M   742KB/s    in 1.5s    
-    
-    2021-09-12 22:21:48 (742 KB/s) - ‘LNQR01.1.fsa_nt.gz’ saved [1119868/1119868]
-    
-    Will not apply HSTS. The HSTS database must be a regular and non-world-writable file.
-    --2021-09-12 22:21:48--  https://sra-download.ncbi.nlm.nih.gov/traces/wgs03/wgs_aux/LV/JN/LVJN01/LVJN01.1.fsa_nt.gz
-    Resolving sra-download.ncbi.nlm.nih.gov (sra-download.ncbi.nlm.nih.gov)... 165.112.9.235, 165.112.9.231, 165.112.9.232
-    Connecting to sra-download.ncbi.nlm.nih.gov (sra-download.ncbi.nlm.nih.gov)|165.112.9.235|:443... connected.
-    HTTP request sent, awaiting response... 200 OK
-    Length: 1516495 (1.4M) [application/octet-stream]
-    Saving to: ‘LVJN01.1.fsa_nt.gz’
-    
-    LVJN01.1.fsa_nt.gz  100%[===================>]   1.45M   370KB/s    in 4.0s    
-    
-    2021-09-12 22:21:53 (370 KB/s) - ‘LVJN01.1.fsa_nt.gz’ saved [1516495/1516495]
-    
-     
+         Reference Magnetosome HMM Profiles (92)          
+┏━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━┳━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━┓
+┃ Profile            ┃ Protein Family ┃ Ref Seqs ┃ Median length (aa) ┃
+┡━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━╇━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━┩
+│ MamI               │ MamI           │       33 │                 76 │
+│ MamK               │ MamK           │       31 │                347 │
+│ MamQ               │ MamQ           │       31 │                270 │
+│ MamA               │ MamA           │       30 │                217 │
+│ MamB               │ MamB           │       27 │                296 │
+│ MamE_full          │ MamE           │       27 │                728 │
+│ MamM               │ MamM           │       25 │                307 │
+│ FeoB               │ FeoB           │       24 │                699 │
+│ MamP               │ MamP           │       24 │                305 │
+│ ...                │ ...            │      ... │                ... │
+└────────────────────┴────────────────┴──────────┴────────────────────┘
+```
 
-<font size=2 color="red">In [4]:</font>
+---
 
+## 📊 Output Files & Interpretation
+
+After running `magcluster run <inputs> -o results/`, the output folder contains:
+
+```text
+results/
+├── {genome_name}_mgc_genes.tsv              # Comprehensive tabular annotations per genome
+├── {genome_name}_magnetosome_proteins.faa   # Extracted magnetosome protein sequences
+├── MGC_align.html                           # Interactive Clinker alignment & figure builder
+├── clusters_gbk/                            # Sliced GenBank files for each cluster
+│   └── {cluster_id}.gbk
+└── figures/                                 # (Optional) SVG figures if --static-plot is set
+    └── {cluster_id}.svg
+```
+
+### 1. Tabular Report (`{genome_name}_mgc_genes.tsv`)
+
+A tab-delimited file documenting every magnetosome hit detected in the genome:
+
+| Column | Description |
+| :--- | :--- |
+| `cluster_id` | MGC cluster identifier (or `unclustered` for lone magnetosome hits outside clusters). |
+| `genome` | Genome prefix identifier. |
+| `gene_id` | Locus tag or predicted gene ID. |
+| `contig` | Contig or scaffold identifier. |
+| `start` | 1-based start coordinate. |
+| `end` | 1-based end coordinate. |
+| `strand` | Strand orientation (`+` or `-`). |
+| `profile` | Best matching HMM profile (e.g., `MamE_full`, `MamE_Cter`, `MamQ_greigite`). |
+| `parent_family` | Standardized parent protein family (e.g., `MamE`, `MamQ`). |
+| `role` | Functional role classification (`core`, `accessory`, or `iron_context`). |
+| `score` | HMM bit score. |
+| `evalue` | HMM search E-value. |
+
+### 2. Protein FASTA (`{genome_name}_magnetosome_proteins.faa`)
+
+Amino acid sequences of all identified magnetosome proteins with structured FASTA headers:
+```text
+>MGMSRV2_RS11765 [MSR-1_genome] cluster=MSR-1_genome_MGC family=MamE profile=MamE_full score=1000.4 evalue=1.97e-301
+MSERRPVGRTL...
+```
+
+### 3. Interactive Web Visualization (`MGC_align.html`)
+
+Open `MGC_align.html` in any modern web browser to view, explore, and customize your gene cluster alignments:
+
+- **Specific Profile Labels**: Arrows display specific domain or subtype annotations (e.g., `MamE_Cter`, `MamE_Nter`, `MamE_Cter_greigite`, `MamQ_greigite`, `MamO_domain`), while standard full-length proteins are cleanly labeled as `MamE`, `MamO`, `Man5`.
+- **Classic Color Palette**:
+  - <span style="color:#EA4335">■</span> **`mam`** (`#EA4335`): Core/classical Mam proteins (Google Red)
+  - <span style="color:#FBBC05">■</span> **`mms`** (`#FBBC05`): Mms proteins (Google Yellow)
+  - <span style="color:#34A853">■</span> **`mad`** (`#34A853`): Desulfobacterota Mad proteins (Google Green)
+  - <span style="color:#4385F4">■</span> **`man`** (`#4385F4`): Nitrospirota Man proteins (Google Blue)
+  - <span style="color:#FFE066">■</span> **`feo`** (`#FFE066`): Iron transport proteins (Gold Yellow)
+  - <span style="color:#8338EC">■</span> **`mae`** (`#8338EC`): Environmental novel Mae proteins (Purple)
+  - <span style="color:#06D6A0">■</span> **`maq`** (`#06D6A0`): Novel Maq proteins (Teal)
+  - <span style="color:#FF006E">■</span> **`mca`** (`#FF006E`): Novel Mca proteins (Pink)
+  - <span style="color:#BDBDBD">■</span> **`Other`** (`#BDBDBD`): Flanking non-magnetosome genes (Muted grey)
+- **Vector Export**: Adjust spacing, gene labels, and alignment links in real-time, then export publication-ready **SVG** figures directly from the browser.
+
+---
+
+## 💡 Clinker Customization Options
+
+You can pass any native Clinker option directly to `magcluster run` using `--clinker-opts`:
 
 ```bash
-# Check the genome files
-ls
+# Skip pairwise sequence alignment for fast rendering:
+magcluster run *.gbff -o results/ --clinker-opts "-na"
+
+# Retain original file order without automatic clustering reordering:
+magcluster run *.gbff -o results/ --clinker-opts "-ufo"
+
+# Combine multiple options (skip alignments + keep file order):
+magcluster run *.gbff -o results/ --clinker-opts "-na -ufo"
 ```
-<font size=2 color="red">Out:</font>
 
-    LNQR01.1.fsa_nt.gz LVJN01.1.fsa_nt.gz
-     
-
-<font size=2 color="red">In [5]:</font>
-
-
+To view all supported Clinker options directly in your terminal, run:
 ```bash
-# Unzip files
-gunzip *.gz
-ls
-```
-<font size=2 color="red">Out:</font>
-
-    LNQR01.1.fsa_nt LVJN01.1.fsa_nt
-     
-
-
-<font size=2 color="red">In [6]:</font>
-
-```bash
-# Rename the genomes
-mv LNQR01.1.fsa_nt HCH-1.fasta
-mv LVJN01.1.fsa_nt IT-1.fasta
-ls
-```
-<font size=2 color="red">Out:</font>
-
-    HCH-1.fasta IT-1.fasta
-     
-
-
-
-## Step 2: Genomes annotation
-We recommand the `evalue` to be set as 1e-05. Note that the `--outdir`, `--prefix`, `--locustag` and `--compliant` parameters are used by default. The reference MGCs file that we provide is also used with `--proteins`.
-
-This step should take a while and you can check the log file for details.
-
-<font size=2 color="red">In [7]:</font>
-
-```bash
-magcluster prokka --evalue 1e-05 ./*.fasta 
+magcluster run --clinker-help
 ```
 
-    
-     
+---
 
+## 🔬 Core Magnetosome Defining Families
 
-<font size=2 color="red">In [8]:</font>
+MagCluster defines an authentic Magnetosome Gene Cluster based on synteny and the presence of magnetosome protein families. The 10 core defining families are:
 
-```bash
-# Move `.gbk` files to a new folder
-mkdir gbkfolder
-mv -v */*.gbk gbkfolder/
-```
-<font size=2 color="red">Out:</font>
+$$\text{MamA, MamB, MamE, MamI, MamK, MamL, MamM, MamO, MamP, MamQ}$$
 
-    renamed 'HCH-1_annotation/HCH-1.gbk' -> 'gbkfolder/HCH-1.gbk'
-    renamed 'IT-1_annotation/IT-1.gbk' -> 'gbkfolder/IT-1.gbk'
-     
+---
 
+## 📖 Citation
 
+If you use MagCluster in your research, please cite:
 
-## Step 3: MGCs screening
-Now that we have `HCH-1.gbk` and `IT-1.gbk`, let's start MGCs screening!
+> Runjia Ji, Wensi Zhang, Yongxin Pan, and Wei Lin. (2022).  
+> **MagCluster: a Tool for Identification, Annotation, and Visualization of Magnetosome Gene Clusters.**  
+> *Microbiology Resource Announcements*, 11:e01031-21.  
+> DOI: [10.1128/mra.01031-21](https://doi.org/10.1128/mra.01031-21)
 
-<font size=2 color="red">In [9]:</font>
+Please also acknowledge the core dependencies powering MagCluster v1.0:
+- **Pyrodigal**: Larralde (2022). *Journal of Open Source Software*, 7(72), 4296. [doi:10.21105/joss.04296](https://doi.org/10.21105/joss.04296)
+- **PyHMMER**: Larralde (2023). *Bioinformatics*, 39(5), btad211. [doi:10.1093/bioinformatics/btad211](https://doi.org/10.1093/bioinformatics/btad211)
+- **Clinker**: Gilchrist & Chooi (2021). *Bioinformatics*, 37(16), 2473–2475. [doi:10.1093/bioinformatics/btab007](https://doi.org/10.1093/bioinformatics/btab007)
 
-```bash
-magcluster mgc_screen gbkfolder -o mgcfolder
-```
-<font size=2 color="red">Out:</font>
+---
 
-    [22:30:40] INFO - Starting mgc_screen...
-    [22:30:40] INFO - Your file is HCH-1.gbk
-    [22:30:40] INFO - The minimum length of contigs to be considered is 2000
-    [22:30:40] INFO - The window size for MGCs screening is 10000
-    [22:30:40] INFO - The threshold of magnetosome genes in a given contig and a given length of screening window is 3
-    [22:30:40] INFO - The output directory is /mnt/c/Users/edith/Desktop/test/magtest/mgcfolder/
-    [22:30:40] INFO - Opening your file...
-    [22:30:40] INFO - Starting magnetosome genes screening...
-    [22:30:40] INFO - Magnetosome gene cluster containing contigs screening completed!
-    [22:30:40] INFO - Creating output folder: /mnt/c/Users/edith/Desktop/test/magtest/mgcfolder/
-    [22:30:40] INFO - Writing mgc.gbk file...
-    [22:30:40] INFO - Writing magpro.csv file(s)...
-    [22:30:40] INFO - Starting mgc_screen...
-    [22:30:40] INFO - Your file is IT-1.gbk
-    [22:30:40] INFO - The minimum length of contigs to be considered is 2000
-    [22:30:40] INFO - The maxmum length of contigs to be considered is 10000
-    [22:30:40] INFO - The threshold of magnetosome genes in one contig is 3
-    [22:30:40] INFO - The output directory is /mnt/c/Users/edith/Desktop/test/magtest/mgcfolder/
-    [22:30:40] INFO - Opening your file...
-    [22:30:40] INFO - Starting magnetosome genes screening...
-    [22:30:41] INFO - Magnetosome gene cluster containing contigs screening completed!
-    [22:30:41] INFO - /mnt/c/Users/edith/Desktop/test/magtest/mgcfolder/ folder already exists! Skip to next step
-    [22:30:41] INFO - Writing mgc.gbk file...
-    [22:30:41] INFO - Writing magpro.csv file(s)...
-    [22:30:41] INFO - Done! Thank you!
-     
+## 📬 Contact & Support
 
-
-<font size=2 color="red">In [10]:</font>
-
-```bash
-ls mgcfolder
-```
-<font size=2 color="red">Out:</font>
-
-    HCH-1_magpro.csv HCH-1_mgc.gbk IT-1_magpro.csv IT-1_mgc.gbk
-     
-
-
-
-Good job! Now you can open the `.csv` files to check the magnetosome protein sequences.
-![HCH-1_magpro.csv](docs/_static/HCH-1.PNG)
-
-## Step 4: MGCs visualization
-Final step! We are almost there! 
-
-Use clinker to generate a MGCs figure. We recommand to use the `-o` parameter to generate a MGCs alignment file where you can browse the homologous gene similarities among genomes.
-
-Be Careful! If there is complete genome(s) in your dataset, the alignment process will take unreasonable time. In that case, we recommand you skip the alignment process with `-na` (no alignment) parameter.
-
-<font size=2 color="red">In [11]:</font>
-
-```bash
-magcluster clinker -o mgc_align.txt -p mgc_align.html mgcfolder/*.gbk
-```
-<font size=2 color="red">Out:</font>
-
-    [22:31:00] INFO - Starting clinker
-    [22:31:00] INFO - Parsing files:
-    [22:31:00] INFO -   HCH-1_mgc.gbk
-    [22:31:00] INFO -   IT-1_mgc.gbk
-    [22:31:00] INFO - Starting cluster alignments
-    [22:31:00] INFO - HCH-1_mgc vs IT-1_mgc
-    [22:31:16] INFO - Generating results summary...
-    [22:31:16] INFO - Writing alignments to: mgc_align.txt
-    [22:31:16] INFO - Building clustermap.js visualisation
-    [22:31:16] INFO - Writing to: mgc_align.html
-    [22:31:17] INFO - Done!
-
-
-Congratulations! Now you should have an interactive html opened in your browser. You can adjust the figure as you like and export it as a `.svg` file.
-
-![MGCs.html](docs/_static/MGCs_figure.PNG)
-
-## Citations
-If you found MagCluster useful to your research, please cite us:
-
-Runjia Ji, Wensi Zhang, Yongxin Pan, and Wei Lin. 2022. **MagCluster: a Tool for Identification, Annotation, and Visualization of Magnetosome Gene Clusters.** *Microbiology Resource Announcements*. 11:e01031-21.
- [doi:10.1128/mra.01031-21](https://journals.asm.org/doi/10.1128/mra.01031-21)
-
-
-MagCluster uses [Prokka](https://github.com/tseemann/prokka) for genomes annotation and [clinker](https://github.com/gamcil/clinker) for gene clusters comparison and visualization. Please include the following citations when using MagCluster:
-
-Torsten Seemann. 2014. **Prokka: rapid prokaryotic genome annotation.** *Bioinformatics*. 30:2068-2069. [doi:10.1093/bioinformatics/btu153](https://doi.org/10.1093/bioinformatics/btu153)
-
-Cameron L M Gilchrist, Yit-Heng Chooi. 2020. **clinker & clustermap.js: Automatic generation of gene cluster comparison figures.** *Bioinformatics*. 37:2473–2475. [doi:10.1101/2020.11.08.370650](https://doi.org/10.1093/bioinformatics/btab007)
-
-
-
-
-
-## Contact us
-If you have any questions or suggestions, feel free to contact us.
-
-jirunjia@gmail.com or weilin@mail.iggcas.ac.cn
+For questions, issues, or feature requests:
+- **GitHub Issues**: [Open an issue on GitHub](https://github.com/RunJiaJi/magcluster/issues)
+- **Email**: Runjia Ji (`jirunjia@gmail.com`) or Wei Lin (`weilin@mail.iggcas.ac.cn`)
