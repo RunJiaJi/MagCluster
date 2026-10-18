@@ -14,21 +14,10 @@ def write_cluster_tables(
     hits: Dict[str, MagnetosomeHit],
     out_dir: Path
 ):
-    """Write standardized TSV reports for clusters and genes."""
+    """Write standardized TSV reports for identified magnetosome genes."""
     out_dir.mkdir(parents=True, exist_ok=True)
 
-    # 1. Clusters table
-    clusters_tsv = out_dir / "mgc_clusters.tsv"
-    with open(clusters_tsv, "w", encoding="utf-8") as f:
-        f.write("cluster_id\tgenome\tcontig\tstart\tend\tspan_bp\tcore_span_bp\tmineral_type\tn_families\tmagnetosome_families\tflags\n")
-        for c in clusters:
-            s = scores[c.cluster_id]
-            f.write(
-                f"{c.cluster_id}\t{c.genome_name}\t{c.contig_id}\t{c.start_bp}\t{c.end_bp}\t{c.span_bp}\t"
-                f"{c.core_span_bp}\t{s.mineral_type}\t{s.n_mag_families}\t{','.join(s.magnetosome_families_found)}\t{','.join(s.flags)}\n"
-            )
-
-    # 2. Genes table
+    # Genes table: mgc_genes.tsv
     genes_tsv = out_dir / "mgc_genes.tsv"
     with open(genes_tsv, "w", encoding="utf-8") as f:
         f.write("cluster_id\tgenome\tgene_id\tcontig\tstart\tend\tstrand\tprofile\tparent_family\trole\tscore\tevalue\n")
@@ -40,26 +29,6 @@ def write_cluster_tables(
                         f"{c.cluster_id}\t{c.genome_name}\t{g.gene_id}\t{c.contig_id}\t{g.start}\t{g.end}\t"
                         f"{g.strand}\t{h.profile}\t{h.parent_family}\t{h.role}\t{h.score:.1f}\t{h.evalue:.2e}\n"
                     )
-
-    # 3. Presence/Absence Matrix
-    matrix_tsv = out_dir / "presence_absence.tsv"
-    with open(matrix_tsv, "w", encoding="utf-8") as f:
-        f.write("cluster_id\tgenome\t" + "\t".join(CORE_FAMILIES) + "\n")
-        for c in clusters:
-            s = scores[c.cluster_id]
-            vals = [("1" if fam in s.magnetosome_families_found else "0") for fam in CORE_FAMILIES]
-            f.write(f"{c.cluster_id}\t{c.genome_name}\t" + "\t".join(vals) + "\n")
-
-    # 4. Summary table (one line per genome)
-    summary_tsv = out_dir / "summary.tsv"
-    genomes = sorted(list({c.genome_name for c in clusters}))
-    with open(summary_tsv, "w", encoding="utf-8") as f:
-        f.write("genome\tn_clusters\tmineral_types\n")
-        for g in genomes:
-            g_clusters = [c for c in clusters if c.genome_name == g]
-            g_scores = [scores[c.cluster_id] for c in g_clusters]
-            minerals = ",".join(sorted(set(s.mineral_type for s in g_scores)))
-            f.write(f"{g}\t{len(g_clusters)}\t{minerals}\n")
 
 def export_combined_magnetosome_fasta(
     clusters: List[MGCCluster],

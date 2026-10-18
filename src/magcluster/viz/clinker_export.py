@@ -1,150 +1,244 @@
 """Clinker-compatible GenBank slice exporter and automated visualization runner."""
 
+import json
+import re
 import subprocess
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Optional
 from Bio import SeqIO
 from Bio.Seq import Seq
 from Bio.SeqFeature import FeatureLocation, SeqFeature
 from Bio.SeqRecord import SeqRecord
 from ..core.cluster import MGCCluster
+from ..core.predict import PredictedGene
 from ..core.search import MagnetosomeHit
 from ..utils.logger import log
 
+# Classic MagCluster v0.2.12 color palette extended for novel families
+FAMILY_COLOR_PALETTE = {
+    "mam": "#EA4335",   # Classic MagCluster Red (v0.2.12)
+    "mms": "#FBBC05",   # Classic MagCluster Yellow (v0.2.12)
+    "mad": "#34A853",   # Classic MagCluster Green (v0.2.12)
+    "man": "#4385F4",   # Classic MagCluster Blue (v0.2.12)
+    "feo": "#FFE066",   # Iron metabolism / transport (v0.2.12)
+    "mae": "#8338EC",   # Vibrant Purple
+    "maq": "#06D6A0",   # Vibrant Teal
+    "mca": "#FF006E",   # Vibrant Magenta / Pink
+    "Other": "#BDBDBD",  # Muted grey for flanking/intervening non-MGC genes
+}
+
+def get_family_class(gene_name: str, hit: Optional[MagnetosomeHit] = None) -> str:
+    """Classify magnetosome gene into parent prefix group (mam, mms, mad, man, mae, maq, mca, feo, Other)."""
+    if hit:
+        if hit.role == "iron_context" or hit.parent_family.startswith("Feo"):
+            return "feo"
+        fam_lower = hit.parent_family.lower()
+        for prefix in ["mam", "mms", "mad", "man", "mae", "maq", "mca"]:
+            if fam_lower.startswith(prefix):
+                return prefix
+        return "Other"
+
+    gn = gene_name.lower()
+    for prefix in ["mam", "mms", "mad", "man", "mae", "maq", "mca", "feo"]:
+        if prefix in gn:
+            return prefix
+    if "iron" in gn:
+        return "feo"
+    return "Other"
+
 def export_cluster_to_genbank(
     cluster: MGCCluster,
-    contig_record: Optional[SeqRecord],
+    contigs_dict: Dict[str, SeqRecord],
     hits: Dict[str, MagnetosomeHit],
     out_path: Path
 ):
-    """Export a sliced GenBank file for a cluster."""
-    offset = cluster.start_bp - 1  # 0-based slice start
-    end_idx = cluster.end_bp       # 0-based slice end (exclusive)
-
-    if contig_record and len(contig_record.seq) >= end_idx:
-        sub_seq = contig_record.seq[offset:end_idx]
-    else:
-        # Fallback if no nucleotide contig is available: approximate sequence with Ns
-        span_len = cluster.span_bp
-        sub_seq = Seq("N" * span_len)
-
-    new_rec = SeqRecord(
-        sub_seq,
-        id=cluster.cluster_id,
-        name=cluster.cluster_id[:16],
-        description=f"Magnetosome Gene Cluster from {cluster.genome_name} ({cluster.contig_id}:{cluster.start_bp}-{cluster.end_bp})"
-    )
-    new_rec.annotations["molecule_type"] = "DNA"
-    new_rec.annotations["topology"] = "linear"
-
-    features = []
-    # Add source feature
-    source_feat = SeqFeature(
-        FeatureLocation(0, len(sub_seq)),
-        type="source",
-        qualifiers={"organism": [cluster.genome_name]}
-    )
-    features.append(source_feat)
-
-    # Add CDS features
+    """Export sliced GenBank file for an MGC cluster (supporting single or multi-contig)."""
+    # Group genes in this cluster by contig
+    genes_by_ctg: Dict[str, List[PredictedGene]] = {}
     for g in cluster.all_genes:
-        feat_start = max(0, g.start - 1 - offset)
-        feat_end = min(len(sub_seq), g.end - offset)
-        feat_strand = g.strand
+        genes_by_ctg.setdefault(g.contig_id, []).append(g)
 
-        if feat_end <= feat_start:
-            continue
+    records_to_write = []
 
-        loc = FeatureLocation(feat_start, feat_end, strand=feat_strand)
+    for ctg_id, ctg_genes in genes_by_ctg.items():
+        ctg_genes.sort(key=lambda x: x.start)
+        offset = ctg_genes[0].start - 1  # 0-based slice start
+        end_idx = ctg_genes[-1].end      # 0-based slice end (exclusive)
 
-        qualifiers = {
-            "locus_tag": [g.gene_id],
-            "translation": [g.translation]
-        }
-
-        if g.gene_id in hits:
-            h = hits[g.gene_id]
-            qualifiers["product"] = [f"Magnetosome protein {h.parent_family}"]
-            qualifiers["gene"] = [h.parent_family]
-            qualifiers["note"] = [f"Profile={h.profile}; Score={h.score:.1f}; Evalue={h.evalue:.2e}"]
+        ctg_rec = contigs_dict.get(ctg_id)
+        if ctg_rec and len(ctg_rec.seq) >= end_idx:
+            sub_seq = ctg_rec.seq[offset:end_idx]
         else:
-            qualifiers["product"] = [g.product or "hypothetical protein"]
+            span_len = max(1, end_idx - offset)
+            sub_seq = Seq("N" * span_len)
 
-        feat = SeqFeature(loc, type="CDS", qualifiers=qualifiers)
-        features.append(feat)
+        rec_name = cluster.cluster_id[:16]
+        new_rec = SeqRecord(
+            sub_seq,
+            id=cluster.cluster_id,
+            name=rec_name,
+            description=f"Magnetosome Gene Cluster from {cluster.genome_name} ({ctg_id}:{offset+1}-{end_idx})"
+        )
+        new_rec.annotations["molecule_type"] = "DNA"
+        new_rec.annotations["topology"] = "linear"
 
-    new_rec.features = features
+        features = []
+        # Source feature
+        features.append(SeqFeature(
+            FeatureLocation(0, len(sub_seq)),
+            type="source",
+            qualifiers={"organism": [cluster.genome_name]}
+        ))
+
+        # CDS features
+        for g in ctg_genes:
+            feat_start = max(0, g.start - 1 - offset)
+            feat_end = min(len(sub_seq), g.end - offset)
+            feat_strand = g.strand
+            if feat_end <= feat_start:
+                continue
+
+            loc = FeatureLocation(feat_start, feat_end, strand=feat_strand)
+            qualifiers = {
+                "locus_tag": [g.gene_id],
+                "translation": [g.translation]
+            }
+
+            if g.gene_id in hits:
+                h = hits[g.gene_id]
+                protein_name = h.parent_family
+                qualifiers["product"] = [protein_name]
+                qualifiers["gene"] = [protein_name]
+                qualifiers["label"] = [protein_name]
+                qualifiers["protein"] = [protein_name]
+                qualifiers["note"] = [f"Profile={h.profile}; Score={h.score:.1f}; Evalue={h.evalue:.2e}"]
+            else:
+                qualifiers["product"] = [g.product or "hypothetical protein"]
+                qualifiers["gene"] = [""]
+                qualifiers["label"] = [""]
+
+            features.append(SeqFeature(loc, type="CDS", qualifiers=qualifiers))
+
+        new_rec.features = features
+        records_to_write.append(new_rec)
+
     out_path.parent.mkdir(parents=True, exist_ok=True)
-    SeqIO.write(new_rec, str(out_path), "genbank")
+    SeqIO.write(records_to_write, str(out_path), "genbank")
 
 def export_all_clusters_for_clinker(
     clusters: List[MGCCluster],
     contigs_lookup: Dict[str, Dict[str, SeqRecord]],
     hits: Dict[str, MagnetosomeHit],
     out_dir: Path
-) -> Tuple[List[Path], Path, Path]:
-    """Export sliced GenBank files, clinker -gf gene_functions.csv, and -cm colour_map.csv."""
+) -> List[Path]:
+    """Export sliced GenBank files for clinker visualization without creating extra CSV tables."""
     gbk_dir = out_dir / "clusters_gbk"
     gbk_dir.mkdir(parents=True, exist_ok=True)
+    for old_gbk in gbk_dir.glob("*.gbk"):
+        old_gbk.unlink()
 
-    gf_lines = []
-    colour_map = {}
     gbk_files = []
-
     for c in clusters:
         gbk_file = gbk_dir / f"{c.cluster_id}.gbk"
-        ctg_rec = contigs_lookup.get(c.genome_name, {}).get(c.contig_id)
-        export_cluster_to_genbank(c, ctg_rec, hits, gbk_file)
+        genome_contigs = contigs_lookup.get(c.genome_name, {})
+        export_cluster_to_genbank(c, genome_contigs, hits, gbk_file)
         gbk_files.append(gbk_file)
 
-        for g in c.all_genes:
-            if g.gene_id in hits:
-                h = hits[g.gene_id]
-                func = h.parent_family
-                color = h.color
-            else:
-                func = "Other"
-                color = "#BDBDBD"
+    return gbk_files
 
-            gf_lines.append(f"{g.gene_id},{func}\n")
-            colour_map[func] = color
+def customize_clinker_html(plot_html: Path, hits: Dict[str, MagnetosomeHit]) -> bool:
+    """Post-process Clinker HTML to apply v0.2.12 family colors and protein name labels."""
+    if not plot_html.exists():
+        return False
 
-    # 1. gene_functions.csv (gene,function)
-    gf_file = out_dir / "clinker_gene_functions.csv"
-    with open(gf_file, "w", encoding="utf-8") as f:
-        f.writelines(gf_lines)
+    with open(plot_html, "r", encoding="utf-8") as f:
+        html = f.read()
 
-    # 2. colour_map.csv (function,colour)
-    cm_file = out_dir / "clinker_colour_map.csv"
-    with open(cm_file, "w", encoding="utf-8") as f:
-        for func, color in colour_map.items():
-            f.write(f"{func},{color}\n")
+    m = re.search(r"<script>const data=(.*?);function serialise", html)
+    if not m:
+        log.warning("Could not locate Clinker data JSON in HTML; skipped custom coloring.")
+        return False
 
-    return gbk_files, gf_file, cm_file
+    try:
+        data = json.loads(m.group(1))
+    except Exception as e:
+        log.warning(f"Failed to parse Clinker data JSON: {e}")
+        return False
+
+    # Initialize groups
+    group_dict = {
+        cls_name: {
+            "uid": f"group_{cls_name}",
+            "label": cls_name,
+            "genes": [],
+            "hidden": False,
+            "colour": color
+        }
+        for cls_name, color in FAMILY_COLOR_PALETTE.items()
+    }
+
+    # Iterate over all genes in every cluster locus
+    for cluster in data.get("clusters", []):
+        for locus in cluster.get("loci", []):
+            for gene in locus.get("genes", []):
+                names = gene.get("names", {})
+                lt = names.get("locus_tag")
+                gn = names.get("gene")
+
+                hit = None
+                if lt and lt in hits:
+                    hit = hits[lt]
+                elif gn and gn in hits:
+                    hit = hits[gn]
+
+                if hit:
+                    protein_name = hit.parent_family
+                    gene["label"] = protein_name
+                    gene.setdefault("names", {})["protein"] = protein_name
+                    gene["names"]["gene"] = protein_name
+                    gene["names"]["product"] = protein_name
+
+                    f_class = get_family_class(protein_name, hit)
+                    group_dict[f_class]["genes"].append(gene["uid"])
+                else:
+                    # Non-magnetosome gene: blank label to prevent arrow clutter
+                    gene["label"] = ""
+                    group_dict["Other"]["genes"].append(gene["uid"])
+
+    # Retain groups that have at least one gene
+    data["groups"] = [
+        g for g in group_dict.values()
+        if len(g["genes"]) > 0
+    ]
+
+    new_html = html[:m.start(1)] + json.dumps(data) + html[m.end(1):]
+    with open(plot_html, "w", encoding="utf-8") as f:
+        f.write(new_html)
+
+    return True
 
 def run_clinker_visualization(
     gbk_files: List[Path],
-    gene_functions_csv: Path,
-    colour_map_csv: Path,
     plot_html: Path,
+    hits: Dict[str, MagnetosomeHit],
     jobs: int = 0,
     identity: float = 0.3
 ) -> bool:
-    """Run Clinker to generate publication-quality interactive HTML comparison figure."""
+    """Run Clinker to generate comparison figure, then post-process colors and labels."""
     if not gbk_files:
         return False
 
     cmd = [
         "clinker",
         *[str(p) for p in gbk_files],
-        "-gf", str(gene_functions_csv),
-        "-cm", str(colour_map_csv),
         "-p", str(plot_html),
         "-j", str(jobs),
         "-i", str(identity)
     ]
     try:
-        res = subprocess.run(cmd, capture_output=True, text=True, check=True)
+        subprocess.run(cmd, capture_output=True, text=True, check=True)
+        # Apply custom coloring & protein labels
+        customize_clinker_html(plot_html, hits)
         return True
     except FileNotFoundError:
         log.warning("clinker is not installed on PATH; skipped interactive HTML figure generation.")

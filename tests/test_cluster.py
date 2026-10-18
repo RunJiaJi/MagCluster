@@ -39,7 +39,7 @@ def test_cluster_engine_synteny():
 
     assert len(clusters) == 1
     c = clusters[0]
-    assert c.cluster_id == "test_sp_MGC1"
+    assert c.cluster_id == "test_sp_MGC"
     assert len(c.distinct_magnetosome_families) == 4
     assert "MamA" in c.distinct_magnetosome_families
     assert "MamK" in c.distinct_magnetosome_families

@@ -24,15 +24,15 @@ def test_msr1_end_to_end():
     # 3. Cluster
     clusterer = ClusterEngine()
     clusters = clusterer.cluster_genome("MSR-1", parsed.genes, hits)
-    # With min_distinct_families=3, MSR-1 yields 4 operons: mamXY, mamMRV, mamAB, and mamGFDC-mms6
-    assert len(clusters) == 4
+    # Each genome yields exactly one consolidated MGC
+    assert len(clusters) == 1
 
-    # The main mamAB cluster
-    c_main = [c for c in clusters if len(c.distinct_magnetosome_families) >= 10][0]
-    assert c_main.span_bp > 20_000
-    assert len(c_main.distinct_magnetosome_families) >= 10
+    c = clusters[0]
+    assert c.cluster_id == "MSR-1_MGC"
+    assert c.span_bp > 50_000
+    assert len(c.distinct_magnetosome_families) >= 20
 
     # 4. Score
-    score = ClusterScorer.score_cluster(c_main)
+    score = ClusterScorer.score_cluster(c)
     assert score.mineral_type == "Magnetite"
-    assert score.n_mag_families >= 10
+    assert score.n_mag_families >= 20

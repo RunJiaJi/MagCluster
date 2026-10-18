@@ -60,7 +60,7 @@ class ClusterEngine:
         genes: List[PredictedGene],
         hits: Dict[str, MagnetosomeHit]
     ) -> List[MGCCluster]:
-        """Group magnetosome hits in a genome into clusters."""
+        """Group magnetosome hits in a genome into exactly one consolidated MGC per genome."""
         if not genes or not hits:
             return []
 
@@ -69,8 +69,7 @@ class ClusterEngine:
         for g in genes:
             genes_by_contig.setdefault(g.contig_id, []).append(g)
 
-        clusters: List[MGCCluster] = []
-        cluster_counter = 1
+        raw_clusters: List[MGCCluster] = []
 
         for ctg_id, ctg_genes in genes_by_contig.items():
             ctg_genes.sort(key=lambda x: x.start)
@@ -81,14 +80,13 @@ class ClusterEngine:
             for idx, g in enumerate(ctg_genes):
                 if g.gene_id in hits:
                     hit = hits[g.gene_id]
-                    # Feo alone is ignored during initial cluster seeding to prevent false positives
                     if hit.role != "iron_context":
                         hit_indices.append(idx)
 
             if not hit_indices:
                 continue
 
-            # Group hit indices by single-linkage (max_intergenic_genes & max_distance_bp)
+            # Group hit indices by synteny (max_intergenic_genes & max_distance_bp)
             raw_groups: List[List[int]] = []
             curr_group = [hit_indices[0]]
 
@@ -105,18 +103,15 @@ class ClusterEngine:
                     curr_group = [next_idx]
             raw_groups.append(curr_group)
 
-            # Evaluate each group against thresholds
             for group in raw_groups:
                 first_hit_idx = group[0]
                 last_hit_idx = group[-1]
 
-                # Determine boundaries with flanking genes
                 flank_start_idx = max(0, first_hit_idx - self.flank_genes)
                 flank_end_idx = min(total_ctg_genes - 1, last_hit_idx + self.flank_genes)
 
                 region_genes = ctg_genes[flank_start_idx : flank_end_idx + 1]
 
-                # Collect all hits in this region
                 core_hits = []
                 acc_hits = []
                 iron_hits = []
@@ -131,23 +126,18 @@ class ClusterEngine:
                         elif h.role == "iron_context":
                             iron_hits.append(h)
 
-                # Rule: Must contain at least `min_distinct_families` distinct magnetosome families
                 distinct_mag_fams = {h.parent_family for h in (core_hits + acc_hits)}
-
                 if len(distinct_mag_fams) < self.min_distinct_families:
                     continue
 
-                # Check edge flag
                 on_edge = (first_hit_idx <= self.flank_genes or last_hit_idx >= total_ctg_genes - 1 - self.flank_genes)
-
                 start_bp = region_genes[0].start
                 end_bp = region_genes[-1].end
                 core_start_bp = ctg_genes[first_hit_idx].start
                 core_end_bp = ctg_genes[last_hit_idx].end
 
-                cluster_id = f"{genome_name}_MGC{cluster_counter}"
                 mgc = MGCCluster(
-                    cluster_id=cluster_id,
+                    cluster_id="tmp",
                     genome_name=genome_name,
                     contig_id=ctg_id,
                     start_bp=start_bp,
@@ -160,7 +150,63 @@ class ClusterEngine:
                     all_genes=region_genes,
                     on_edge=on_edge
                 )
-                clusters.append(mgc)
-                cluster_counter += 1
+                raw_clusters.append(mgc)
 
-        return clusters
+        if not raw_clusters:
+            return []
+
+        # Merge all qualifying sub-clusters in this genome into exactly ONE consolidated MGC
+        cluster_id = f"{genome_name}_MGC"
+
+        contigs_used = []
+        consolidated_genes: List[PredictedGene] = []
+        consolidated_core: List[MagnetosomeHit] = []
+        consolidated_acc: List[MagnetosomeHit] = []
+        consolidated_iron: List[MagnetosomeHit] = []
+        on_edge = any(c.on_edge for c in raw_clusters)
+
+        for ctg_id, ctg_genes in genes_by_contig.items():
+            ctg_sub_clusters = [c for c in raw_clusters if c.contig_id == ctg_id]
+            if not ctg_sub_clusters:
+                continue
+
+            contigs_used.append(ctg_id)
+            min_start = min(c.start_bp for c in ctg_sub_clusters)
+            max_end = max(c.end_bp for c in ctg_sub_clusters)
+
+            # Get all genes on this contig within [min_start, max_end]
+            span_genes = [g for g in ctg_genes if g.start >= min_start and g.end <= max_end]
+            consolidated_genes.extend(span_genes)
+
+            for g in span_genes:
+                if g.gene_id in hits:
+                    h = hits[g.gene_id]
+                    if h.role == "core":
+                        consolidated_core.append(h)
+                    elif h.role == "accessory":
+                        consolidated_acc.append(h)
+                    elif h.role == "iron_context":
+                        consolidated_iron.append(h)
+
+        start_bp = min(g.start for g in consolidated_genes)
+        end_bp = max(g.end for g in consolidated_genes)
+        all_mag_hits = consolidated_core + consolidated_acc
+        core_start_bp = min(h.start for h in all_mag_hits) if all_mag_hits else start_bp
+        core_end_bp = max(h.end for h in all_mag_hits) if all_mag_hits else end_bp
+        contig_label = ",".join(contigs_used) if len(contigs_used) > 1 else contigs_used[0]
+
+        final_mgc = MGCCluster(
+            cluster_id=cluster_id,
+            genome_name=genome_name,
+            contig_id=contig_label,
+            start_bp=start_bp,
+            end_bp=end_bp,
+            cluster_core_start=core_start_bp,
+            cluster_core_end=core_end_bp,
+            core_hits=consolidated_core,
+            accessory_hits=consolidated_acc,
+            iron_hits=consolidated_iron,
+            all_genes=consolidated_genes,
+            on_edge=on_edge
+        )
+        return [final_mgc]

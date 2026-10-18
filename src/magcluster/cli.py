@@ -115,6 +115,18 @@ def run_pipeline(
     console.print(f"Discovered [bold]{len(expanded_files)}[/bold] input file(s).")
     outdir.mkdir(parents=True, exist_ok=True)
 
+    # Clean up obsolete table files if re-running in existing outdir
+    for old_file in [
+        "clinker_colour_map.csv",
+        "clinker_gene_functions.csv",
+        "mgc_clusters.tsv",
+        "presence_absence.tsv",
+        "summary.tsv",
+    ]:
+        p = outdir / old_file
+        if p.exists():
+            p.unlink()
+
     # Initialize engines
     predictor = GenePredictor(meta=meta)
     searcher = MagnetosomeSearcher(evalue_cutoff=evalue, score_cutoff=score, cpus=threads)
@@ -181,17 +193,16 @@ def run_pipeline(
 
     # 6. Clinker visualization
     if all_clusters:
-        console.print("[dim]-> Preparing sliced GenBank files and Clinker gene function maps...[/dim]")
-        gbk_files, gf_file, cm_file = export_all_clusters_for_clinker(all_clusters, contigs_lookup, all_hits, outdir)
+        console.print("[dim]-> Preparing sliced GenBank files for Clinker visualization...[/dim]")
+        gbk_files = export_all_clusters_for_clinker(all_clusters, contigs_lookup, all_hits, outdir)
 
         if not no_plot:
             clinker_html = outdir / "MGC_align.html"
             console.print(f"[dim]-> Running Clinker to generate interactive comparison: {clinker_html.name}...[/dim]")
             success = run_clinker_visualization(
                 gbk_files=gbk_files,
-                gene_functions_csv=gf_file,
-                colour_map_csv=cm_file,
                 plot_html=clinker_html,
+                hits=all_hits,
                 jobs=threads,
                 identity=identity
             )
@@ -205,11 +216,10 @@ def run_pipeline(
     elapsed = time.time() - start_time
     console.print(f"\n[bold green]✓ Done in {elapsed:.1f}s![/bold green] Results saved to: [bold]{outdir.resolve()}[/bold]")
     if all_clusters:
-        console.print(f"  • Summary: [underline]{outdir}/summary.tsv[/underline]")
-        console.print(f"  • Cluster Table: [underline]{outdir}/mgc_clusters.tsv[/underline]")
+        console.print(f"  • Magnetosome Genes: [underline]{outdir}/mgc_genes.tsv[/underline]")
         console.print(f"  • Combined Proteins: [underline]{outdir}/magnetosome_proteins.faa[/underline]")
         if not no_plot:
-            console.print(f"  • Clinker Figure: [underline]{outdir}/MGC_align.html[/underline]")
+            console.print(f"  • Clinker Visualization: [underline]{outdir}/MGC_align.html[/underline]")
 
 @app.command(name="db")
 def db_info():
