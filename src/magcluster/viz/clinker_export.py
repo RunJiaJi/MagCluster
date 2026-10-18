@@ -46,6 +46,16 @@ def get_family_class(gene_name: str, hit: Optional[MagnetosomeHit] = None) -> st
         return "feo"
     return "Other"
 
+def get_display_label(hit: MagnetosomeHit) -> str:
+    """Return the display label for a magnetosome hit in figures.
+    
+    Retains specific variant/domain labels (e.g. MamE_Cter, MamQ_greigite, MamO_domain),
+    while omitting the '_full' suffix for full-length proteins (e.g. MamE_full -> MamE).
+    """
+    if hit.profile.endswith("_full"):
+        return hit.profile[:-5]
+    return hit.profile
+
 def export_cluster_to_genbank(
     cluster: MGCCluster,
     contigs_dict: Dict[str, SeqRecord],
@@ -106,7 +116,7 @@ def export_cluster_to_genbank(
 
             if g.gene_id in hits:
                 h = hits[g.gene_id]
-                protein_name = h.profile
+                protein_name = get_display_label(h)
                 qualifiers["product"] = [protein_name]
                 qualifiers["gene"] = [protein_name]
                 qualifiers["label"] = [protein_name]
@@ -192,7 +202,7 @@ def customize_clinker_html(plot_html: Path, hits: Dict[str, MagnetosomeHit]) -> 
                     hit = hits[gn]
 
                 if hit:
-                    protein_name = hit.profile
+                    protein_name = get_display_label(hit)
                     gene["label"] = protein_name
                     gene["is_mag"] = True
                     gene.setdefault("names", {})["protein"] = protein_name

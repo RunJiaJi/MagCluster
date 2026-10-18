@@ -163,3 +163,19 @@ def test_clinker_profile_labels(tmp_path):
     mam_group = [grp for grp in data["groups"] if grp["label"] == "mam"][0]
     assert "gene_uid_1" in mam_group["genes"]
 
+    # 3. Verify _full suffix omission for full-length proteins
+    from magcluster.viz.clinker_export import get_display_label
+    hit_full = MagnetosomeHit(
+        gene_id="g_full", contig_id="ctg1", profile="MamE_full", parent_family="MamE",
+        score=900.0, evalue=0.0, role="core", lineage="Alpha", color="#EA4335",
+        start=100, end=700, strand=1, gene_index=0, translation="MEFULL"
+    )
+    hit_o_full = MagnetosomeHit(
+        gene_id="g_ofull", contig_id="ctg1", profile="MamO_full", parent_family="MamO",
+        score=900.0, evalue=0.0, role="core", lineage="Alpha", color="#EA4335",
+        start=100, end=700, strand=1, gene_index=0, translation="MOFULL"
+    )
+    assert get_display_label(hit_full) == "MamE"
+    assert get_display_label(hit_o_full) == "MamO"
+    assert get_display_label(hits["g_mame"]) == "MamE_Cter"
+

@@ -36,7 +36,7 @@ def plot_mgc_cluster(
         if g.gene_id in hits:
             hit = hits[g.gene_id]
             color = hit.color
-            label = hit.profile
+            label = hit.profile[:-5] if hit.profile.endswith("_full") else hit.profile
         else:
             color = "#E0E0E0"  # gray for intervening non-MGC genes
             label = ""
