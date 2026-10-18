@@ -1,0 +1,856 @@
+version: 1.0.0
+clustering_params:
+  max_intergenic_genes: 5
+  min_distinct_core: 3
+  min_distinct_total: 4
+  min_cluster_span_bp: 2000
+core_families:
+- MamA
+- MamB
+- MamE
+- MamI
+- MamK
+- MamL
+- MamM
+- MamO
+- MamP
+- MamQ
+color_palette:
+  mam: '#E63946'
+  mms: '#F4A261'
+  mad: '#2A9D8F'
+  man: '#1D3557'
+  mae: '#8338EC'
+  mca: '#06D6A0'
+  maq: '#FF70A6'
+  feo: '#6C757D'
+  greigite: '#B5179E'
+profiles:
+  FeoA:
+    parent_family: FeoA
+    role: iron_context
+    lineage: Iron_context
+    color: '#6C757D'
+    trusted_cutoff: 25.0
+    evalue_cutoff: 1.0e-05
+    n_reference_seqs: 19
+    median_length: 84
+  FeoB:
+    parent_family: FeoB
+    role: iron_context
+    lineage: Iron_context
+    color: '#6C757D'
+    trusted_cutoff: 25.0
+    evalue_cutoff: 1.0e-05
+    n_reference_seqs: 24
+    median_length: 699
+  Mad1:
+    parent_family: Mad1
+    role: accessory
+    lineage: Desulfo_Mad
+    color: '#2A9D8F'
+    trusted_cutoff: 25.0
+    evalue_cutoff: 1.0e-05
+    n_reference_seqs: 5
+    median_length: 220
+  Mad10:
+    parent_family: Mad10
+    role: accessory
+    lineage: Desulfo_Mad
+    color: '#2A9D8F'
+    trusted_cutoff: 25.0
+    evalue_cutoff: 1.0e-05
+    n_reference_seqs: 8
+    median_length: 221
+  Mad11:
+    parent_family: Mad11
+    role: accessory
+    lineage: Desulfo_Mad
+    color: '#2A9D8F'
+    trusted_cutoff: 25.0
+    evalue_cutoff: 1.0e-05
+    n_reference_seqs: 6
+    median_length: 157
+  Mad12:
+    parent_family: Mad12
+    role: accessory
+    lineage: Desulfo_Mad
+    color: '#2A9D8F'
+    trusted_cutoff: 25.0
+    evalue_cutoff: 1.0e-05
+    n_reference_seqs: 3
+    median_length: 276
+  Mad14:
+    parent_family: Mad14
+    role: accessory
+    lineage: Desulfo_Mad
+    color: '#2A9D8F'
+    trusted_cutoff: 25.0
+    evalue_cutoff: 1.0e-05
+    n_reference_seqs: 3
+    median_length: 86
+  Mad15:
+    parent_family: Mad15
+    role: accessory
+    lineage: Desulfo_Mad
+    color: '#2A9D8F'
+    trusted_cutoff: 25.0
+    evalue_cutoff: 1.0e-05
+    n_reference_seqs: 3
+    median_length: 41
+  Mad16:
+    parent_family: Mad16
+    role: accessory
+    lineage: Desulfo_Mad
+    color: '#2A9D8F'
+    trusted_cutoff: 25.0
+    evalue_cutoff: 1.0e-05
+    n_reference_seqs: 2
+    median_length: 98
+  Mad18:
+    parent_family: Mad18
+    role: accessory
+    lineage: Desulfo_Mad
+    color: '#2A9D8F'
+    trusted_cutoff: 25.0
+    evalue_cutoff: 1.0e-05
+    n_reference_seqs: 1
+    median_length: 173
+  Mad19:
+    parent_family: Mad19
+    role: accessory
+    lineage: Desulfo_Mad
+    color: '#2A9D8F'
+    trusted_cutoff: 25.0
+    evalue_cutoff: 1.0e-05
+    n_reference_seqs: 2
+    median_length: 113
+  Mad2:
+    parent_family: Mad2
+    role: accessory
+    lineage: Desulfo_Mad
+    color: '#2A9D8F'
+    trusted_cutoff: 25.0
+    evalue_cutoff: 1.0e-05
+    n_reference_seqs: 10
+    median_length: 131
+  Mad20:
+    parent_family: Mad20
+    role: accessory
+    lineage: Desulfo_Mad
+    color: '#2A9D8F'
+    trusted_cutoff: 25.0
+    evalue_cutoff: 1.0e-05
+    n_reference_seqs: 3
+    median_length: 287
+  Mad21:
+    parent_family: Mad21
+    role: accessory
+    lineage: Desulfo_Mad
+    color: '#2A9D8F'
+    trusted_cutoff: 25.0
+    evalue_cutoff: 1.0e-05
+    n_reference_seqs: 5
+    median_length: 343
+  Mad22:
+    parent_family: Mad22
+    role: accessory
+    lineage: Desulfo_Mad
+    color: '#2A9D8F'
+    trusted_cutoff: 25.0
+    evalue_cutoff: 1.0e-05
+    n_reference_seqs: 4
+    median_length: 398
+  Mad23:
+    parent_family: Mad23
+    role: accessory
+    lineage: Desulfo_Mad
+    color: '#2A9D8F'
+    trusted_cutoff: 25.0
+    evalue_cutoff: 1.0e-05
+    n_reference_seqs: 13
+    median_length: 482
+  Mad24:
+    parent_family: Mad24
+    role: accessory
+    lineage: Desulfo_Mad
+    color: '#2A9D8F'
+    trusted_cutoff: 25.0
+    evalue_cutoff: 1.0e-05
+    n_reference_seqs: 14
+    median_length: 204
+  Mad25:
+    parent_family: Mad25
+    role: accessory
+    lineage: Desulfo_Mad
+    color: '#2A9D8F'
+    trusted_cutoff: 25.0
+    evalue_cutoff: 1.0e-05
+    n_reference_seqs: 12
+    median_length: 247
+  Mad26:
+    parent_family: Mad26
+    role: accessory
+    lineage: Desulfo_Mad
+    color: '#2A9D8F'
+    trusted_cutoff: 25.0
+    evalue_cutoff: 1.0e-05
+    n_reference_seqs: 11
+    median_length: 191
+  Mad27:
+    parent_family: Mad27
+    role: accessory
+    lineage: Desulfo_Mad
+    color: '#2A9D8F'
+    trusted_cutoff: 25.0
+    evalue_cutoff: 1.0e-05
+    n_reference_seqs: 6
+    median_length: 424
+  Mad28:
+    parent_family: Mad28
+    role: accessory
+    lineage: Desulfo_Mad
+    color: '#2A9D8F'
+    trusted_cutoff: 25.0
+    evalue_cutoff: 1.0e-05
+    n_reference_seqs: 18
+    median_length: 395
+  Mad29:
+    parent_family: Mad29
+    role: accessory
+    lineage: Desulfo_Mad
+    color: '#2A9D8F'
+    trusted_cutoff: 25.0
+    evalue_cutoff: 1.0e-05
+    n_reference_seqs: 8
+    median_length: 303
+  Mad3:
+    parent_family: Mad3
+    role: accessory
+    lineage: Desulfo_Mad
+    color: '#2A9D8F'
+    trusted_cutoff: 25.0
+    evalue_cutoff: 1.0e-05
+    n_reference_seqs: 1
+    median_length: 48
+  Mad31:
+    parent_family: Mad31
+    role: accessory
+    lineage: Desulfo_Mad
+    color: '#2A9D8F'
+    trusted_cutoff: 25.0
+    evalue_cutoff: 1.0e-05
+    n_reference_seqs: 6
+    median_length: 227
+  Mad4:
+    parent_family: Mad4
+    role: accessory
+    lineage: Desulfo_Mad
+    color: '#2A9D8F'
+    trusted_cutoff: 25.0
+    evalue_cutoff: 1.0e-05
+    n_reference_seqs: 5
+    median_length: 129
+  Mad5:
+    parent_family: Mad5
+    role: accessory
+    lineage: Desulfo_Mad
+    color: '#2A9D8F'
+    trusted_cutoff: 25.0
+    evalue_cutoff: 1.0e-05
+    n_reference_seqs: 1
+    median_length: 112
+  Mad6:
+    parent_family: Mad6
+    role: accessory
+    lineage: Desulfo_Mad
+    color: '#2A9D8F'
+    trusted_cutoff: 25.0
+    evalue_cutoff: 1.0e-05
+    n_reference_seqs: 4
+    median_length: 288
+  Mad7:
+    parent_family: Mad7
+    role: accessory
+    lineage: Desulfo_Mad
+    color: '#2A9D8F'
+    trusted_cutoff: 25.0
+    evalue_cutoff: 1.0e-05
+    n_reference_seqs: 4
+    median_length: 129
+  Mad8:
+    parent_family: Mad8
+    role: accessory
+    lineage: Desulfo_Mad
+    color: '#2A9D8F'
+    trusted_cutoff: 25.0
+    evalue_cutoff: 1.0e-05
+    n_reference_seqs: 4
+    median_length: 117
+  Mad9:
+    parent_family: Mad9
+    role: accessory
+    lineage: Desulfo_Mad
+    color: '#2A9D8F'
+    trusted_cutoff: 25.0
+    evalue_cutoff: 1.0e-05
+    n_reference_seqs: 4
+    median_length: 141
+  Mae1:
+    parent_family: Mae1
+    role: accessory
+    lineage: Environmental_Mae
+    color: '#8338EC'
+    trusted_cutoff: 25.0
+    evalue_cutoff: 1.0e-05
+    n_reference_seqs: 1
+    median_length: 189
+  Mae2:
+    parent_family: Mae2
+    role: accessory
+    lineage: Environmental_Mae
+    color: '#8338EC'
+    trusted_cutoff: 25.0
+    evalue_cutoff: 1.0e-05
+    n_reference_seqs: 2
+    median_length: 219
+  Mae3:
+    parent_family: Mae3
+    role: accessory
+    lineage: Environmental_Mae
+    color: '#8338EC'
+    trusted_cutoff: 25.0
+    evalue_cutoff: 1.0e-05
+    n_reference_seqs: 1
+    median_length: 70
+  Mae4:
+    parent_family: Mae4
+    role: accessory
+    lineage: Environmental_Mae
+    color: '#8338EC'
+    trusted_cutoff: 25.0
+    evalue_cutoff: 1.0e-05
+    n_reference_seqs: 4
+    median_length: 249
+  Mae5:
+    parent_family: Mae5
+    role: accessory
+    lineage: Environmental_Mae
+    color: '#8338EC'
+    trusted_cutoff: 25.0
+    evalue_cutoff: 1.0e-05
+    n_reference_seqs: 2
+    median_length: 86
+  Mae6:
+    parent_family: Mae6
+    role: accessory
+    lineage: Environmental_Mae
+    color: '#8338EC'
+    trusted_cutoff: 25.0
+    evalue_cutoff: 1.0e-05
+    n_reference_seqs: 1
+    median_length: 209
+  Mae7:
+    parent_family: Mae7
+    role: accessory
+    lineage: Environmental_Mae
+    color: '#8338EC'
+    trusted_cutoff: 25.0
+    evalue_cutoff: 1.0e-05
+    n_reference_seqs: 1
+    median_length: 260
+  MamA:
+    parent_family: MamA
+    role: core
+    lineage: Alpha_classical
+    color: '#E63946'
+    trusted_cutoff: 25.0
+    evalue_cutoff: 1.0e-05
+    n_reference_seqs: 30
+    median_length: 217
+  MamA_greigite:
+    parent_family: MamA
+    role: core
+    lineage: Desulfo_greigite
+    color: '#B5179E'
+    trusted_cutoff: 25.0
+    evalue_cutoff: 1.0e-05
+    n_reference_seqs: 3
+    median_length: 230
+  MamB:
+    parent_family: MamB
+    role: core
+    lineage: Alpha_classical
+    color: '#E63946'
+    trusted_cutoff: 25.0
+    evalue_cutoff: 1.0e-05
+    n_reference_seqs: 27
+    median_length: 296
+  MamB_greigite:
+    parent_family: MamB
+    role: core
+    lineage: Desulfo_greigite
+    color: '#B5179E'
+    trusted_cutoff: 25.0
+    evalue_cutoff: 1.0e-05
+    n_reference_seqs: 6
+    median_length: 315
+  MamC:
+    parent_family: MamC
+    role: accessory
+    lineage: Alpha_classical
+    color: '#E63946'
+    trusted_cutoff: 25.0
+    evalue_cutoff: 1.0e-05
+    n_reference_seqs: 13
+    median_length: 124
+  MamD:
+    parent_family: MamD
+    role: accessory
+    lineage: Alpha_classical
+    color: '#E63946'
+    trusted_cutoff: 25.0
+    evalue_cutoff: 1.0e-05
+    n_reference_seqs: 18
+    median_length: 314
+  MamEO:
+    parent_family: MamE
+    role: core
+    lineage: Alpha_classical
+    color: '#E63946'
+    trusted_cutoff: 25.0
+    evalue_cutoff: 1.0e-05
+    n_reference_seqs: 4
+    median_length: 734
+  MamE_Cter:
+    parent_family: MamE
+    role: core
+    lineage: Alpha_classical
+    color: '#E63946'
+    trusted_cutoff: 25.0
+    evalue_cutoff: 1.0e-05
+    n_reference_seqs: 4
+    median_length: 614
+  MamE_Cter_greigite:
+    parent_family: MamE
+    role: core
+    lineage: Desulfo_greigite
+    color: '#B5179E'
+    trusted_cutoff: 25.0
+    evalue_cutoff: 1.0e-05
+    n_reference_seqs: 2
+    median_length: 354
+  MamE_Nter:
+    parent_family: MamE
+    role: core
+    lineage: Alpha_classical
+    color: '#E63946'
+    trusted_cutoff: 25.0
+    evalue_cutoff: 1.0e-05
+    n_reference_seqs: 5
+    median_length: 285
+  MamE_Nter_greigite:
+    parent_family: MamE
+    role: core
+    lineage: Desulfo_greigite
+    color: '#B5179E'
+    trusted_cutoff: 25.0
+    evalue_cutoff: 1.0e-05
+    n_reference_seqs: 3
+    median_length: 178
+  MamE_full:
+    parent_family: MamE
+    role: core
+    lineage: Alpha_classical
+    color: '#E63946'
+    trusted_cutoff: 25.0
+    evalue_cutoff: 1.0e-05
+    n_reference_seqs: 27
+    median_length: 728
+  MamE_greigite:
+    parent_family: MamE
+    role: core
+    lineage: Desulfo_greigite
+    color: '#B5179E'
+    trusted_cutoff: 25.0
+    evalue_cutoff: 1.0e-05
+    n_reference_seqs: 1
+    median_length: 309
+  MamF:
+    parent_family: MamF
+    role: accessory
+    lineage: Alpha_classical
+    color: '#E63946'
+    trusted_cutoff: 25.0
+    evalue_cutoff: 1.0e-05
+    n_reference_seqs: 23
+    median_length: 111
+  MamG:
+    parent_family: MamG
+    role: accessory
+    lineage: Alpha_classical
+    color: '#E63946'
+    trusted_cutoff: 25.0
+    evalue_cutoff: 1.0e-05
+    n_reference_seqs: 9
+    median_length: 163
+  MamH:
+    parent_family: MamH
+    role: accessory
+    lineage: Alpha_classical
+    color: '#E63946'
+    trusted_cutoff: 25.0
+    evalue_cutoff: 1.0e-05
+    n_reference_seqs: 15
+    median_length: 431
+  MamI:
+    parent_family: MamI
+    role: core
+    lineage: Alpha_classical
+    color: '#E63946'
+    trusted_cutoff: 25.0
+    evalue_cutoff: 1.0e-05
+    n_reference_seqs: 33
+    median_length: 76
+  MamI_greigite:
+    parent_family: MamI
+    role: core
+    lineage: Desulfo_greigite
+    color: '#B5179E'
+    trusted_cutoff: 25.0
+    evalue_cutoff: 1.0e-05
+    n_reference_seqs: 5
+    median_length: 74
+  MamJ:
+    parent_family: MamJ
+    role: accessory
+    lineage: Alpha_classical
+    color: '#E63946'
+    trusted_cutoff: 25.0
+    evalue_cutoff: 1.0e-05
+    n_reference_seqs: 9
+    median_length: 386
+  MamK:
+    parent_family: MamK
+    role: core
+    lineage: Alpha_classical
+    color: '#E63946'
+    trusted_cutoff: 25.0
+    evalue_cutoff: 1.0e-05
+    n_reference_seqs: 31
+    median_length: 347
+  MamL:
+    parent_family: MamL
+    role: core
+    lineage: Alpha_classical
+    color: '#E63946'
+    trusted_cutoff: 25.0
+    evalue_cutoff: 1.0e-05
+    n_reference_seqs: 20
+    median_length: 78
+  MamM:
+    parent_family: MamM
+    role: core
+    lineage: Alpha_classical
+    color: '#E63946'
+    trusted_cutoff: 25.0
+    evalue_cutoff: 1.0e-05
+    n_reference_seqs: 25
+    median_length: 307
+  MamN:
+    parent_family: MamN
+    role: accessory
+    lineage: Alpha_classical
+    color: '#E63946'
+    trusted_cutoff: 25.0
+    evalue_cutoff: 1.0e-05
+    n_reference_seqs: 11
+    median_length: 437
+  MamO_domain:
+    parent_family: MamO
+    role: core
+    lineage: Alpha_classical
+    color: '#E63946'
+    trusted_cutoff: 25.0
+    evalue_cutoff: 1.0e-05
+    n_reference_seqs: 11
+    median_length: 307
+  MamO_full:
+    parent_family: MamO
+    role: core
+    lineage: Alpha_classical
+    color: '#E63946'
+    trusted_cutoff: 25.0
+    evalue_cutoff: 1.0e-05
+    n_reference_seqs: 17
+    median_length: 637
+  MamO_greigite:
+    parent_family: MamO
+    role: core
+    lineage: Desulfo_greigite
+    color: '#B5179E'
+    trusted_cutoff: 25.0
+    evalue_cutoff: 1.0e-05
+    n_reference_seqs: 2
+    median_length: 280
+  MamP:
+    parent_family: MamP
+    role: core
+    lineage: Alpha_classical
+    color: '#E63946'
+    trusted_cutoff: 25.0
+    evalue_cutoff: 1.0e-05
+    n_reference_seqs: 24
+    median_length: 305
+  MamP_greigite:
+    parent_family: MamP
+    role: core
+    lineage: Desulfo_greigite
+    color: '#B5179E'
+    trusted_cutoff: 25.0
+    evalue_cutoff: 1.0e-05
+    n_reference_seqs: 1
+    median_length: 336
+  MamQ:
+    parent_family: MamQ
+    role: core
+    lineage: Alpha_classical
+    color: '#E63946'
+    trusted_cutoff: 25.0
+    evalue_cutoff: 1.0e-05
+    n_reference_seqs: 31
+    median_length: 270
+  MamQ_greigite:
+    parent_family: MamQ
+    role: core
+    lineage: Desulfo_greigite
+    color: '#B5179E'
+    trusted_cutoff: 25.0
+    evalue_cutoff: 1.0e-05
+    n_reference_seqs: 3
+    median_length: 237
+  MamR:
+    parent_family: MamR
+    role: accessory
+    lineage: Alpha_classical
+    color: '#E63946'
+    trusted_cutoff: 25.0
+    evalue_cutoff: 1.0e-05
+    n_reference_seqs: 12
+    median_length: 84
+  MamS:
+    parent_family: MamS
+    role: accessory
+    lineage: Alpha_classical
+    color: '#E63946'
+    trusted_cutoff: 25.0
+    evalue_cutoff: 1.0e-05
+    n_reference_seqs: 15
+    median_length: 184
+  MamT:
+    parent_family: MamT
+    role: accessory
+    lineage: Alpha_classical
+    color: '#E63946'
+    trusted_cutoff: 25.0
+    evalue_cutoff: 1.0e-05
+    n_reference_seqs: 15
+    median_length: 176
+  MamT_greigite:
+    parent_family: MamT
+    role: accessory
+    lineage: Desulfo_greigite
+    color: '#B5179E'
+    trusted_cutoff: 25.0
+    evalue_cutoff: 1.0e-05
+    n_reference_seqs: 7
+    median_length: 297
+  MamU:
+    parent_family: MamU
+    role: accessory
+    lineage: Alpha_classical
+    color: '#E63946'
+    trusted_cutoff: 25.0
+    evalue_cutoff: 1.0e-05
+    n_reference_seqs: 6
+    median_length: 297
+  MamV:
+    parent_family: MamV
+    role: accessory
+    lineage: Alpha_classical
+    color: '#E63946'
+    trusted_cutoff: 25.0
+    evalue_cutoff: 1.0e-05
+    n_reference_seqs: 5
+    median_length: 311
+  MamW:
+    parent_family: MamW
+    role: accessory
+    lineage: Alpha_classical
+    color: '#E63946'
+    trusted_cutoff: 25.0
+    evalue_cutoff: 1.0e-05
+    n_reference_seqs: 5
+    median_length: 117
+  MamX:
+    parent_family: MamX
+    role: accessory
+    lineage: Alpha_classical
+    color: '#E63946'
+    trusted_cutoff: 25.0
+    evalue_cutoff: 1.0e-05
+    n_reference_seqs: 12
+    median_length: 271
+  MamY:
+    parent_family: MamY
+    role: accessory
+    lineage: Alpha_classical
+    color: '#E63946'
+    trusted_cutoff: 25.0
+    evalue_cutoff: 1.0e-05
+    n_reference_seqs: 7
+    median_length: 378
+  MamZ:
+    parent_family: MamZ
+    role: accessory
+    lineage: Alpha_classical
+    color: '#E63946'
+    trusted_cutoff: 25.0
+    evalue_cutoff: 1.0e-05
+    n_reference_seqs: 13
+    median_length: 644
+  Man1:
+    parent_family: Man1
+    role: accessory
+    lineage: Nitrospirota_Man
+    color: '#1D3557'
+    trusted_cutoff: 25.0
+    evalue_cutoff: 1.0e-05
+    n_reference_seqs: 4
+    median_length: 178
+  Man2:
+    parent_family: Man2
+    role: accessory
+    lineage: Nitrospirota_Man
+    color: '#1D3557'
+    trusted_cutoff: 25.0
+    evalue_cutoff: 1.0e-05
+    n_reference_seqs: 4
+    median_length: 82
+  Man3:
+    parent_family: Man3
+    role: accessory
+    lineage: Nitrospirota_Man
+    color: '#1D3557'
+    trusted_cutoff: 25.0
+    evalue_cutoff: 1.0e-05
+    n_reference_seqs: 4
+    median_length: 50
+  Man4:
+    parent_family: Man4
+    role: accessory
+    lineage: Nitrospirota_Man
+    color: '#1D3557'
+    trusted_cutoff: 25.0
+    evalue_cutoff: 1.0e-05
+    n_reference_seqs: 5
+    median_length: 146
+  Man5_Cter:
+    parent_family: Man5
+    role: accessory
+    lineage: Nitrospirota_Man
+    color: '#1D3557'
+    trusted_cutoff: 25.0
+    evalue_cutoff: 1.0e-05
+    n_reference_seqs: 1
+    median_length: 104
+  Man5_Nter:
+    parent_family: Man5
+    role: accessory
+    lineage: Nitrospirota_Man
+    color: '#1D3557'
+    trusted_cutoff: 25.0
+    evalue_cutoff: 1.0e-05
+    n_reference_seqs: 1
+    median_length: 252
+  Man5_full:
+    parent_family: Man5
+    role: accessory
+    lineage: Nitrospirota_Man
+    color: '#1D3557'
+    trusted_cutoff: 25.0
+    evalue_cutoff: 1.0e-05
+    n_reference_seqs: 4
+    median_length: 356
+  Man6:
+    parent_family: Man6
+    role: accessory
+    lineage: Nitrospirota_Man
+    color: '#1D3557'
+    trusted_cutoff: 25.0
+    evalue_cutoff: 1.0e-05
+    n_reference_seqs: 5
+    median_length: 383
+  Maq1:
+    parent_family: Maq1
+    role: accessory
+    lineage: Novel_Maq
+    color: '#FF70A6'
+    trusted_cutoff: 25.0
+    evalue_cutoff: 1.0e-05
+    n_reference_seqs: 3
+    median_length: 582
+  McaA:
+    parent_family: McaA
+    role: accessory
+    lineage: Novel_Mca
+    color: '#06D6A0'
+    trusted_cutoff: 25.0
+    evalue_cutoff: 1.0e-05
+    n_reference_seqs: 2
+    median_length: 776
+  McaB:
+    parent_family: McaB
+    role: accessory
+    lineage: Novel_Mca
+    color: '#06D6A0'
+    trusted_cutoff: 25.0
+    evalue_cutoff: 1.0e-05
+    n_reference_seqs: 2
+    median_length: 219
+  Mms36:
+    parent_family: Mms36
+    role: accessory
+    lineage: Alpha_Mms
+    color: '#F4A261'
+    trusted_cutoff: 25.0
+    evalue_cutoff: 1.0e-05
+    n_reference_seqs: 5
+    median_length: 348
+  Mms48:
+    parent_family: Mms48
+    role: accessory
+    lineage: Alpha_Mms
+    color: '#F4A261'
+    trusted_cutoff: 25.0
+    evalue_cutoff: 1.0e-05
+    n_reference_seqs: 5
+    median_length: 469
+  Mms6:
+    parent_family: Mms6
+    role: accessory
+    lineage: Alpha_Mms
+    color: '#F4A261'
+    trusted_cutoff: 25.0
+    evalue_cutoff: 1.0e-05
+    n_reference_seqs: 12
+    median_length: 157
+  MmsF:
+    parent_family: MmsF
+    role: accessory
+    lineage: Alpha_Mms
+    color: '#F4A261'
+    trusted_cutoff: 25.0
+    evalue_cutoff: 1.0e-05
+    n_reference_seqs: 12
+    median_length: 107

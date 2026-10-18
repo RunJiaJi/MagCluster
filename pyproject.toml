@@ -1,0 +1,53 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "magcluster"
+version = "1.0.0"
+description = "Fast, accurate, Prokka-free Magnetosome Gene Cluster (MGC) identification, classification, and visualization"
+readme = "README.md"
+authors = [
+    { name = "Runjia Ji", email = "jirunjia@gmail.com" }
+]
+license = { text = "GPL-3.0-or-later" }
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering :: Bio-Informatics",
+    "Intended Audience :: Science/Research",
+    "Operating System :: POSIX :: Linux",
+    "Operating System :: MacOS",
+]
+requires-python = ">=3.10"
+dependencies = [
+    "biopython>=1.80",
+    "pyrodigal>=3.0.0",
+    "pyhmmer>=0.10.0",
+    "pyfamsa>=0.6.0",
+    "pandas>=2.0.0",
+    "typer>=0.9.0",
+    "rich>=13.0.0",
+    "pyyaml>=6.0",
+    "pygenomeviz>=1.0.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0.0",
+]
+
+[project.scripts]
+magcluster = "magcluster.cli:app"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+"magcluster.data" = ["*.yaml", "*.tsv", "hmms/*.hmm"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]

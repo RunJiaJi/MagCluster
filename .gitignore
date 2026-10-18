@@ -127,3 +127,7 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+# Test output directories
+test_output*/
+magcluster_results*/
