@@ -33,9 +33,6 @@ Examples:
 
   # Inspect built-in Magnetosome HMM database and reference family summary:
   $ magcluster db
-
-  # View all available Clinker visualization options:
-  $ magcluster clinker-help
 """
 
 app = typer.Typer(
@@ -53,11 +50,7 @@ def version_callback(value: bool):
         raise typer.Exit()
 
 def show_clinker_help():
-    """Display Clinker options guide and native clinker --help output."""
-    import shutil
-    import subprocess
-    import sys
-
+    """Display Clinker options guide for use with --clinker-opts."""
     console.print("[bold cyan]=== Clinker Options Guide (for use with --clinker-opts) ===[/bold cyan]\n")
 
     table = Table(title="Recommended Clinker Options for MagCluster", show_header=True)
@@ -91,16 +84,6 @@ def show_clinker_help():
         '--clinker-opts "-dc 4"'
     )
     console.print(table)
-    console.print("\n[bold dim]--- Full Clinker Native Help (clinker --help) ---[/bold dim]\n")
-
-    clinker_bin = shutil.which("clinker")
-    if clinker_bin:
-        subprocess.run([clinker_bin, "--help"])
-    else:
-        try:
-            subprocess.run([sys.executable, "-m", "clinker.main", "--help"])
-        except Exception:
-            console.print("[yellow]Could not invoke clinker binary directly.[/yellow]")
 
 def clinker_help_callback(value: bool):
     if value:
@@ -135,6 +118,9 @@ Examples:
 
   # Pass custom options to Clinker (e.g. skip pairwise alignments or keep file order):
   $ magcluster run *.gbff -o results/ --clinker-opts "-na -ufo"
+
+  # View available Clinker visualization options:
+  $ magcluster run --clinker-help
 """
 )
 def run_pipeline(
@@ -387,11 +373,6 @@ def db_info():
             )
 
         console.print(table)
-
-@app.command(name="clinker-help")
-def clinker_help_cmd():
-    """Display help and available options for Clinker (for use with --clinker-opts)."""
-    show_clinker_help()
 
 if __name__ == "__main__":
     app()
