@@ -289,14 +289,18 @@ def db_info():
         table.add_column("Median length (aa)", justify="right", style="magenta")
 
         with open(summary_p, "r", encoding="utf-8") as f:
-            reader = csv.DictReader(f, delimiter="\t")
-            for r in reader:
-                table.add_row(
-                    r["profile"],
-                    r["parent_family"],
-                    r["n_seqs"],
-                    r["median_length"],
-                )
+            rows = list(csv.DictReader(f, delimiter="\t"))
+
+        # Sort descending by Ref Seqs count, then alphabetically by Profile name
+        sorted_rows = sorted(rows, key=lambda r: (-int(r["n_seqs"]), r["profile"]))
+
+        for r in sorted_rows:
+            table.add_row(
+                r["profile"],
+                r["parent_family"],
+                r["n_seqs"],
+                r["median_length"],
+            )
 
         console.print(table)
 
