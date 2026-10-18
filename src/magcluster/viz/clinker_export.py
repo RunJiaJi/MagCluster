@@ -106,12 +106,12 @@ def export_cluster_to_genbank(
 
             if g.gene_id in hits:
                 h = hits[g.gene_id]
-                protein_name = h.parent_family
+                protein_name = h.profile
                 qualifiers["product"] = [protein_name]
                 qualifiers["gene"] = [protein_name]
                 qualifiers["label"] = [protein_name]
                 qualifiers["protein"] = [protein_name]
-                qualifiers["note"] = [f"Profile={h.profile}; Score={h.score:.1f}; Evalue={h.evalue:.2e}"]
+                qualifiers["note"] = [f"Profile={h.profile}; Family={h.parent_family}; Score={h.score:.1f}; Evalue={h.evalue:.2e}"]
             else:
                 qualifiers["product"] = [g.product or "hypothetical protein"]
                 qualifiers["gene"] = [""]
@@ -192,7 +192,7 @@ def customize_clinker_html(plot_html: Path, hits: Dict[str, MagnetosomeHit]) -> 
                     hit = hits[gn]
 
                 if hit:
-                    protein_name = hit.parent_family
+                    protein_name = hit.profile
                     gene["label"] = protein_name
                     gene["is_mag"] = True
                     gene.setdefault("names", {})["protein"] = protein_name
@@ -200,7 +200,7 @@ def customize_clinker_html(plot_html: Path, hits: Dict[str, MagnetosomeHit]) -> 
                     gene["names"]["product"] = protein_name
                     gene["names"]["label"] = protein_name
 
-                    f_class = get_family_class(protein_name, hit)
+                    f_class = get_family_class(hit.parent_family, hit)
                     group_dict[f_class]["genes"].append(gene["uid"])
                 else:
                     # Non-magnetosome gene: blank label to prevent arrow clutter

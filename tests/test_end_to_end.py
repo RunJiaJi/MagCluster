@@ -87,3 +87,79 @@ def test_per_genome_exports(tmp_path):
     assert len(faas) == 2
     assert (tmp_path / "genomeA_magnetosome_proteins.faa").exists()
     assert (tmp_path / "genomeB_magnetosome_proteins.faa").exists()
+
+def test_clinker_profile_labels(tmp_path):
+    from magcluster.core.cluster import MGCCluster
+    from magcluster.core.predict import PredictedGene
+    from magcluster.core.search import MagnetosomeHit
+    from magcluster.viz.clinker_export import export_cluster_to_genbank, customize_clinker_html
+    import json
+    from Bio import SeqIO
+
+    gene1 = PredictedGene(gene_id="g_mame", contig_id="ctg1", start=100, end=700, strand=1, gene_index=0, translation="MEFULL")
+    cluster = MGCCluster(
+        cluster_id="test_cluster",
+        genome_name="test_genome",
+        contig_id="ctg1",
+        start_bp=100,
+        end_bp=700,
+        cluster_core_start=100,
+        cluster_core_end=700,
+        all_genes=[gene1]
+    )
+    hits = {
+        "g_mame": MagnetosomeHit(
+            gene_id="g_mame", contig_id="ctg1", profile="MamE_Cter", parent_family="MamE",
+            score=500.0, evalue=1e-100, role="core", lineage="Alpha", color="#EA4335",
+            start=100, end=700, strand=1, gene_index=0, translation="MEFULL"
+        )
+    }
+
+    # 1. GenBank export
+    gbk_file = tmp_path / "test.gbk"
+    export_cluster_to_genbank(cluster, {}, hits, gbk_file)
+    rec = SeqIO.read(str(gbk_file), "genbank")
+    cds_feat = [f for f in rec.features if f.type == "CDS"][0]
+    assert cds_feat.qualifiers["label"] == ["MamE_Cter"]
+    assert cds_feat.qualifiers["gene"] == ["MamE_Cter"]
+    assert cds_feat.qualifiers["product"] == ["MamE_Cter"]
+    assert "Profile=MamE_Cter" in cds_feat.qualifiers["note"][0]
+    assert "Family=MamE" in cds_feat.qualifiers["note"][0]
+
+    # 2. HTML customization
+    fake_data = {
+        "clusters": [
+            {
+                "name": "test_cluster",
+                "loci": [
+                    {
+                        "name": "ctg1",
+                        "genes": [
+                            {
+                                "uid": "gene_uid_1",
+                                "names": {"locus_tag": "g_mame", "gene": "MamE_Cter"},
+                                "label": "MamE_Cter"
+                            }
+                        ]
+                    }
+                ]
+            }
+        ],
+        "groups": []
+    }
+    html_file = tmp_path / "test.html"
+    html_file.write_text(f"<script>const data={json.dumps(fake_data)};function serialise(){{}}</script>", encoding="utf-8")
+    
+    assert customize_clinker_html(html_file, hits) is True
+    updated_html = html_file.read_text(encoding="utf-8")
+    import re
+    m = re.search(r"<script>const data=(.*?);function serialise", updated_html)
+    data = json.loads(m.group(1))
+    g = data["clusters"][0]["loci"][0]["genes"][0]
+    assert g["label"] == "MamE_Cter"
+    assert g["names"]["gene"] == "MamE_Cter"
+    assert g["names"]["product"] == "MamE_Cter"
+    # Verify group is mam family (red)
+    mam_group = [grp for grp in data["groups"] if grp["label"] == "mam"][0]
+    assert "gene_uid_1" in mam_group["genes"]
+
