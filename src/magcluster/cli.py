@@ -18,19 +18,64 @@ from .utils.logger import console, log
 from .viz.clinker_export import export_all_clusters_for_clinker, run_clinker_visualization
 from .viz.static_plot import plot_all_clusters
 
+HELP_TEXT = f"MagCluster (v{__version__}): Magnetosome Gene Cluster (MGC) identification & visualization."
+
+EPILOG_TEXT = """
+Examples:
+  # Run MGC analysis on a single GenBank/GBFF genome:
+  $ magcluster run genome.gbff -o results/
+
+  # Run MGC analysis on FASTA contigs with 8 CPU threads:
+  $ magcluster run contigs.fasta -o results/ -t 8
+
+  # Batch process multiple genomes or a folder of genomes:
+  $ magcluster run genomes_dir/ -o results/
+
+  # Inspect built-in Magnetosome HMM database and reference family summary:
+  $ magcluster db
+"""
+
 app = typer.Typer(
     name="magcluster",
-    help="MagCluster: Fast, Prokka-free Magnetosome Gene Cluster (MGC) identification & visualization.",
+    help=HELP_TEXT,
+    epilog=EPILOG_TEXT,
+    options_metavar="",
     add_completion=False,
     no_args_is_help=True
 )
 
-@app.command(name="version")
-def version_cmd():
-    """Display MagCluster version."""
-    console.print(f"[bold cyan]MagCluster[/bold cyan] version [bold green]{__version__}[/bold green]")
+def version_callback(value: bool):
+    if value:
+        console.print(f"[bold cyan]MagCluster[/bold cyan] version [bold green]{__version__}[/bold green]")
+        raise typer.Exit()
 
-@app.command(name="run")
+@app.callback()
+def main_callback(
+    version: Optional[bool] = typer.Option(
+        None,
+        "-v", "--version",
+        help="Show MagCluster version and exit.",
+        callback=version_callback,
+        is_eager=True,
+    )
+):
+    """MagCluster command-line entrypoint."""
+    pass
+
+@app.command(
+    name="run",
+    epilog="""
+Examples:
+  # Analyze a single GenBank/GBFF genome:
+  $ magcluster run genome.gbff -o results/
+
+  # Analyze FASTA contigs with 8 CPU threads:
+  $ magcluster run contigs.fasta -o results/ -t 8
+
+  # Batch process genomes in a directory:
+  $ magcluster run genomes_dir/ -o results/
+"""
+)
 def run_pipeline(
     inputs: List[Path] = typer.Argument(
         ...,
@@ -224,29 +269,45 @@ def run_pipeline(
 @app.command(name="db")
 def db_info():
     """Display information about the built-in Magnetosome HMM database and rules."""
+    import csv
+
     summary_p = get_profiles_summary_path()
     rules = load_rules()
+    user_db_path = get_hmm_path().resolve()
 
     console.print("[bold cyan]=== MagCluster Reference Database Info ===[/bold cyan]")
     console.print(f"Rules version: [bold green]{rules.get('version', 'unknown')}[/bold green]")
-    console.print(f"HMM database path: [dim]{get_hmm_path()}[/dim]")
+    console.print(f"HMM database path: [dim]{user_db_path}[/dim]")
     console.print(f"Total HMM profiles: [bold]{len(rules.get('profiles', {}))}[/bold]")
     console.print(f"Core defining families ({len(rules.get('core_families', []))}): [bold magenta]{', '.join(rules.get('core_families', []))}[/bold magenta]\n")
 
     if summary_p.exists():
-        table = Table(title="Top 20 Reference Profiles Summary", show_header=True)
-        table.add_column("Profile", style="cyan")
-        table.add_column("Parent Family", style="green")
-        table.add_column("Role", style="magenta")
-        table.add_column("Lineage", style="blue")
-        table.add_column("Ref Seqs", justify="right")
-        table.add_column("Median AA", justify="right")
-
+        # Aggregate stats by parent protein family
+        fam_stats = {}
         with open(summary_p, "r", encoding="utf-8") as f:
-            lines = f.readlines()
-            for line in lines[1:21]:
-                parts = line.strip().split("\t")
-                table.add_row(parts[0], parts[1], parts[2], parts[3], parts[4], parts[5])
+            reader = csv.DictReader(f, delimiter="\t")
+            for r in reader:
+                fam = r["parent_family"]
+                n = int(r["n_seqs"])
+                med = float(r["median_length"])
+                if fam not in fam_stats:
+                    fam_stats[fam] = {"n_seqs": 0, "lens": []}
+                fam_stats[fam]["n_seqs"] += n
+                fam_stats[fam]["lens"].append((med, n))
+
+        # Sort descending by sequence count and take top 10
+        sorted_fams = sorted(fam_stats.items(), key=lambda x: x[1]["n_seqs"], reverse=True)[:10]
+
+        table = Table(title="Top 10 Reference Magnetosome Protein Families", show_header=True)
+        table.add_column("Protein Family", style="bold green")
+        table.add_column("Ref Seqs", justify="right", style="cyan")
+        table.add_column("Median length (aa)", justify="right", style="magenta")
+
+        for fam, d in sorted_fams:
+            tot_seqs = d["n_seqs"]
+            w_med = round(sum(med * n for med, n in d["lens"]) / tot_seqs) if tot_seqs > 0 else 0
+            table.add_row(fam, str(tot_seqs), str(w_med))
+
         console.print(table)
 
 if __name__ == "__main__":
