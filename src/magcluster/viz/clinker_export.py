@@ -1,13 +1,15 @@
-"""Clinker-compatible GenBank slice exporter and gene function table generator."""
+"""Clinker-compatible GenBank slice exporter and automated visualization runner."""
 
+import subprocess
 from pathlib import Path
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Tuple
 from Bio import SeqIO
 from Bio.Seq import Seq
 from Bio.SeqFeature import FeatureLocation, SeqFeature
 from Bio.SeqRecord import SeqRecord
 from ..core.cluster import MGCCluster
 from ..core.search import MagnetosomeHit
+from ..utils.logger import log
 
 def export_cluster_to_genbank(
     cluster: MGCCluster,
@@ -46,7 +48,6 @@ def export_cluster_to_genbank(
 
     # Add CDS features
     for g in cluster.all_genes:
-        # Calculate coordinates relative to sliced record (0-based)
         feat_start = max(0, g.start - 1 - offset)
         feat_end = min(len(sub_seq), g.end - offset)
         feat_strand = g.strand
@@ -78,28 +79,76 @@ def export_cluster_to_genbank(
 
 def export_all_clusters_for_clinker(
     clusters: List[MGCCluster],
-    contigs_lookup: Dict[str, Dict[str, SeqRecord]],  # genome_name -> (ctg_id -> SeqRecord)
+    contigs_lookup: Dict[str, Dict[str, SeqRecord]],
     hits: Dict[str, MagnetosomeHit],
     out_dir: Path
-):
-    """Export sliced GenBank files and clinker -gf gene_functions.csv table."""
+) -> Tuple[List[Path], Path, Path]:
+    """Export sliced GenBank files, clinker -gf gene_functions.csv, and -cm colour_map.csv."""
     gbk_dir = out_dir / "clusters_gbk"
     gbk_dir.mkdir(parents=True, exist_ok=True)
 
-    gf_lines = ["gene,function,colour\n"]
+    gf_lines = []
+    colour_map = {}
+    gbk_files = []
 
     for c in clusters:
         gbk_file = gbk_dir / f"{c.cluster_id}.gbk"
         ctg_rec = contigs_lookup.get(c.genome_name, {}).get(c.contig_id)
         export_cluster_to_genbank(c, ctg_rec, hits, gbk_file)
+        gbk_files.append(gbk_file)
 
         for g in c.all_genes:
             if g.gene_id in hits:
                 h = hits[g.gene_id]
-                gf_lines.append(f"{g.gene_id},{h.parent_family},{h.color}\n")
+                func = h.parent_family
+                color = h.color
             else:
-                gf_lines.append(f"{g.gene_id},other,#BDBDBD\n")
+                func = "Other"
+                color = "#BDBDBD"
 
+            gf_lines.append(f"{g.gene_id},{func}\n")
+            colour_map[func] = color
+
+    # 1. gene_functions.csv (gene,function)
     gf_file = out_dir / "clinker_gene_functions.csv"
     with open(gf_file, "w", encoding="utf-8") as f:
         f.writelines(gf_lines)
+
+    # 2. colour_map.csv (function,colour)
+    cm_file = out_dir / "clinker_colour_map.csv"
+    with open(cm_file, "w", encoding="utf-8") as f:
+        for func, color in colour_map.items():
+            f.write(f"{func},{color}\n")
+
+    return gbk_files, gf_file, cm_file
+
+def run_clinker_visualization(
+    gbk_files: List[Path],
+    gene_functions_csv: Path,
+    colour_map_csv: Path,
+    plot_html: Path,
+    jobs: int = 0,
+    identity: float = 0.3
+) -> bool:
+    """Run Clinker to generate publication-quality interactive HTML comparison figure."""
+    if not gbk_files:
+        return False
+
+    cmd = [
+        "clinker",
+        *[str(p) for p in gbk_files],
+        "-gf", str(gene_functions_csv),
+        "-cm", str(colour_map_csv),
+        "-p", str(plot_html),
+        "-j", str(jobs),
+        "-i", str(identity)
+    ]
+    try:
+        res = subprocess.run(cmd, capture_output=True, text=True, check=True)
+        return True
+    except FileNotFoundError:
+        log.warning("clinker is not installed on PATH; skipped interactive HTML figure generation.")
+        return False
+    except subprocess.CalledProcessError as e:
+        log.warning(f"clinker execution warning: {e.stderr}")
+        return False

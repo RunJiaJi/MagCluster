@@ -1,8 +1,7 @@
 version: 1.0.0
 clustering_params:
   max_intergenic_genes: 5
-  min_distinct_core: 3
-  min_distinct_total: 4
+  min_distinct_families: 3
   min_cluster_span_bp: 2000
 core_families:
 - MamA

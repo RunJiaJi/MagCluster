@@ -13,10 +13,9 @@ from .core.predict import GenePredictor
 from .core.scoring import ClusterScorer
 from .core.search import MagnetosomeSearcher
 from .data import get_hmm_path, get_profiles_summary_path, load_rules
-from .utils.io import export_family_fastas, write_cluster_tables
+from .utils.io import export_combined_magnetosome_fasta, write_cluster_tables
 from .utils.logger import console, log
-from .viz.clinker_export import export_all_clusters_for_clinker
-from .viz.html_report import generate_html_report
+from .viz.clinker_export import export_all_clusters_for_clinker, run_clinker_visualization
 from .viz.static_plot import plot_all_clusters
 
 app = typer.Typer(
@@ -63,38 +62,38 @@ def run_pipeline(
         "--max-gap",
         help="Maximum intergenic non-MGC genes allowed between cluster hits."
     ),
-    min_core: int = typer.Option(
+    threshold: int = typer.Option(
         3,
-        "--min-core",
-        help="Minimum distinct core families required to define an MGC."
-    ),
-    min_total: int = typer.Option(
-        4,
-        "--min-total",
-        help="Minimum distinct total magnetosome families required."
+        "-th", "--threshold", "--min-families",
+        help="Minimum number of distinct magnetosome families required to define an MGC (default: 3)."
     ),
     flank: int = typer.Option(
         3,
-        "--flank",
-        help="Number of flanking non-MGC genes to include on each side of cluster."
+        "-un", "--unmag-num", "--flank",
+        help="Number of flanking non-MGC genes to reserve on each side of cluster (default: 3)."
     ),
     meta: Optional[bool] = typer.Option(
         None,
         "--meta/--single",
         help="Force metagenome mode vs single-genome mode in Pyrodigal."
     ),
-    fmt: str = typer.Option(
-        "svg",
-        "--format",
-        help="Static plot output format (svg, png, pdf)."
+    identity: float = typer.Option(
+        0.3,
+        "-i", "--identity",
+        help="Minimum alignment sequence identity for Clinker (default: 0.3)."
+    ),
+    static_plot: bool = typer.Option(
+        False,
+        "--static-plot",
+        help="Also render static vector figures (SVG) with pyGenomeViz."
     ),
     no_plot: bool = typer.Option(
         False,
         "--no-plot",
-        help="Skip static and HTML plot generation."
+        help="Skip Clinker alignment and visualization."
     ),
 ):
-    """Run full end-to-end pipeline: Predict -> Search -> Cluster -> Score -> Visualize."""
+    """Run full pipeline: Predict -> Search -> Cluster -> Score Mineral -> Visualize with Clinker."""
     start_time = time.time()
     console.print(f"[bold cyan]=== MagCluster v{__version__} Execution ===[/bold cyan]")
     console.print(f"[dim]Output directory: {outdir.resolve()}[/dim]\n")
@@ -121,8 +120,7 @@ def run_pipeline(
     searcher = MagnetosomeSearcher(evalue_cutoff=evalue, score_cutoff=score, cpus=threads)
     clusterer = ClusterEngine(
         max_intergenic_genes=max_gap,
-        min_distinct_core=min_core,
-        min_distinct_total=min_total,
+        min_distinct_families=threshold,
         flank_genes=flank
     )
 
@@ -170,35 +168,48 @@ def run_pipeline(
                 all_scores[c.cluster_id] = score_obj
                 console.print(
                     f"     • [bold]{c.cluster_id}[/bold]: {c.contig_id}:{c.start_bp}-{c.end_bp} "
-                    f"({c.span_bp} bp) | Core: {score_obj.n_core_genes}/10 "
-                    f"| Confidence: [bold]{score_obj.confidence}[/bold] "
-                    f"| Mineral: {score_obj.mineral_type}"
+                    f"({c.span_bp} bp) | Families: {score_obj.n_mag_families} "
+                    f"| Mineral: [bold]{score_obj.mineral_type}[/bold]"
                 )
         else:
-            console.print(f"  [dim]-> No syntenic MGC clusters met the threshold criteria.[/dim]")
+            console.print(f"  [dim]-> No syntenic MGC clusters met the threshold criteria (>= {threshold} distinct magnetosome families).[/dim]")
 
     # 5. Export results
-    console.print("\n[bold cyan]Writing standardized reports & data assets...[/bold cyan]")
+    console.print("\n[bold cyan]Writing reports and magnetosome sequences...[/bold cyan]")
     write_cluster_tables(all_clusters, all_scores, all_hits, outdir)
-    export_family_fastas(all_clusters, all_hits, outdir)
+    export_combined_magnetosome_fasta(all_clusters, all_hits, outdir, filename="magnetosome_proteins.faa")
 
-    # 6. Export for clinker
-    export_all_clusters_for_clinker(all_clusters, contigs_lookup, all_hits, outdir)
+    # 6. Clinker visualization
+    if all_clusters:
+        console.print("[dim]-> Preparing sliced GenBank files and Clinker gene function maps...[/dim]")
+        gbk_files, gf_file, cm_file = export_all_clusters_for_clinker(all_clusters, contigs_lookup, all_hits, outdir)
 
-    # 7. Visualization
-    if not no_plot and all_clusters:
-        console.print(f"[dim]-> Rendering publication-quality {fmt.upper()} cluster maps with pyGenomeViz...[/dim]")
-        plot_all_clusters(all_clusters, all_hits, outdir / "figures", fmt=fmt)
-        
-        console.print("[dim]-> Generating standalone HTML dashboard report...[/dim]")
-        generate_html_report(all_clusters, all_scores, outdir / "report.html")
+        if not no_plot:
+            clinker_html = outdir / "MGC_align.html"
+            console.print(f"[dim]-> Running Clinker to generate interactive comparison: {clinker_html.name}...[/dim]")
+            success = run_clinker_visualization(
+                gbk_files=gbk_files,
+                gene_functions_csv=gf_file,
+                colour_map_csv=cm_file,
+                plot_html=clinker_html,
+                jobs=threads,
+                identity=identity
+            )
+            if success:
+                console.print(f"  [bold green]✓ Clinker interactive alignment created: {clinker_html}[/bold green]")
+
+        if static_plot:
+            console.print(f"[dim]-> Rendering static cluster maps with pyGenomeViz...[/dim]")
+            plot_all_clusters(all_clusters, all_hits, outdir / "figures", fmt="svg")
 
     elapsed = time.time() - start_time
     console.print(f"\n[bold green]✓ Done in {elapsed:.1f}s![/bold green] Results saved to: [bold]{outdir.resolve()}[/bold]")
     if all_clusters:
-        console.print(f"  • TSV summary: [underline]{outdir}/summary.tsv[/underline]")
-        console.print(f"  • HTML report: [underline]{outdir}/report.html[/underline]")
-        console.print(f"  • Sliced GBKs for Clinker: [underline]{outdir}/clusters_gbk/[/underline]")
+        console.print(f"  • Summary: [underline]{outdir}/summary.tsv[/underline]")
+        console.print(f"  • Cluster Table: [underline]{outdir}/mgc_clusters.tsv[/underline]")
+        console.print(f"  • Combined Proteins: [underline]{outdir}/magnetosome_proteins.faa[/underline]")
+        if not no_plot:
+            console.print(f"  • Clinker Figure: [underline]{outdir}/MGC_align.html[/underline]")
 
 @app.command(name="db")
 def db_info():

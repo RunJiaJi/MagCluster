@@ -23,12 +23,13 @@ class MGCCluster:
     is_circular: bool = False
 
     @property
-    def distinct_core_families(self) -> Set[str]:
-        return {h.parent_family for h in self.core_hits}
+    def distinct_magnetosome_families(self) -> Set[str]:
+        """Set of distinct true magnetosome families (excluding iron_context/Feo)."""
+        return {h.parent_family for h in (self.core_hits + self.accessory_hits)}
 
     @property
     def distinct_all_families(self) -> Set[str]:
-        return {h.parent_family for h in (self.core_hits + self.accessory_hits)}
+        return {h.parent_family for h in (self.core_hits + self.accessory_hits + self.iron_hits)}
 
     @property
     def span_bp(self) -> int:
@@ -39,20 +40,18 @@ class MGCCluster:
         return self.cluster_core_end - self.cluster_core_start + 1
 
 class ClusterEngine:
-    """Detects MGCs based on synteny, gene distances, and core gene presence rules."""
+    """Detects MGCs based on synteny, gene distances, and magnetosome family threshold."""
 
     def __init__(
         self,
         max_intergenic_genes: int = 5,
         max_distance_bp: int = 25_000,
-        min_distinct_core: int = 3,
-        min_distinct_total: int = 4,
+        min_distinct_families: int = 3,
         flank_genes: int = 3
     ):
         self.max_intergenic_genes = max_intergenic_genes
         self.max_distance_bp = max_distance_bp
-        self.min_distinct_core = min_distinct_core
-        self.min_distinct_total = min_distinct_total
+        self.min_distinct_families = min_distinct_families
         self.flank_genes = flank_genes
 
     def cluster_genome(
@@ -74,11 +73,10 @@ class ClusterEngine:
         cluster_counter = 1
 
         for ctg_id, ctg_genes in genes_by_contig.items():
-            # Sort genes by start position
             ctg_genes.sort(key=lambda x: x.start)
             total_ctg_genes = len(ctg_genes)
 
-            # Find indices of genes with magnetosome hits (excluding lone Feo unless clustered with Mam/Mad)
+            # Find indices of genes with true magnetosome hits (excluding lone Feo)
             hit_indices = []
             for idx, g in enumerate(ctg_genes):
                 if g.gene_id in hits:
@@ -118,7 +116,7 @@ class ClusterEngine:
 
                 region_genes = ctg_genes[flank_start_idx : flank_end_idx + 1]
 
-                # Collect all hits in this region (now including any Feo genes in the neighborhood)
+                # Collect all hits in this region
                 core_hits = []
                 acc_hits = []
                 iron_hits = []
@@ -133,13 +131,10 @@ class ClusterEngine:
                         elif h.role == "iron_context":
                             iron_hits.append(h)
 
-                # Check core and total distinct families
-                distinct_cores = {h.parent_family for h in core_hits}
-                distinct_totals = {h.parent_family for h in (core_hits + acc_hits)}
+                # Rule: Must contain at least `min_distinct_families` distinct magnetosome families
+                distinct_mag_fams = {h.parent_family for h in (core_hits + acc_hits)}
 
-                if len(distinct_cores) < self.min_distinct_core:
-                    continue
-                if len(distinct_totals) < self.min_distinct_total:
+                if len(distinct_mag_fams) < self.min_distinct_families:
                     continue
 
                 # Check edge flag

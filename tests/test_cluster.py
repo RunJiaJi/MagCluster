@@ -34,18 +34,16 @@ def test_cluster_engine_synteny():
         "g_5": MagnetosomeHit("g_5", "ctg_1", "MamK", "MamK", 100.0, 1e-20, "core", "Alpha_classical", "#E63946", 5001, 5900, 1, 5, "M"*100),
     }
 
-    engine = ClusterEngine(max_intergenic_genes=2, min_distinct_core=3, min_distinct_total=4, flank_genes=1)
+    engine = ClusterEngine(max_intergenic_genes=2, min_distinct_families=3, flank_genes=1)
     clusters = engine.cluster_genome("test_sp", genes, hits)
 
     assert len(clusters) == 1
     c = clusters[0]
     assert c.cluster_id == "test_sp_MGC1"
-    assert len(c.distinct_core_families) == 4
-    assert "MamA" in c.distinct_core_families
-    assert "MamK" in c.distinct_core_families
+    assert len(c.distinct_magnetosome_families) == 4
+    assert "MamA" in c.distinct_magnetosome_families
+    assert "MamK" in c.distinct_magnetosome_families
 
     score = ClusterScorer.score_cluster(c)
-    assert score.completeness_score == 0.4  # 4 / 10
-    assert score.confidence == "Medium"
     assert score.mineral_type == "Magnetite"
-    assert score.lineage_signature == "Alphaproteobacteria"
+    assert score.n_mag_families == 4
