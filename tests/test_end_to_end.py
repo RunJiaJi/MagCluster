@@ -36,3 +36,20 @@ def test_msr1_end_to_end():
     score = ClusterScorer.score_cluster(c)
     assert score.mineral_type == "Magnetite"
     assert score.n_mag_families >= 20
+
+def test_protein_fasta_without_coords(tmp_path):
+    faa_content = (
+        ">protein_1 some header without coords\n"
+        "MSQIKIVGVGPGGIAALIGEARALGISDVTVVDLEEAAGRAVAEA\n"
+        ">protein_2 another header\n"
+        "MKSPVTVALVGNPNAGSTSLFNALTGAQSAVANYQRVTTSLNVRE\n"
+    )
+    test_faa = tmp_path / "test.faa"
+    test_faa.write_text(faa_content, encoding="utf-8")
+
+    parsed = parse_input(test_faa)
+    assert parsed.file_type == "faa"
+    assert not parsed.has_coordinates
+    assert len(parsed.genes) == 2
+    assert parsed.genes[0].contig_id == "unplaced"
+    assert parsed.genes[0].start == 0

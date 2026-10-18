@@ -74,6 +74,9 @@ Examples:
 
   # Batch process genomes in a directory:
   $ magcluster run genomes_dir/ -o results/
+
+  # Pass custom options to Clinker (e.g. skip pairwise alignments or keep file order):
+  $ magcluster run *.gbff -o results/ --clinker-opts "-na -ufo"
 """
 )
 def run_pipeline(
@@ -126,6 +129,11 @@ def run_pipeline(
         0.3,
         "-i", "--identity",
         help="Minimum alignment sequence identity for Clinker (default: 0.3)."
+    ),
+    clinker_opts: Optional[str] = typer.Option(
+        None,
+        "--clinker-opts",
+        help="Additional options passed directly to clinker (e.g. '--clinker-opts \"-na -ufo\"')."
     ),
     static_plot: bool = typer.Option(
         False,
@@ -184,6 +192,7 @@ def run_pipeline(
     all_clusters = []
     all_scores = {}
     all_hits = {}
+    all_genes_lookup = {}
     contigs_lookup = {}
 
     for idx, f_path in enumerate(expanded_files, 1):
@@ -202,6 +211,10 @@ def run_pipeline(
             genes = parsed.genes
             console.print(f"  [dim]-> Found {len(genes)} pre-annotated CDS.[/dim]")
 
+        for g in genes:
+            g.genome_name = genome_name
+            all_genes_lookup[g.gene_id] = g
+
         if not genes:
             console.print(f"  [yellow]No genes found in {f_path.name}, skipping.[/yellow]")
             continue
@@ -216,6 +229,11 @@ def run_pipeline(
             continue
 
         # 4. Cluster
+        if not parsed.has_coordinates:
+            console.print(f"  [yellow]! Input protein FASTA lacks genomic coordinates (contig/start/end).[/yellow]")
+            console.print(f"    [dim]Identified {len(hits)} magnetosome protein(s); syntenic cluster detection and Clinker plotting skipped.[/dim]")
+            continue
+
         clusters = clusterer.cluster_genome(genome_name, genes, hits)
         if clusters:
             console.print(f"  [bold cyan]-> Detected {len(clusters)} MGC cluster(s)![/bold cyan]")
@@ -233,8 +251,8 @@ def run_pipeline(
 
     # 5. Export results
     console.print("\n[bold cyan]Writing reports and magnetosome sequences...[/bold cyan]")
-    write_cluster_tables(all_clusters, all_scores, all_hits, outdir)
-    export_combined_magnetosome_fasta(all_clusters, all_hits, outdir, filename="magnetosome_proteins.faa")
+    write_cluster_tables(all_clusters, all_scores, all_hits, outdir, genes_lookup=all_genes_lookup)
+    export_combined_magnetosome_fasta(all_clusters, all_hits, outdir, filename="magnetosome_proteins.faa", genes_lookup=all_genes_lookup)
 
     # 6. Clinker visualization
     if all_clusters:
@@ -249,7 +267,8 @@ def run_pipeline(
                 plot_html=clinker_html,
                 hits=all_hits,
                 jobs=threads,
-                identity=identity
+                identity=identity,
+                clinker_opts=clinker_opts
             )
             if success:
                 console.print(f"  [bold green]✓ Clinker interactive alignment created: {clinker_html}[/bold green]")
@@ -260,11 +279,11 @@ def run_pipeline(
 
     elapsed = time.time() - start_time
     console.print(f"\n[bold green]✓ Done in {elapsed:.1f}s![/bold green] Results saved to: [bold]{outdir.resolve()}[/bold]")
-    if all_clusters:
+    if all_hits:
         console.print(f"  • Magnetosome Genes: [underline]{outdir}/mgc_genes.tsv[/underline]")
         console.print(f"  • Combined Proteins: [underline]{outdir}/magnetosome_proteins.faa[/underline]")
-        if not no_plot:
-            console.print(f"  • Clinker Visualization: [underline]{outdir}/MGC_align.html[/underline]")
+    if all_clusters and not no_plot:
+        console.print(f"  • Clinker Visualization: [underline]{outdir}/MGC_align.html[/underline]")
 
 @app.command(name="db")
 def db_info():

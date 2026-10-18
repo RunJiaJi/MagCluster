@@ -26,6 +26,7 @@ class ParsedGenome:
     contigs: Dict[str, SeqRecord] = field(default_factory=dict)
     genes: List[PredictedGene] = field(default_factory=list)
     needs_prediction: bool = False
+    has_coordinates: bool = True
 
 def detect_file_type(path: Path) -> str:
     """Detect whether file is GenBank, FASTA nucleotide, or FAA."""
@@ -153,11 +154,13 @@ def parse_faa(faa_path: Path, genome_name: Optional[str] = None) -> ParsedGenome
 
     genes: List[PredictedGene] = []
     contig_counts = {}
+    any_prodigal = False
 
     with opener(faa_path, "rt", encoding="utf-8", errors="ignore") as f:
         for i, rec in enumerate(SeqIO.parse(f, "fasta")):
             m = PRODIGAL_HDR_RE.match(rec.description)
             if m:
+                any_prodigal = True
                 gene_id = m["id"]
                 start = int(m["start"])
                 end = int(m["end"])
@@ -168,10 +171,10 @@ def parse_faa(faa_path: Path, genome_name: Optional[str] = None) -> ParsedGenome
                 ctg_id = ctg_match.group(1) if ctg_match else gene_id.rsplit("_", 1)[0]
             else:
                 gene_id = rec.id
-                start = 1 + i * 1000
-                end = start + len(rec.seq) * 3
-                strand = 1
-                ctg_id = "contig_1"
+                start = 0
+                end = 0
+                strand = 0
+                ctg_id = "unplaced"
 
             c_idx = contig_counts.get(ctg_id, 0)
             contig_counts[ctg_id] = c_idx + 1
@@ -194,7 +197,8 @@ def parse_faa(faa_path: Path, genome_name: Optional[str] = None) -> ParsedGenome
         file_type="faa",
         contigs={},
         genes=genes,
-        needs_prediction=False
+        needs_prediction=False,
+        has_coordinates=any_prodigal
     )
 
 def parse_input(path: Path, genome_name: Optional[str] = None) -> ParsedGenome:

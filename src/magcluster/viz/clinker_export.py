@@ -242,11 +242,14 @@ def run_clinker_visualization(
     plot_html: Path,
     hits: Dict[str, MagnetosomeHit],
     jobs: int = 0,
-    identity: float = 0.3
+    identity: float = 0.3,
+    clinker_opts: Optional[str] = None
 ) -> bool:
     """Run Clinker to generate comparison figure, then post-process colors and labels."""
     if not gbk_files:
         return False
+
+    import shlex
 
     cmd = [
         "clinker",
@@ -255,6 +258,11 @@ def run_clinker_visualization(
         "-j", str(jobs),
         "-i", str(identity)
     ]
+
+    if clinker_opts:
+        extra_args = shlex.split(clinker_opts)
+        cmd.extend(extra_args)
+
     try:
         subprocess.run(cmd, capture_output=True, text=True, check=True)
         # Apply custom coloring & protein labels
