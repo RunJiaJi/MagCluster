@@ -179,3 +179,27 @@ def test_clinker_profile_labels(tmp_path):
     assert get_display_label(hit_o_full) == "MamO"
     assert get_display_label(hits["g_mame"]) == "MamE_Cter"
 
+def test_force_overwrite_existing_outdir(tmp_path):
+    from typer.testing import CliRunner
+    from magcluster.cli import app
+
+    runner = CliRunner()
+    test_faa = tmp_path / "test.faa"
+    test_faa.write_text(">p1\nMSQIKIVGVGPGGIAALIGEARALGISDVTVVDLEEAAGRAVAEA\n", encoding="utf-8")
+
+    out_dir = tmp_path / "results_dir"
+    out_dir.mkdir(parents=True)
+    # Place an existing file in out_dir
+    (out_dir / "existing_file.txt").write_text("dummy", encoding="utf-8")
+
+    # 1. Run without --force -> should fail and instruct user to use --force
+    res = runner.invoke(app, ["run", str(test_faa), "-o", str(out_dir), "--no-plot"])
+    assert res.exit_code == 1
+    assert "already exists" in res.output
+    assert "--force" in res.output
+
+    # 2. Run with --force -> should proceed
+    res_force = runner.invoke(app, ["run", str(test_faa), "-o", str(out_dir), "--no-plot", "--force"])
+    assert res_force.exit_code == 0
+
+

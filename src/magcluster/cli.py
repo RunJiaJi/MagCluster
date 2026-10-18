@@ -119,6 +119,9 @@ Examples:
   # Pass custom options to Clinker (e.g. skip pairwise alignments or keep file order):
   $ magcluster run *.gbff -o results/ --clinker-opts "-na -ufo"
 
+  # Force overwrite when output directory already exists:
+  $ magcluster run *.gbff -o results/ --force
+
   # View available Clinker visualization options:
   $ magcluster run --clinker-help
 """
@@ -196,6 +199,11 @@ def run_pipeline(
         "--no-plot",
         help="Skip Clinker alignment and visualization."
     ),
+    force: bool = typer.Option(
+        False,
+        "-f", "--force",
+        help="Overwrite existing files if the output directory already exists and is not empty."
+    ),
 ):
     """Run full pipeline: Predict -> Search -> Cluster -> Score Mineral -> Visualize with Clinker."""
     start_time = time.time()
@@ -215,6 +223,15 @@ def run_pipeline(
     if not expanded_files:
         console.print("[bold red]No input files found![/bold red]")
         raise typer.Exit(code=1)
+
+    # Check if outdir exists and is non-empty
+    if outdir.exists() and any(p for p in outdir.iterdir() if not p.name.startswith(".")):
+        if not force:
+            console.print(
+                f"[bold red]Error:[/bold red] Output directory '[bold]{outdir}[/bold]' already exists and is not empty.\n"
+                f"Please specify a different directory or use [bold cyan]--force[/bold cyan] (or [bold cyan]-f[/bold cyan]) to overwrite."
+            )
+            raise typer.Exit(code=1)
 
     console.print(f"Discovered [bold]{len(expanded_files)}[/bold] input file(s).")
     outdir.mkdir(parents=True, exist_ok=True)
