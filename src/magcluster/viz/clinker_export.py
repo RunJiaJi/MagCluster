@@ -194,15 +194,25 @@ def customize_clinker_html(plot_html: Path, hits: Dict[str, MagnetosomeHit]) -> 
                 if hit:
                     protein_name = hit.parent_family
                     gene["label"] = protein_name
+                    gene["is_mag"] = True
                     gene.setdefault("names", {})["protein"] = protein_name
                     gene["names"]["gene"] = protein_name
                     gene["names"]["product"] = protein_name
+                    gene["names"]["label"] = protein_name
 
                     f_class = get_family_class(protein_name, hit)
                     group_dict[f_class]["genes"].append(gene["uid"])
                 else:
                     # Non-magnetosome gene: blank label to prevent arrow clutter
                     gene["label"] = ""
+                    gene["is_mag"] = False
+                    gene["names"] = {
+                        "protein": "",
+                        "gene": "",
+                        "label": "",
+                        "locus_tag": "",
+                        "product": ""
+                    }
                     group_dict["Other"]["genes"].append(gene["uid"])
 
     # Retain groups that have at least one gene
@@ -212,6 +222,16 @@ def customize_clinker_html(plot_html: Path, hits: Dict[str, MagnetosomeHit]) -> 
     ]
 
     new_html = html[:m.start(1)] + json.dumps(data) + html[m.end(1):]
+
+    # Prevent clustermap.js from falling back to t.uid when t.label is empty
+    new_html = new_html.replace("labelText:t=>t.label||t.uid", "labelText:t=>t.label||\"\"")
+
+    # Prevent sidebar label selector from ever applying labels to non-magnetosome genes
+    new_html = new_html.replace(
+        ".each(d => d.label = d.names[type] ? d.names[type] : d.label)",
+        ".each(d => d.label = d.is_mag ? (d.names[type] || d.label) : \"\")"
+    )
+
     with open(plot_html, "w", encoding="utf-8") as f:
         f.write(new_html)
 
