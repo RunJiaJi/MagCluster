@@ -282,31 +282,21 @@ def db_info():
     console.print(f"Core defining families ({len(rules.get('core_families', []))}): [bold magenta]{', '.join(rules.get('core_families', []))}[/bold magenta]\n")
 
     if summary_p.exists():
-        # Aggregate stats by parent protein family
-        fam_stats = {}
-        with open(summary_p, "r", encoding="utf-8") as f:
-            reader = csv.DictReader(f, delimiter="\t")
-            for r in reader:
-                fam = r["parent_family"]
-                n = int(r["n_seqs"])
-                med = float(r["median_length"])
-                if fam not in fam_stats:
-                    fam_stats[fam] = {"n_seqs": 0, "lens": []}
-                fam_stats[fam]["n_seqs"] += n
-                fam_stats[fam]["lens"].append((med, n))
-
-        # Sort descending by sequence count and take top 10
-        sorted_fams = sorted(fam_stats.items(), key=lambda x: x[1]["n_seqs"], reverse=True)[:10]
-
-        table = Table(title="Top 10 Reference Magnetosome Protein Families", show_header=True)
+        table = Table(title="Reference Magnetosome HMM Profiles (92)", show_header=True)
+        table.add_column("Profile", style="bold cyan")
         table.add_column("Protein Family", style="bold green")
         table.add_column("Ref Seqs", justify="right", style="cyan")
         table.add_column("Median length (aa)", justify="right", style="magenta")
 
-        for fam, d in sorted_fams:
-            tot_seqs = d["n_seqs"]
-            w_med = round(sum(med * n for med, n in d["lens"]) / tot_seqs) if tot_seqs > 0 else 0
-            table.add_row(fam, str(tot_seqs), str(w_med))
+        with open(summary_p, "r", encoding="utf-8") as f:
+            reader = csv.DictReader(f, delimiter="\t")
+            for r in reader:
+                table.add_row(
+                    r["profile"],
+                    r["parent_family"],
+                    r["n_seqs"],
+                    r["median_length"],
+                )
 
         console.print(table)
 
