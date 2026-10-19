@@ -14,11 +14,10 @@
 
 - **One command**: `magcluster run` runs everything from gene prediction to cluster visualization in a single step.
 - **No Prokka needed**: gene calling is handled natively by [Pyrodigal](https://github.com/althonos/pyrodigal) (fast, no Perl or external setup).
-- **92 HMM profiles**: replaces keyword matching with curated HMMs covering 8 magnetosome families (`Mam`, `Mms`, `Mad`, `Man`, `Mae`, `Maq`, `Mca`, `Feo`), searched using [PyHMMER](https://github.com/althonos/pyhmmer).
-- **Flexible inputs**: accepts GenBank (`.gbk`/`.gbff`), nucleotide FASTA contigs (`.fasta`/`.fna`), and protein FASTA (`.faa`), including `.gz` compressed files.
+- **92 HMM profiles**: curated protein HMMs covering 8 magnetosome families (`Mam`, `Mms`, `Mad`, `Man`, `Mae`, `Maq`, `Mca`, `Feo`), searched using [PyHMMER](https://github.com/althonos/pyhmmer).
+- **Flexible inputs**: accepts GenBank (`.gbk`/`.gbff`), nucleotide FASTA contigs (`.fasta`/`.fna`/`.fa`), and protein FASTA (`.faa`), including `.gz` compressed files.
 - **Per-genome outputs**: writes separate `{genome}_mgc_genes.tsv` and `{genome}_magnetosome_proteins.faa` files for each genome.
-- **Clean interactive plots**: generates Clinker HTML maps with specific domain labels (`MamE_Cter`, `MamQ_greigite`) while keeping full-length proteins simple (`MamE`, `MamO`).
-- **Overwrite protection**: stops and asks for `--force` (`-f`) before writing into an existing non-empty folder.
+
 
 ---
 
@@ -27,8 +26,8 @@
 ### 1. Create a Conda environment (recommended)
 
 ```bash
-conda create -n magcluster -c conda-forge -c bioconda python=3.12 pip
-conda activate magcluster
+conda create -n magcluster-1.0 -c conda-forge -c bioconda python=3.12 pip
+conda activate magcluster-1.0
 ```
 
 ### 2. Install MagCluster
@@ -60,7 +59,7 @@ magcluster run --help
 magcluster run genome.gbff -o results/
 ```
 
-### 2. Unannotated FASTA contigs (`.fasta` / `.fna`)
+### 2. Unannotated FASTA contigs (`.fasta` / `.fna` / `.fa`)
 MagCluster automatically predicts genes and uses all CPU cores by default:
 ```bash
 magcluster run contigs.fasta -o results/ -t 8
@@ -72,7 +71,7 @@ magcluster run genomes_dir/ -o results/
 ```
 
 ### 4. Protein FASTA (`.faa`)
-If your input contains protein sequences without coordinates, MagCluster will annotate magnetosome proteins and output TSV/FASTA tables without plotting:
+Note if your input contains protein sequences without coordinates, MagCluster will annotate magnetosome proteins and output TSV table and FASTA files without plotting the gene cluster:
 ```bash
 magcluster run proteins.faa -o results/
 ```
@@ -143,7 +142,7 @@ results/
 | `start`, `end` | Gene coordinates (1-based) |
 | `strand` | Strand (`+` or `-`) |
 | `profile` | Best matching HMM profile (e.g. `MamE_full`, `MamE_Cter`, `MamQ_greigite`) |
-| `parent_family` | Standard family name (e.g. `MamE`, `MamQ`) |
+| `parent_family` | Family name (e.g. `MamE`, `MamQ`) |
 | `role` | `core`, `accessory`, or `iron_context` |
 | `score`, `evalue` | HMM match score and E-value |
 
@@ -157,9 +156,9 @@ MSERRPVGRTL...
 
 ### 3. Interactive visualization (`MGC_align.html`)
 
-Open this file in Google Chrome, Edge, Firefox, or Safari:
+Open this file in your webbrowser:
 
-- **Gene labels**: Arrows show specific domain annotations like `MamE_Cter`, `MamE_Nter`, and `MamQ_greigite`. Normal full-length proteins are labeled simply as `MamE`, `MamO`, etc.
+- **Gene labels**: Arrows show specific domain annotations like `MamE_Cter`, `MamE_Nter`, and `MamQ_greigite`.
 - **Family colors**:
   - Red: `mam` family
   - Yellow: `mms` family
@@ -190,7 +189,7 @@ magcluster run *.gbff -o results/ --clinker-opts "-ufo"
 magcluster run *.gbff -o results/ --clinker-opts "-na -ufo"
 ```
 
-To see all Clinker options, run:
+To see all Clinker visualization options, run:
 ```bash
 magcluster run --clinker-help
 ```

@@ -14,11 +14,9 @@
 
 - **一条命令搞定**：新版用 `magcluster run` 整合了以前繁琐的多个步骤，一键完成基因预测、HMM 比对、基因簇识别和绘图。
 - **不再依赖外部 Prokka**：内置原生 [Pyrodigal](https://github.com/althonos/pyrodigal) 进行快速基因预测，不需要再配置复杂的 Perl 环境和 BLAST 索引。
-- **92 个精细 HMM 模型**：内置来自 817 条代表性磁小体蛋白训练出的 92 个 HMM profile，覆盖 8 大蛋白家族，使用 [PyHMMER](https://github.com/althonos/pyhmmer) 检索，速度快且不易漏检。
-- **支持多种输入格式**：无论是带注释的 GenBank 文件（`.gbk`/`.gbff`）、未注释的核酸 Contig（`.fasta`/`.fna`），还是纯蛋白序列（`.faa`），都可以直接处理，同时支持 `.gz` 压缩包。
+- **92 个精细 HMM 模型**：覆盖 8 大磁小体蛋白家族（`Mam`、`Mms`、`Mad`、`Man`、`Mae`、`Maq`、`Mca`、`Feo`），使用 [PyHMMER](https://github.com/althonos/pyhmmer) 进行快速检索。
+- **支持多种输入格式**：支持带注释的 GenBank 文件（`.gbk`/`.gbff`）、未注释的核酸 Contig（`.fasta`/`.fna`/`.fa`），以及纯蛋白序列（`.faa`），同时支持 `.gz` 压缩文件。
 - **每个基因组独立出结果**：每个样本单独生成 `{genome}_mgc_genes.tsv` 和 `{genome}_magnetosome_proteins.faa`，不再混在一起。
-- **图像标签更清晰**：生成的 Clinker 网页图中，带有明确结构域或变体的蛋白会标出具体标签（如 `MamE_Cter`、`MamQ_greigite`），普通全长蛋白则简洁显示为 `MamE`、`MamO` 等。
-- **防止误覆盖**：如果输出文件夹已经存在且非空，程序会暂停提醒，加上 `--force`（或 `-f`）才会执行覆盖。
 
 ---
 
@@ -27,8 +25,8 @@
 ### 1. 新建 Conda 环境（推荐）
 
 ```bash
-conda create -n magcluster -c conda-forge -c bioconda python=3.12 pip
-conda activate magcluster
+conda create -n magcluster-1.0 -c conda-forge -c bioconda python=3.12 pip
+conda activate magcluster-1.0
 ```
 
 ### 2. 安装 MagCluster
@@ -60,7 +58,7 @@ magcluster run --help
 magcluster run genome.gbff -o results/
 ```
 
-### 2. 分析未注释的 FASTA Contig（`.fasta` / `.fna`）
+### 2. 分析未注释的 FASTA Contig（`.fasta` / `.fna` / `.fa`）
 程序会自动调用 Pyrodigal 进行基因预测，默认调用所有 CPU 核心：
 ```bash
 magcluster run contigs.fasta -o results/ -t 8
@@ -72,7 +70,7 @@ magcluster run genomes_dir/ -o results/
 ```
 
 ### 4. 分析蛋白质序列文件（`.faa`）
-如果输入的是没有基因组坐标的蛋白 FASTA，程序会自动进行 HMM 磁小体蛋白注释并输出结果表格，自动跳过共线性绘图：
+注意：如果输入的是没有基因组坐标的纯蛋白 FASTA，程序会完成磁小体蛋白注释并输出 TSV 表格和 FASTA 序列文件，不进行基因簇绘图：
 ```bash
 magcluster run proteins.faa -o results/
 ```
@@ -144,7 +142,7 @@ results/
 | `start`, `end` | 基因在染色体上的起止坐标（1-based） |
 | `strand` | 正负链方向（`+` 或 `-`） |
 | `profile` | 具体匹配到的 HMM 模型（如 `MamE_full`、`MamE_Cter`、`MamQ_greigite`） |
-| `parent_family` | 对应的归一化家族名称（如 `MamE`、`MamQ`） |
+| `parent_family` | 家族名称（如 `MamE`、`MamQ`） |
 | `role` | 基因功能角色：`core`（核心）、`accessory`（辅助）或 `iron_context`（铁转运） |
 | `score`, `evalue` | HMM 检索得分与 E 值 |
 
@@ -158,9 +156,9 @@ MSERRPVGRTL...
 
 ### 3. 交互式基因簇对齐图（`MGC_align.html`）
 
-直接用 Chrome、Edge、Firefox 或 Safari 打开：
+直接用浏览器打开：
 
-- **基因标签**：明确带有结构域或亚型的基因会显示具体标签（如 `MamE_Cter`、`MamE_Nter`、`MamQ_greigite`），普通全长蛋白则简洁显示为 `MamE`、`MamO` 等。
+- **基因标签**：基因箭头会标出具体的结构域或变体标签（如 `MamE_Cter`、`MamE_Nter`、`MamQ_greigite`）。
 - **家族配色板**：
   - 红色：`mam` 家族
   - 黄色：`mms` 家族
@@ -191,7 +189,7 @@ magcluster run *.gbff -o results/ --clinker-opts "-ufo"
 magcluster run *.gbff -o results/ --clinker-opts "-na -ufo"
 ```
 
-如果想查看 Clinker 原生支持哪些参数，直接输入：
+如果想查看 Clinker 支持的所有可视化参数，直接输入：
 ```bash
 magcluster run --clinker-help
 ```
