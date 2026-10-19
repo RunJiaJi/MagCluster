@@ -315,9 +315,11 @@ def run_pipeline(
                 score_obj = ClusterScorer.score_cluster(c)
                 all_clusters.append(c)
                 all_scores[c.cluster_id] = score_obj
+                sub_count = len(c.subclusters) if getattr(c, "subclusters", None) else 1
+                sub_info = f" ({sub_count} subclusters, {len(c.all_genes)} genes)" if sub_count > 1 else f" ({len(c.all_genes)} genes)"
                 console.print(
-                    f"     • [bold]{c.cluster_id}[/bold]: {c.contig_id}:{c.start_bp}-{c.end_bp} "
-                    f"({c.span_bp} bp) | Families: {score_obj.n_mag_families} "
+                    f"     • [bold]{c.cluster_id}[/bold]{sub_info}: {c.contig_id}:{c.start_bp}-{c.end_bp} "
+                    f"| Families: {score_obj.n_mag_families} "
                     f"| Mineral: [bold]{score_obj.mineral_type}[/bold]"
                 )
         else:

@@ -20,43 +20,47 @@ def plot_mgc_cluster(
         link_track_ratio=0.8,
     )
 
-    track_name = f"{cluster.cluster_id} ({cluster.contig_id})"
-    track_size = cluster.span_bp
-    track = gv.add_feature_track(track_name, track_size)
+    subclusters = getattr(cluster, "subclusters", None) or []
+    slices = subclusters if subclusters else [cluster]
 
-    # Offset to make plot relative to cluster start_bp
-    offset = cluster.start_bp
+    for i, s in enumerate(slices, 1):
+        ctg_label = s.contig_id
+        track_name = f"{cluster.cluster_id} loc{i} ({ctg_label})" if len(slices) > 1 else f"{cluster.cluster_id} ({ctg_label})"
+        track_size = s.span_bp
+        track = gv.add_feature_track(track_name, track_size)
 
-    for g in cluster.all_genes:
-        g_start = max(0, g.start - offset)
-        g_end = min(track_size, g.end - offset)
-        strand = g.strand
+        offset = s.start_bp
 
-        # Determine color and label
-        if g.gene_id in hits:
-            hit = hits[g.gene_id]
-            color = hit.color
-            label = hit.profile[:-5] if hit.profile.endswith("_full") else hit.profile
-        else:
-            color = "#E0E0E0"  # gray for intervening non-MGC genes
-            label = ""
+        for g in s.all_genes:
+            g_start = max(0, g.start - offset)
+            g_end = min(track_size, g.end - offset)
+            strand = g.strand
 
-        text_kws = {
-            "size": 8,
-            "rotation": 45 if len(label) > 4 else 0,
-            "vpos": "top"
-        }
+            # Determine color and label
+            if g.gene_id in hits:
+                hit = hits[g.gene_id]
+                color = hit.color
+                label = hit.profile[:-5] if hit.profile.endswith("_full") else hit.profile
+            else:
+                color = "#E0E0E0"  # gray for intervening non-MGC genes
+                label = ""
 
-        track.add_feature(
-            start=g_start,
-            end=g_end,
-            strand=strand,
-            label=label,
-            text_kws=text_kws,
-            facecolor=color,
-            edgecolor="#333333",
-            linewidth=0.5
-        )
+            text_kws = {
+                "size": 8,
+                "rotation": 45 if len(label) > 4 else 0,
+                "vpos": "top"
+            }
+
+            track.add_feature(
+                start=g_start,
+                end=g_end,
+                strand=strand,
+                label=label,
+                text_kws=text_kws,
+                facecolor=color,
+                edgecolor="#333333",
+                linewidth=0.5
+            )
 
     out_path.parent.mkdir(parents=True, exist_ok=True)
     gv.savefig(str(out_path))

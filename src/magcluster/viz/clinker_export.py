@@ -62,16 +62,29 @@ def export_cluster_to_genbank(
     hits: Dict[str, MagnetosomeHit],
     out_path: Path
 ):
-    """Export sliced GenBank file for an MGC cluster (supporting single or multi-contig)."""
-    # Group genes in this cluster by contig
-    genes_by_ctg: Dict[str, List[PredictedGene]] = {}
-    for g in cluster.all_genes:
-        genes_by_ctg.setdefault(g.contig_id, []).append(g)
+    """Export sliced GenBank file for an MGC cluster (supporting discrete subclusters & contigs)."""
+    subclusters = getattr(cluster, "subclusters", None) or []
+    if subclusters:
+        slices = [
+            (sub.contig_id, sorted(sub.all_genes, key=lambda x: x.start))
+            for sub in subclusters
+        ]
+    else:
+        # Fallback grouping by contig if subclusters not populated
+        genes_by_ctg: Dict[str, List[PredictedGene]] = {}
+        for g in cluster.all_genes:
+            genes_by_ctg.setdefault(g.contig_id, []).append(g)
+        slices = [
+            (ctg_id, sorted(ctg_genes, key=lambda x: x.start))
+            for ctg_id, ctg_genes in genes_by_ctg.items()
+        ]
 
     records_to_write = []
 
-    for ctg_id, ctg_genes in genes_by_ctg.items():
-        ctg_genes.sort(key=lambda x: x.start)
+    for i, (ctg_id, ctg_genes) in enumerate(slices, 1):
+        if not ctg_genes:
+            continue
+
         offset = ctg_genes[0].start - 1  # 0-based slice start
         end_idx = ctg_genes[-1].end      # 0-based slice end (exclusive)
 
@@ -82,12 +95,14 @@ def export_cluster_to_genbank(
             span_len = max(1, end_idx - offset)
             sub_seq = Seq("N" * span_len)
 
-        rec_name = cluster.cluster_id[:16]
+        rec_id = f"{cluster.genome_name}_loc{i}" if len(slices) > 1 else cluster.cluster_id
+        rec_name = rec_id[:16]
+        desc_label = f"slice {i}" if len(slices) > 1 else "cluster"
         new_rec = SeqRecord(
             sub_seq,
-            id=cluster.cluster_id,
+            id=rec_id,
             name=rec_name,
-            description=f"Magnetosome Gene Cluster from {cluster.genome_name} ({ctg_id}:{offset+1}-{end_idx})"
+            description=f"Magnetosome Gene Cluster {desc_label} from {cluster.genome_name} ({ctg_id}:{offset+1}-{end_idx})"
         )
         new_rec.annotations["molecule_type"] = "DNA"
         new_rec.annotations["topology"] = "linear"
@@ -260,9 +275,19 @@ def run_clinker_visualization(
         return False
 
     import shlex
+    import shutil
+    import sys
+
+    clinker_bin = shutil.which("clinker")
+    if not clinker_bin:
+        env_bin = Path(sys.executable).parent / "clinker"
+        if env_bin.exists():
+            clinker_bin = str(env_bin)
+        else:
+            clinker_bin = "clinker"
 
     cmd = [
-        "clinker",
+        clinker_bin,
         *[str(p) for p in gbk_files],
         "-p", str(plot_html),
         "-j", str(jobs),
