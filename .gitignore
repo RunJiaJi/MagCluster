@@ -131,3 +131,5 @@ dmypy.json
 # Test output directories
 test_output*/
 magcluster_results*/
+results/
+*.gbff

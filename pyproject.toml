@@ -10,7 +10,8 @@ readme = "README.md"
 authors = [
     { name = "Runjia Ji", email = "jirunjia@gmail.com" }
 ]
-license = { text = "GPL-3.0-or-later" }
+license = "GPL-3.0-or-later"
+
 classifiers = [
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.10",
@@ -34,6 +35,12 @@ dependencies = [
     "pygenomeviz>=1.0.0",
     "clinker>=0.0.30",
 ]
+
+[project.urls]
+Homepage = "https://github.com/RunJiaJi/MagCluster"
+Documentation = "https://github.com/RunJiaJi/MagCluster#readme"
+Repository = "https://github.com/RunJiaJi/MagCluster.git"
+"Bug Tracker" = "https://github.com/RunJiaJi/MagCluster/issues"
 
 [project.optional-dependencies]
 dev = [
