@@ -1,5 +1,7 @@
 """End-to-end integration tests on real genomes."""
 
+import os
+import re
 from pathlib import Path
 import pytest
 from magcluster.core.cluster import ClusterEngine
@@ -8,6 +10,7 @@ from magcluster.core.scoring import ClusterScorer
 from magcluster.core.search import MagnetosomeSearcher
 
 _candidates = [
+    *([Path(os.environ["MAGCLUSTER_MSR1_GBFF"])] if os.environ.get("MAGCLUSTER_MSR1_GBFF") else []),
     Path(__file__).resolve().parent.parent / "MSR-1_genome.gbff",
     Path(__file__).resolve().parent.parent.parent / "MSR-1_genome.gbff",
     Path("/Users/sybil/.gemini/antigravity-ide/brain/0bc121af-6698-4630-998e-7a76d2146f06/scratch/controls/MSR-1_genome.gbff"),
@@ -200,8 +203,9 @@ def test_force_overwrite_existing_outdir(tmp_path):
     # 1. Run without --force -> should fail and instruct user to use --force
     res = runner.invoke(app, ["run", str(test_faa), "-o", str(out_dir), "--no-plot"])
     assert res.exit_code == 1
-    assert "already exists" in res.output
-    assert "--force" in res.output
+    text = " ".join(re.sub(r"\x1b\[[0-9;?]*[ -/]*[@-~]", "", res.output).split())  # colour/width independent
+    assert "already exists" in text
+    assert "--force" in text
 
     # 2. Run with --force -> should proceed
     res_force = runner.invoke(app, ["run", str(test_faa), "-o", str(out_dir), "--no-plot", "--force"])

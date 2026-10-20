@@ -7,6 +7,9 @@ import pyhmmer
 from ..data import get_hmm_path, load_rules
 from .predict import PredictedGene
 
+#: Bit-score cutoff used for a profile that has no ``trusted_cutoff`` in rules.yaml.
+DEFAULT_SCORE_CUTOFF = 25.0
+
 @dataclass
 class MagnetosomeHit:
     """Represents a significant HMM match for a gene."""
@@ -33,9 +36,18 @@ class MagnetosomeSearcher:
         hmm_path: Optional[Path] = None,
         rules_path: Optional[Path] = None,
         evalue_cutoff: float = 1e-5,
-        score_cutoff: float = 25.0,
+        score_cutoff: Optional[float] = None,
         cpus: int = 0
     ):
+        """
+        Args:
+            evalue_cutoff: maximum E-value of a reported hit.
+            score_cutoff: global minimum bit score.  ``None`` (default) uses each
+                profile's ``trusted_cutoff`` from rules.yaml (25.0 for all built-in
+                profiles); an explicit value replaces the per-profile cutoffs for
+                every profile.
+            cpus: worker threads for PyHMMER (0 = all available cores).
+        """
         self.hmm_path = hmm_path or get_hmm_path()
         self.rules = load_rules(rules_path)
         self.evalue_cutoff = evalue_cutoff
@@ -50,6 +62,17 @@ class MagnetosomeSearcher:
 
         # Profile metadata lookup from rules
         self.profile_meta = self.rules.get("profiles", {})
+
+    def min_score_for(self, profile_name: str) -> float:
+        """Effective bit-score cutoff for *profile_name*.
+
+        An explicit ``score_cutoff`` (``-s/--score``) always wins; otherwise the
+        profile's ``trusted_cutoff`` from rules.yaml is used.
+        """
+        if self.score_cutoff is not None:
+            return float(self.score_cutoff)
+        meta = self.profile_meta.get(profile_name, {})
+        return float(meta.get("trusted_cutoff", DEFAULT_SCORE_CUTOFF))
 
     def search_genes(self, genes: List[PredictedGene]) -> Dict[str, MagnetosomeHit]:
         """Search a list of genes against magnetosome HMMs, returning best hit per gene."""
@@ -88,7 +111,7 @@ class MagnetosomeSearcher:
             role = meta.get("role", "accessory")
             lineage = meta.get("lineage", "Other")
             color = meta.get("color", "#A8DADC")
-            min_score = meta.get("trusted_cutoff", self.score_cutoff)
+            min_score = self.min_score_for(prof_name)
 
             for hit in top_hits:
                 g_id = hit.name.decode() if isinstance(hit.name, bytes) else str(hit.name)

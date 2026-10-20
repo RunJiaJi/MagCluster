@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "magcluster"
-version = "1.0.0"
+version = "1.0.1"
 description = "Fast, accurate, Prokka-free Magnetosome Gene Cluster (MGC) identification, classification, and visualization"
 readme = "README.md"
 authors = [
@@ -17,6 +17,7 @@ classifiers = [
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
     "Topic :: Scientific/Engineering :: Bio-Informatics",
     "Intended Audience :: Science/Research",
     "Operating System :: POSIX :: Linux",
@@ -26,10 +27,8 @@ requires-python = ">=3.10"
 dependencies = [
     "biopython>=1.80",
     "pyrodigal>=3.0.0",
-    "pyhmmer>=0.10.0",
-    "pyfamsa>=0.6.0",
-    "pandas>=2.0.0",
-    "typer>=0.9.0",
+    "pyhmmer>=0.10.1",
+    "typer>=0.16.0",
     "rich>=13.0.0",
     "pyyaml>=6.0",
     "pygenomeviz>=1.0.0",
@@ -45,6 +44,10 @@ Repository = "https://github.com/RunJiaJi/MagCluster.git"
 [project.optional-dependencies]
 dev = [
     "pytest>=7.0.0",
+]
+# Only needed to rebuild the HMM database with scripts/build_database.py
+build-db = [
+    "pyfamsa>=0.6.0",
 ]
 
 [project.scripts]

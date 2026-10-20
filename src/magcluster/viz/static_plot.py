@@ -2,9 +2,16 @@
 
 from pathlib import Path
 from typing import Dict, List, Optional
-from pygenomeviz import GenomeViz
 from ..core.cluster import MGCCluster
 from ..core.search import MagnetosomeHit
+from ..utils.logger import quiet_matplotlib
+
+
+def _genome_viz_class():
+    """Import pyGenomeViz (and thus matplotlib) lazily, only when a figure is drawn."""
+    quiet_matplotlib()
+    from pygenomeviz import GenomeViz
+    return GenomeViz
 
 def plot_mgc_cluster(
     cluster: MGCCluster,
@@ -14,6 +21,7 @@ def plot_mgc_cluster(
     feature_style: str = "arrow"
 ):
     """Render a single MGC cluster to SVG, PNG, or PDF."""
+    GenomeViz = _genome_viz_class()
     gv = GenomeViz(
         fig_track_height=1.0,
         feature_track_ratio=0.8,
@@ -69,10 +77,19 @@ def plot_all_clusters(
     clusters: List[MGCCluster],
     hits: Dict[str, MagnetosomeHit],
     out_dir: Path,
-    fmt: str = "svg"
-):
-    """Plot all clusters in the list."""
+    fmt: str = "svg",
+    hits_by_genome: Optional[Dict[str, Dict[str, MagnetosomeHit]]] = None,
+) -> List[Path]:
+    """Plot all clusters in the list; returns the written figure paths.
+
+    ``hits_by_genome`` (genome name -> hits of that genome) takes precedence over
+    the flat ``hits`` dict so that identical gene IDs in different genomes never mix.
+    """
     out_dir.mkdir(parents=True, exist_ok=True)
+    written = []
     for c in clusters:
         f_name = out_dir / f"{c.cluster_id}.{fmt}"
-        plot_mgc_cluster(c, hits, f_name)
+        g_hits = hits_by_genome.get(c.genome_name, {}) if hits_by_genome is not None else hits
+        plot_mgc_cluster(c, g_hits, f_name)
+        written.append(f_name)
+    return written

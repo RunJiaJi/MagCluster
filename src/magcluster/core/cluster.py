@@ -49,6 +49,11 @@ class MGCCluster:
     subclusters: List[MGCSubcluster] = field(default_factory=list)
     on_edge: bool = False
     is_circular: bool = False
+    #: True when all subclusters lie on one circular replicon and the shortest arc
+    #: covering them crosses the origin; then ``start_bp > end_bp``.
+    wraps_origin: bool = False
+    #: Length of the replicon (only set when ``wraps_origin`` is True).
+    contig_length: int = 0
 
     @property
     def distinct_magnetosome_families(self) -> Set[str]:
@@ -61,11 +66,34 @@ class MGCCluster:
 
     @property
     def span_bp(self) -> int:
+        if self.wraps_origin and self.contig_length:
+            return self.contig_length - self.start_bp + 1 + self.end_bp
         return self.end_bp - self.start_bp + 1
 
     @property
     def core_span_bp(self) -> int:
         return self.cluster_core_end - self.cluster_core_start + 1
+
+def _origin_wrapped_span(subclusters: List[MGCSubcluster], contig_length: int):
+    """Return (start, end) of the shortest arc covering *subclusters* on a circular
+    replicon if that arc crosses the origin, else ``None``.
+
+    Only the *reported* coordinates change; which genes form the MGC does not.
+    """
+    if contig_length <= 0 or len(subclusters) < 2:
+        return None
+    subs = sorted(subclusters, key=lambda x: x.start_bp)
+    # Largest gap between consecutive subclusters inside the linear coordinates
+    best_gap, best_i = -1, -1
+    for i in range(len(subs) - 1):
+        gap = subs[i + 1].start_bp - subs[i].end_bp
+        if gap > best_gap:
+            best_gap, best_i = gap, i
+    origin_gap = contig_length - max(s.end_bp for s in subs) + min(s.start_bp for s in subs)
+    if best_gap > origin_gap:
+        # Cutting at the largest internal gap gives a shorter arc: it spans the origin
+        return subs[best_i + 1].start_bp, subs[best_i].end_bp
+    return None
 
 class ClusterEngine:
     """Detects MGCs based on synteny, gene distances, and magnetosome family threshold."""
@@ -77,6 +105,14 @@ class ClusterEngine:
         min_distinct_families: int = 3,
         flank_genes: int = 3
     ):
+        if max_intergenic_genes < 0:
+            raise ValueError("max_intergenic_genes must be >= 0")
+        if max_distance_bp < 0:
+            raise ValueError("max_distance_bp must be >= 0")
+        if min_distinct_families < 1:
+            raise ValueError("min_distinct_families must be >= 1")
+        if flank_genes < 0:
+            raise ValueError("flank_genes must be >= 0")
         self.max_intergenic_genes = max_intergenic_genes
         self.max_distance_bp = max_distance_bp
         self.min_distinct_families = min_distinct_families
@@ -86,9 +122,15 @@ class ClusterEngine:
         self,
         genome_name: str,
         genes: List[PredictedGene],
-        hits: Dict[str, MagnetosomeHit]
+        hits: Dict[str, MagnetosomeHit],
+        contig_lengths: Optional[Dict[str, int]] = None,
+        circular_contigs: Optional[Dict[str, bool]] = None,
     ) -> List[MGCCluster]:
-        """Group magnetosome hits in a genome into consolidated MGC with discrete subclusters."""
+        """Group magnetosome hits in a genome into consolidated MGC with discrete subclusters.
+
+        ``contig_lengths``/``circular_contigs`` are optional and only used to report
+        origin-spanning coordinates on complete circular replicons.
+        """
         if not genes or not hits:
             return []
 
@@ -245,4 +287,15 @@ class ClusterEngine:
             subclusters=all_subclusters,
             on_edge=on_edge
         )
+
+        # Origin-spanning MGC on a single complete circular replicon: report the
+        # shortest covering arc (start > end) instead of an almost genome-wide range.
+        if len(contigs_used) == 1 and circular_contigs and circular_contigs.get(contigs_used[0]):
+            final_mgc.is_circular = True
+            ctg_len = (contig_lengths or {}).get(contigs_used[0], 0)
+            wrapped = _origin_wrapped_span(all_subclusters, ctg_len)
+            if wrapped:
+                final_mgc.start_bp, final_mgc.end_bp = wrapped
+                final_mgc.wraps_origin = True
+                final_mgc.contig_length = ctg_len
         return [final_mgc]

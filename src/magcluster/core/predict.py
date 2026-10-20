@@ -54,6 +54,10 @@ class GenePredictor:
         self.translation_table = translation_table
         self.meta = meta
         self.min_gene_len = min_gene_len
+        #: Mode actually used by the last ``predict_from_records`` call ('meta' or 'single').
+        self.last_mode: Optional[str] = None
+        #: Human-readable reason when single mode had to fall back to meta mode.
+        self.last_fallback_reason: Optional[str] = None
 
     def _open_fasta(self, fasta_path: Path) -> Iterator[SeqRecord]:
         """Open plain or gzipped FASTA."""
@@ -84,15 +88,29 @@ class GenePredictor:
             use_meta = total_bp < 100_000 or (len(records) > 200 and max_ctg_bp < 20_000)
 
         gf = pyrodigal.GeneFinder(meta=use_meta)
-        
+        self.last_fallback_reason = None
+
         # In single mode, train on the combined records
         if not use_meta:
             seq_bytes = [bytes(r.seq) for r in records if len(r.seq) >= 2000]
             if seq_bytes:
-                gf.train(*seq_bytes, translation_table=self.translation_table)
+                try:
+                    gf.train(*seq_bytes, translation_table=self.translation_table)
+                except ValueError as e:
+                    # Pyrodigal refuses to train on < 20 kb of sequence: fall back to meta mode
+                    gf = pyrodigal.GeneFinder(meta=True)
+                    use_meta = True
+                    self.last_fallback_reason = (
+                        f"single-genome training failed ({e}); used metagenome mode instead"
+                    )
             else:
                 # Fallback to meta if training sequences are too short
                 gf = pyrodigal.GeneFinder(meta=True)
+                use_meta = True
+                self.last_fallback_reason = (
+                    "no contig >= 2,000 bp available for single-genome training; used metagenome mode instead"
+                )
+        self.last_mode = "meta" if use_meta else "single"
 
         predicted_genes: List[PredictedGene] = []
         global_gene_idx = 1
@@ -140,7 +158,10 @@ class GenePredictor:
     ) -> List[PredictedGene]:
         """Predict genes directly from a FASTA file."""
         records = list(self._open_fasta(fasta_path))
-        prefix = genome_name or fasta_path.name.split(".")[0]
+        if genome_name is None:
+            from .parser import genome_name_from_path, sanitize_genome_name
+            genome_name = sanitize_genome_name(genome_name_from_path(fasta_path))
+        prefix = genome_name
         return self.predict_from_records(records, genome_name=prefix)
 
     @staticmethod
