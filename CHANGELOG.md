@@ -89,6 +89,12 @@ how genome IDs are now derived).
 - The `clinker` executable next to the running Python interpreter is preferred over `PATH`.
 
 ### Documentation
+- Note on platforms: on Apple silicon (arm64), HMMER's SIMD code can change the last printed
+  digit of an E-value compared with Linux x86_64 (e.g. `6.43e-194` vs `6.44e-194`). Hits,
+  coordinates, scores and clusters are the same. The tests compare the 1.0.0 reference
+  outputs byte for byte on Linux x86_64 and with a float tolerance elsewhere.
+- Tests check CLI output independently of terminal colour and width, so they also pass on
+  GitHub Actions, where Rich/typer force colour output.
 - README: install with `pip install magcluster` or
   `conda install -c conda-forge -c bioconda magcluster`. The logo now uses an absolute URL so
   it renders on PyPI. Option aliases (`--min-families`, `--unmag-num`, `-h`), all outputs
