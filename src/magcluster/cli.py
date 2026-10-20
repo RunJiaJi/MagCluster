@@ -258,6 +258,7 @@ def _assign_genome_names(files: List[Path]) -> Tuple[List[str], List[str]]:
 @app.command(
     name="run",
     context_settings=CONTEXT_SETTINGS,
+    options_metavar="[OPTIONS]",
     epilog="""
 Examples:
   # Analyze a single GenBank/GBFF genome:
@@ -729,7 +730,7 @@ def _process_one_genome(
     return f"{len(genes)} genes, {len(hits)} hits, no MGC"
 
 
-@app.command(name="db", context_settings=CONTEXT_SETTINGS)
+@app.command(name="db", context_settings=CONTEXT_SETTINGS, options_metavar="[OPTIONS]")
 def db_info():
     """Display information about the built-in Magnetosome HMM database and rules."""
     import csv

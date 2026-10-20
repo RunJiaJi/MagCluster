@@ -2,7 +2,7 @@
 
 All notable changes to MagCluster are documented here.
 
-## [1.0.1] - 2026-10-20
+## [1.0.1] - 2026-10-21
 
 Bug-fix release. MGC detection (gene prediction, HMM search, clustering rules and
 thresholds) is unchanged. With default options, the result tables, protein FASTA and
@@ -52,6 +52,8 @@ how genome IDs are now derived).
 - The same input listed twice (or a file plus its folder) is processed once. Before, its
   rows appeared twice in the table.
 - `-h` now works as an alias of `--help`.
+- `magcluster db --help` printed a blank usage line (and `run --help` omitted
+  `[OPTIONS]`) with recent typer releases (e.g. 0.27); both usage lines are complete again.
 - `--clinker-help` showed "alignment scores ." because Rich swallowed `[default: 2]`.
 - matplotlib and pyGenomeViz are imported only when `--static-plot` is used, and their font
   cache / font_manager messages are silenced. `--help`, `--version` and `--no-plot` runs

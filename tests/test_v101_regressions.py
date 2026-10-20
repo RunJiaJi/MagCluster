@@ -418,6 +418,15 @@ def test_dash_h_alias():
         assert res.exit_code == 0 and re.search(r"--help\s+-h", res.output)
 
 
+def test_usage_lines_not_blank():
+    # typer 0.27 propagates the app-level options_metavar="" to sub-commands,
+    # which used to render an empty "Usage:" line for `magcluster db -h`.
+    db = flat(run_cli("db", "--help").output)
+    assert "Usage: magcluster db [OPTIONS]" in db
+    run = flat(run_cli("run", "--help").output)
+    assert "Usage: magcluster run [OPTIONS]" in run
+
+
 def test_clinker_help_shows_default():
     res = run_cli("run", "--clinker-help")
     assert res.exit_code == 0 and "[default: 2]" in flat(res.output)
