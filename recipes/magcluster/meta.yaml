@@ -1,5 +1,5 @@
 {% set name = "magcluster" %}
-{% set version = "1.0.0" %}
+{% set version = "1.0.1" %}
 
 package:
   name: {{ name|lower }}
@@ -7,7 +7,9 @@ package:
 
 source:
   url: https://pypi.org/packages/source/{{ name[0] }}/{{ name }}/{{ name }}-{{ version }}.tar.gz
-  sha256: 63e34f2c6257f5e673152a41d1246d94e9f41cbafc2129d727375031be0f7439
+  # Replace with the sha256 of the sdist actually uploaded to PyPI:
+  #   curl -sL https://pypi.org/packages/source/m/magcluster/magcluster-{{ version }}.tar.gz | sha256sum
+  sha256: REPLACE_WITH_PYPI_SDIST_SHA256
 
 build:
   number: 0
@@ -16,7 +18,7 @@ build:
   entry_points:
     - magcluster = magcluster.cli:app
   run_exports:
-    - {{ pin_subpackage('magcluster', max_pin="x.x") }}
+    - {{ pin_subpackage('magcluster', max_pin="x") }}
 
 requirements:
   host:
@@ -27,10 +29,8 @@ requirements:
     - python >=3.10
     - biopython >=1.80
     - pyrodigal >=3.0.0
-    - pyhmmer >=0.10.0
-    - pyfamsa >=0.6.0
-    - pandas >=2.0.0
-    - typer >=0.9.0
+    - pyhmmer >=0.10.1
+    - typer >=0.15.2
     - rich >=13.0.0
     - pyyaml >=6.0
     - pygenomeviz >=1.0.0

@@ -1,4 +1,9 @@
-"""Unified genome and annotation parser (FASTA, GenBank/GBFF, GFF3, FAA)."""
+"""Unified genome and annotation parser (FASTA, GenBank/GBFF, protein FASTA).
+
+GFF3 files are *not* supported as input: they carry gene coordinates but no
+protein or contig sequences.  Supply the matching GenBank/GBFF, nucleotide
+FASTA or Prodigal-style protein FASTA instead.
+"""
 
 import gzip
 import re
@@ -11,29 +16,109 @@ from .predict import PredictedGene
 
 GENBANK_EXTENSIONS = {".gbk", ".gbff", ".gbf", ".gb"}
 FASTA_EXTENSIONS = {".fa", ".fasta", ".fna", ".fsa", ".fsa_nt"}
-FAA_EXTENSIONS = {".faa", ".pep", ".faa.gz"}
+FAA_EXTENSIONS = {".faa", ".pep"}
+GFF_EXTENSIONS = {".gff", ".gff3"}
+
+#: Extensions picked up when a directory is given as input (optionally ``.gz``).
+GENOME_EXTENSIONS = GENBANK_EXTENSIONS | FASTA_EXTENSIONS | FAA_EXTENSIONS
+
+#: All extensions stripped from a file name to derive the genome ID.
+KNOWN_EXTENSIONS = GENOME_EXTENSIONS | GFF_EXTENSIONS
 
 PRODIGAL_HDR_RE = re.compile(
     r"^(?P<id>\S+)\s+#\s+(?P<start>\d+)\s+#\s+(?P<end>\d+)\s+#\s+(?P<strand>[-+]?\d+)\s+#\s+(?P<attr>.*)$"
 )
+
+# Header keywords that mark a FASTA record as a complete (circular) replicon.
+CIRCULAR_HDR_RE = re.compile(r"complete\s+(genome|sequence)|\bcircular\b|topology=circular", re.IGNORECASE)
+
+# Characters kept in genome IDs; everything else (whitespace, shell/filesystem
+# specials) is replaced by '_'.  \w is Unicode-aware, so e.g. Chinese is kept.
+_UNSAFE_NAME_RE = re.compile(r"[^\w.\-]+")
+
+
+class InputFormatError(ValueError):
+    """Raised when an input file cannot be parsed as a supported genome format."""
+
+    def __init__(self, msg: str):
+        # Third-party messages (e.g. Biopython) can span several lines: keep one line
+        super().__init__(" ".join(str(msg).split()))
+
 
 @dataclass
 class ParsedGenome:
     """Represents a parsed genome with its contig sequences and genes."""
     name: str
     file_path: Path
-    file_type: str                         # 'genbank', 'fasta', 'faa', 'gff'
+    file_type: str                         # 'genbank', 'fasta', 'faa'
     contigs: Dict[str, SeqRecord] = field(default_factory=dict)
     genes: List[PredictedGene] = field(default_factory=list)
     needs_prediction: bool = False
     has_coordinates: bool = True
+    circular_contigs: Dict[str, bool] = field(default_factory=dict)
+
+
+def _strip_gz(name: str) -> str:
+    return name[:-3] if name.lower().endswith(".gz") else name
+
+
+def known_extension(path: Path) -> str:
+    """Return the recognised (lower-case) genome extension of *path*, ignoring ``.gz``; '' if none."""
+    ext = Path(_strip_gz(path.name)).suffix.lower()
+    return ext if ext in KNOWN_EXTENSIONS else ""
+
+
+def is_genome_file(path: Path) -> bool:
+    """True if *path* has a supported genome extension (optionally gzipped)."""
+    ext = known_extension(path)
+    return bool(ext) and ext in GENOME_EXTENSIONS
+
+
+def genome_name_from_path(path: Path) -> str:
+    """Genome ID from a file name: the full name minus ``.gz`` and one known extension.
+
+    ``strainX.v1.fna`` -> ``strainX.v1``; ``GCF_000513295.1.gbff.gz`` -> ``GCF_000513295.1``;
+    files without a known extension keep their full name.
+    """
+    name = _strip_gz(path.name)
+    ext = known_extension(path)
+    if ext and name.lower().endswith(ext):
+        name = name[: -len(ext)]
+    return name or path.name
+
+
+def sanitize_genome_name(name: str) -> str:
+    """Make a genome ID safe for file names, GenBank LOCUS lines and Clinker.
+
+    Whitespace and characters other than letters (including non-ASCII), digits,
+    '.', '-' and '_' are replaced by '_'.  Leading dots are removed so that output
+    files never become hidden files.
+    """
+    safe = _UNSAFE_NAME_RE.sub("_", name).lstrip(".")
+    return safe or "genome"
+
+
+def _open_text(path: Path):
+    opener = gzip.open if str(path).lower().endswith(".gz") else open
+    return opener(path, "rt", encoding="utf-8", errors="ignore")
+
+
+def _check_not_binary(path: Path):
+    """Reject binary (non-text) files with a clear message."""
+    opener = gzip.open if str(path).lower().endswith(".gz") else open
+    try:
+        with opener(path, "rb") as f:
+            chunk = f.read(8192)
+    except (OSError, EOFError) as e:
+        raise InputFormatError(f"cannot read file ({e})") from None
+    if b"\x00" in chunk:
+        raise InputFormatError("binary file, not a FASTA/GenBank text file")
+    return chunk
+
 
 def detect_file_type(path: Path) -> str:
-    """Detect whether file is GenBank, FASTA nucleotide, or FAA."""
-    name = path.name.lower()
-    if name.endswith(".gz"):
-        name = name[:-3]
-    ext = Path(name).suffix
+    """Detect whether file is GenBank, nucleotide FASTA, protein FASTA (FAA) or GFF."""
+    ext = known_extension(path)
 
     if ext in GENBANK_EXTENSIONS:
         return "genbank"
@@ -41,41 +126,51 @@ def detect_file_type(path: Path) -> str:
         return "faa"
     if ext in FASTA_EXTENSIONS:
         return "fasta"
-    if ext in {".gff", ".gff3"}:
+    if ext in GFF_EXTENSIONS:
         return "gff"
 
-    # Inspect first line if extension is ambiguous
-    opener = gzip.open if str(path).endswith(".gz") else open
+    # Inspect first non-empty line if extension is missing or unknown
     try:
-        with opener(path, "rt", encoding="utf-8", errors="ignore") as f:
-            first_line = f.readline().strip()
-            if first_line.startswith("LOCUS"):
-                return "genbank"
-            if first_line.startswith(">"):
-                return "fasta"
-            if first_line.startswith("##gff"):
-                return "gff"
-    except Exception:
+        with _open_text(path) as f:
+            for line in f:
+                first_line = line.strip()
+                if not first_line:
+                    continue
+                if first_line.startswith("LOCUS"):
+                    return "genbank"
+                if first_line.startswith(">"):
+                    return "fasta"
+                if first_line.startswith("##gff"):
+                    return "gff"
+                break
+    except (OSError, EOFError):
         pass
-    return "fasta"
+    return "unknown"
 
 def parse_genbank(gbk_path: Path, genome_name: Optional[str] = None) -> ParsedGenome:
     """Parse existing GenBank/GBFF file and extract already annotated CDS features.
     
     Robust to Biopython >= 1.80 (uses int(feature.location.start) rather than .position).
     """
-    prefix = genome_name or gbk_path.stem.split(".")[0]
-    opener = gzip.open if str(gbk_path).endswith(".gz") else open
+    prefix = genome_name or sanitize_genome_name(genome_name_from_path(gbk_path))
+    _check_not_binary(gbk_path)
 
     contigs = {}
+    circular: Dict[str, bool] = {}
     genes: List[PredictedGene] = []
     gene_idx = 1
 
-    with opener(gbk_path, "rt", encoding="utf-8", errors="ignore") as f:
-        records = list(SeqIO.parse(f, "genbank"))
+    try:
+        with _open_text(gbk_path) as f:
+            records = list(SeqIO.parse(f, "genbank"))
+    except Exception as e:  # Biopython raises ValueError/AttributeError on malformed input
+        raise InputFormatError(f"not a valid GenBank/GBFF file ({e})") from None
+    if not records:
+        raise InputFormatError("no GenBank records found (expected a 'LOCUS' line)")
 
     for rec in records:
         contigs[rec.id] = rec
+        circular[rec.id] = str(rec.annotations.get("topology", "")).lower() == "circular"
         ctg_gene_idx = 0
 
         for feat in rec.features:
@@ -125,18 +220,28 @@ def parse_genbank(gbk_path: Path, genome_name: Optional[str] = None) -> ParsedGe
         file_type="genbank",
         contigs=contigs,
         genes=genes,
-        needs_prediction=len(genes) == 0
+        needs_prediction=len(genes) == 0,
+        circular_contigs=circular,
     )
 
 def parse_fasta(fasta_path: Path, genome_name: Optional[str] = None) -> ParsedGenome:
     """Parse nucleotide FASTA, populating contigs, flagged for gene prediction."""
-    prefix = genome_name or fasta_path.stem.split(".")[0]
-    opener = gzip.open if str(fasta_path).endswith(".gz") else open
+    prefix = genome_name or sanitize_genome_name(genome_name_from_path(fasta_path))
+    _check_not_binary(fasta_path)
 
     contigs = {}
-    with opener(fasta_path, "rt", encoding="utf-8", errors="ignore") as f:
-        for rec in SeqIO.parse(f, "fasta"):
-            contigs[rec.id] = rec
+    circular: Dict[str, bool] = {}
+    try:
+        with _open_text(fasta_path) as f:
+            for rec in SeqIO.parse(f, "fasta"):
+                contigs[rec.id] = rec
+                circular[rec.id] = bool(CIRCULAR_HDR_RE.search(rec.description))
+    except Exception as e:  # Biopython raises ValueError on text that is not FASTA
+        raise InputFormatError(f"not a valid FASTA file ({e})") from None
+    if not contigs:
+        raise InputFormatError("no FASTA records found (expected a '>' header line)")
+    if not any(len(rec.seq) for rec in contigs.values()):
+        raise InputFormatError("FASTA records contain no sequence")
 
     return ParsedGenome(
         name=prefix,
@@ -144,52 +249,60 @@ def parse_fasta(fasta_path: Path, genome_name: Optional[str] = None) -> ParsedGe
         file_type="fasta",
         contigs=contigs,
         genes=[],
-        needs_prediction=True
+        needs_prediction=True,
+        circular_contigs=circular,
     )
 
 def parse_faa(faa_path: Path, genome_name: Optional[str] = None) -> ParsedGenome:
     """Parse protein FASTA, extracting coordinates if in Prodigal header format."""
-    prefix = genome_name or faa_path.stem.split(".")[0]
-    opener = gzip.open if str(faa_path).endswith(".gz") else open
+    prefix = genome_name or sanitize_genome_name(genome_name_from_path(faa_path))
+    _check_not_binary(faa_path)
 
     genes: List[PredictedGene] = []
     contig_counts = {}
     any_prodigal = False
 
-    with opener(faa_path, "rt", encoding="utf-8", errors="ignore") as f:
-        for i, rec in enumerate(SeqIO.parse(f, "fasta")):
-            m = PRODIGAL_HDR_RE.match(rec.description)
-            if m:
-                any_prodigal = True
-                gene_id = m["id"]
-                start = int(m["start"])
-                end = int(m["end"])
-                strand = int(m["strand"])
-                attr = m["attr"]
-                # Try to extract contig from attributes or header
-                ctg_match = re.search(r"contig=([^;]+)", attr)
-                ctg_id = ctg_match.group(1) if ctg_match else gene_id.rsplit("_", 1)[0]
-            else:
-                gene_id = rec.id
-                start = 0
-                end = 0
-                strand = 0
-                ctg_id = "unplaced"
+    try:
+        with _open_text(faa_path) as f:
+            records = list(SeqIO.parse(f, "fasta"))
+    except Exception as e:
+        raise InputFormatError(f"not a valid protein FASTA file ({e})") from None
+    if not records:
+        raise InputFormatError("no FASTA records found (expected a '>' header line)")
 
-            c_idx = contig_counts.get(ctg_id, 0)
-            contig_counts[ctg_id] = c_idx + 1
+    for i, rec in enumerate(records):
+        m = PRODIGAL_HDR_RE.match(rec.description)
+        if m:
+            any_prodigal = True
+            gene_id = m["id"]
+            start = int(m["start"])
+            end = int(m["end"])
+            strand = int(m["strand"])
+            attr = m["attr"]
+            # Try to extract contig from attributes or header
+            ctg_match = re.search(r"contig=([^;]+)", attr)
+            ctg_id = ctg_match.group(1) if ctg_match else gene_id.rsplit("_", 1)[0]
+        else:
+            gene_id = rec.id
+            start = 0
+            end = 0
+            strand = 0
+            ctg_id = "unplaced"
 
-            pg = PredictedGene(
-                gene_id=gene_id,
-                contig_id=ctg_id,
-                start=start,
-                end=end,
-                strand=strand,
-                gene_index=c_idx,
-                translation=str(rec.seq).rstrip("*"),
-                locus_tag=gene_id
-            )
-            genes.append(pg)
+        c_idx = contig_counts.get(ctg_id, 0)
+        contig_counts[ctg_id] = c_idx + 1
+
+        pg = PredictedGene(
+            gene_id=gene_id,
+            contig_id=ctg_id,
+            start=start,
+            end=end,
+            strand=strand,
+            gene_index=c_idx,
+            translation=str(rec.seq).rstrip("*"),
+            locus_tag=gene_id
+        )
+        genes.append(pg)
 
     return ParsedGenome(
         name=prefix,
@@ -202,11 +315,24 @@ def parse_faa(faa_path: Path, genome_name: Optional[str] = None) -> ParsedGenome
     )
 
 def parse_input(path: Path, genome_name: Optional[str] = None) -> ParsedGenome:
-    """Automatically detect and parse input file into ParsedGenome."""
+    """Automatically detect and parse input file into ParsedGenome.
+
+    Raises :class:`InputFormatError` with a user-readable reason for unsupported
+    or malformed files.
+    """
     ftype = detect_file_type(path)
     if ftype == "genbank":
         return parse_genbank(path, genome_name)
     if ftype == "faa":
         return parse_faa(path, genome_name)
-    # Default to nucleotide fasta
-    return parse_fasta(path, genome_name)
+    if ftype == "fasta":
+        return parse_fasta(path, genome_name)
+    if ftype == "gff":
+        raise InputFormatError(
+            "GFF3 input is not supported (GFF3 has no protein/contig sequences); "
+            "provide the matching GenBank/GBFF, nucleotide FASTA or Prodigal protein FASTA instead"
+        )
+    _check_not_binary(path)
+    raise InputFormatError(
+        "unrecognised file format (expected GenBank/GBFF starting with 'LOCUS' or FASTA starting with '>')"
+    )

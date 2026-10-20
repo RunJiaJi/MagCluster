@@ -1,6 +1,6 @@
-# MagCluster v1.0.0 打包与发布完整指南 (PyPI & Bioconda)
+# MagCluster v1.0.1 打包与发布完整指南 (PyPI & Bioconda)
 
-本指南旨在为维护者提供清晰、可落地的 **MagCluster v1.0.0** 发布操作步骤。
+本指南旨在为维护者提供清晰、可落地的 **MagCluster v1.0.1** 发布操作步骤。
 
 ---
 
@@ -28,8 +28,8 @@ conda activate magcluster2
 ```
 
 构建完成后，`dist/` 目录下将生成两个核心文件：
-- `dist/magcluster-1.0.0.tar.gz` (源码分发包 sdist)
-- `dist/magcluster-1.0.0-py3-none-any.whl` (二进制轮子包 wheel)
+- `dist/magcluster-1.0.1.tar.gz` (源码分发包 sdist)
+- `dist/magcluster-1.0.1-py3-none-any.whl` (二进制轮子包 wheel)
 
 且 `twine check dist/*` 结果必须为 `PASSED`。
 
@@ -67,7 +67,7 @@ conda activate magcluster2
 2. 新增 Repository Secret：
    - Name: `PYPI_API_TOKEN`
    - Secret: 粘贴你的 PyPI API Token（`pypi-...`）；
-3. 在 GitHub 仓库页面发布新 Release（例如 Tag 为 `v1.0.0`），GitHub Actions 将自动触发打包、校验并上传至 PyPI。
+3. 在 GitHub 仓库页面发布新 Release（例如 Tag 为 `v1.0.1`），GitHub Actions 将自动触发打包、校验并上传至 PyPI。
 
 ---
 
@@ -80,12 +80,12 @@ MagCluster 在早期（v0.2.x）已收录于 Bioconda。本次 v1.0.0 彻底移�
 ### 1. Recipe 关键信息核对
 
 - **Package Name**: `magcluster`
-- **Version**: `1.0.0`
-- **Source URL**: `https://pypi.org/packages/source/m/magcluster/magcluster-1.0.0.tar.gz`
+- **Version**: `1.0.1`
+- **Source URL**: `https://pypi.org/packages/source/m/magcluster/magcluster-1.0.1.tar.gz`
 - **SHA256**: `63e34f2c6257f5e673152a41d1246d94e9f41cbafc2129d727375031be0f7439`
 - **核心依赖变化**：
   - ❌ 彻底移除：`prokka`、`blast`、`tbl2asn`
-  - ✅ 新增依赖：`pyrodigal >=3.0.0`、`pyhmmer >=0.10.0`、`pyfamsa >=0.6.0`、`typer >=0.9.0`、`rich >=13.0.0`、`pyyaml >=6.0`、`pygenomeviz >=1.0.0`、`clinker-py >=0.0.30`
+  - ✅ 运行依赖（1.0.1）：`biopython >=1.80`、`pyrodigal >=3.0.0`、`pyhmmer >=0.10.1`、`typer >=0.15.2`、`rich >=13.0.0`、`pyyaml >=6.0`、`pygenomeviz >=1.0.0`、`clinker-py >=0.0.30`（1.0.1 起不再依赖 `pandas` 和 `pyfamsa`）
 
 ---
 
@@ -94,12 +94,12 @@ MagCluster 在早期（v0.2.x）已收录于 Bioconda。本次 v1.0.0 彻底移�
 1. **Fork 与分支**：
    - 访问 [bioconda/bioconda-recipes](https://github.com/bioconda/bioconda-recipes)；
    - 点击右上角 **Fork** 到你的个人 GitHub 账号；
-   - 在个人 Fork 仓库中基于 `master` 创建新分支（例如 `magcluster-1.0.0`）。
+   - 在个人 Fork 仓库中基于 `master` 创建新分支（例如 `magcluster-1.0.1`）。
 
 2. **更新 meta.yaml**：
    - 打开 `recipes/magcluster/meta.yaml` 文件；
    - 将本项目中 [recipes/magcluster/meta.yaml](file:///Users/sybil/Downloads/win.DESKTOP-DUDCGV3/Desktop/博士后/11_magcluster_更新/MagCluster/recipes/magcluster/meta.yaml) 的全部内容复制替换进去；
-   - 提交 Commit：`magcluster: update to 1.0.0`。
+   - 提交 Commit：`magcluster: update to 1.0.1`。
 
 3. **创建 Pull Request**：
    - 从你的分支向 `bioconda/bioconda-recipes:master` 发起 PR；
@@ -110,7 +110,7 @@ MagCluster 在早期（v0.2.x）已收录于 Bioconda。本次 v1.0.0 彻底移�
      ```
    - 机器人审核通过后将自动合并，合并后约 1~2 小时内，全网即可通过 conda 安装：
      ```bash
-     conda install -c bioconda -c conda-forge magcluster=1.0.0
+     conda install -c bioconda -c conda-forge magcluster=1.0.1
      ```
 
 ---
@@ -120,7 +120,7 @@ MagCluster 在早期（v0.2.x）已收录于 Bioconda。本次 v1.0.0 彻底移�
 1. **若重新打包导致 SHA256 改变**：
    - 如果在正式上传前修改了代码并重新运行了 `python -m build`，请务必运行：
      ```bash
-     shasum -a 256 dist/magcluster-1.0.0.tar.gz
+     shasum -a 256 dist/magcluster-1.0.1.tar.gz
      ```
    - 并同步更新 `recipes/magcluster/meta.yaml` 中的 `sha256` 字段。
 
