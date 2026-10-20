@@ -334,7 +334,20 @@ def test_unreadable_inputs_give_clear_errors(tmp_path, content, needles):
     f.write_bytes(content)
     res = run_cli("run", f, "-o", tmp_path / "o")
     assert res.exit_code == 1
-    assert any(n in flat(res.output) for n in needles)
+    out = flat(res.output)
+    assert any(n in out for n in needles)
+    # one short line, not Biopython's multi-paragraph explanation
+    err = next(line for line in out.split("Error: ")[1:2])
+    assert len(err.split("Skipped.")[0]) < 220 and "fasta-pearson" not in out
+
+
+def test_short_reason_condenses_parser_errors():
+    from magcluster.core.parser import _short_reason
+    biopython_msg = ("This FASTA file contains comments at the beginning of the file, which are not\n"
+                     "allowed by the 'fasta' parser. To parse this file, you have three options: ...")
+    assert _short_reason(ValueError(biopython_msg)) == "text found before the first '>' header line"
+    long = _short_reason(ValueError("x " * 500))
+    assert len(long) <= 160 and long.endswith("...") and "\n" not in long
 
 
 def test_gff_rejected_clearly(tmp_path):

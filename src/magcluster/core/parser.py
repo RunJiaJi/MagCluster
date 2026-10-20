@@ -45,6 +45,16 @@ class InputFormatError(ValueError):
         super().__init__(" ".join(str(msg).split()))
 
 
+def _short_reason(exc: Exception, limit: int = 160) -> str:
+    """Condense a third-party parser error to a short, single-line reason."""
+    msg = " ".join(str(exc).split())
+    if "comments at the beginning" in msg:  # Biopython >= 1.85 on leading non-'>' text
+        return "text found before the first '>' header line"
+    if len(msg) > limit:
+        msg = msg[: limit - 3].rstrip() + "..."
+    return msg
+
+
 @dataclass
 class ParsedGenome:
     """Represents a parsed genome with its contig sequences and genes."""
@@ -110,7 +120,7 @@ def _check_not_binary(path: Path):
         with opener(path, "rb") as f:
             chunk = f.read(8192)
     except (OSError, EOFError) as e:
-        raise InputFormatError(f"cannot read file ({e})") from None
+        raise InputFormatError(f"cannot read file ({_short_reason(e)})") from None
     if b"\x00" in chunk:
         raise InputFormatError("binary file, not a FASTA/GenBank text file")
     return chunk
@@ -164,7 +174,7 @@ def parse_genbank(gbk_path: Path, genome_name: Optional[str] = None) -> ParsedGe
         with _open_text(gbk_path) as f:
             records = list(SeqIO.parse(f, "genbank"))
     except Exception as e:  # Biopython raises ValueError/AttributeError on malformed input
-        raise InputFormatError(f"not a valid GenBank/GBFF file ({e})") from None
+        raise InputFormatError(f"not a valid GenBank/GBFF file ({_short_reason(e)})") from None
     if not records:
         raise InputFormatError("no GenBank records found (expected a 'LOCUS' line)")
 
@@ -237,7 +247,7 @@ def parse_fasta(fasta_path: Path, genome_name: Optional[str] = None) -> ParsedGe
                 contigs[rec.id] = rec
                 circular[rec.id] = bool(CIRCULAR_HDR_RE.search(rec.description))
     except Exception as e:  # Biopython raises ValueError on text that is not FASTA
-        raise InputFormatError(f"not a valid FASTA file ({e})") from None
+        raise InputFormatError(f"not a valid FASTA file ({_short_reason(e)})") from None
     if not contigs:
         raise InputFormatError("no FASTA records found (expected a '>' header line)")
     if not any(len(rec.seq) for rec in contigs.values()):
@@ -266,7 +276,7 @@ def parse_faa(faa_path: Path, genome_name: Optional[str] = None) -> ParsedGenome
         with _open_text(faa_path) as f:
             records = list(SeqIO.parse(f, "fasta"))
     except Exception as e:
-        raise InputFormatError(f"not a valid protein FASTA file ({e})") from None
+        raise InputFormatError(f"not a valid protein FASTA file ({_short_reason(e)})") from None
     if not records:
         raise InputFormatError("no FASTA records found (expected a '>' header line)")
 
