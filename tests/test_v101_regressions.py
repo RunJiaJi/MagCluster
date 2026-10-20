@@ -6,6 +6,7 @@ gryphiswaldense MSR-1 genome that contains the magnetosome island
 """
 
 import gzip
+import platform
 import re
 import shutil
 import subprocess
@@ -77,14 +78,49 @@ def tsv_rows(path: Path):
 # --------------------------------------------------------------------------
 # Detection outputs are unchanged versus 1.0.0
 # --------------------------------------------------------------------------
-def test_outputs_byte_identical_to_v100(tmp_path):
+FLOAT_RE = re.compile(r"-?\d+\.\d+(?:e[+-]\d+)?")
+# The 1.0.0 reference files were produced on Linux x86_64. HMMER's SIMD code differs on
+# other CPUs (e.g. NEON on Apple silicon), which can change the last printed digit of an
+# E-value (6.43e-194 vs 6.44e-194). There we compare everything else exactly and the
+# floating-point numbers with a tolerance; on Linux x86_64 the files must be byte-identical.
+STRICT_BYTES = sys.platform.startswith("linux") and platform.machine() in ("x86_64", "AMD64")
+
+
+def assert_same_output(new: Path, ref: Path):
+    a, b = new.read_text(), ref.read_text()
+    if STRICT_BYTES:
+        assert new.read_bytes() == ref.read_bytes(), new.name
+        return
+    assert FLOAT_RE.sub("<num>", a) == FLOAT_RE.sub("<num>", b), new.name
+    for x, y in zip(FLOAT_RE.findall(a), FLOAT_RE.findall(b)):
+        fx, fy = float(x), float(y)
+        if "e" in x or "e" in y:
+            assert fx == pytest.approx(fy, rel=2e-2, abs=1e-300), (new.name, x, y)
+        else:
+            assert fx == pytest.approx(fy, abs=0.15), (new.name, x, y)
+
+
+def test_outputs_identical_to_v100(tmp_path):
     out = tmp_path / "out"
     res = run_cli("run", MAI_GZ, "-o", out, "-t", "2", "--no-plot")
     assert res.exit_code == 0
     for name in ["MSR-1_MAI90kb_mgc_genes.tsv", "MSR-1_MAI90kb_magnetosome_proteins.faa"]:
-        assert (out / name).read_bytes() == (EXPECTED / name).read_bytes(), name
-    assert (out / "clusters_gbk" / "MSR-1_MAI90kb_MGC.gbk").read_bytes() == \
-        (EXPECTED / "MSR-1_MAI90kb_MGC.gbk").read_bytes()
+        assert_same_output(out / name, EXPECTED / name)
+    assert_same_output(out / "clusters_gbk" / "MSR-1_MAI90kb_MGC.gbk", EXPECTED / "MSR-1_MAI90kb_MGC.gbk")
+
+
+def test_assert_same_output_tolerates_only_float_noise(tmp_path, monkeypatch):
+    monkeypatch.setattr(sys.modules[__name__], "STRICT_BYTES", False)
+    ref = tmp_path / "ref.tsv"; ref.write_text("c\tMamY\t16177\t636.9\t6.43e-194\n")
+    ok = tmp_path / "ok.tsv"; ok.write_text("c\tMamY\t16177\t636.9\t6.44e-194\n")
+    assert_same_output(ok, ref)
+    for bad in ("c\tMamY\t16178\t636.9\t6.43e-194\n",   # coordinate
+                "c\tMamX\t16177\t636.9\t6.43e-194\n",   # profile
+                "c\tMamY\t16177\t640.0\t6.43e-194\n",   # score
+                "c\tMamY\t16177\t636.9\t6.43e-150\n"):  # e-value
+        p = tmp_path / "bad.tsv"; p.write_text(bad)
+        with pytest.raises(AssertionError):
+            assert_same_output(p, ref)
 
 
 # --------------------------------------------------------------------------
