@@ -1,6 +1,7 @@
 """End-to-end integration tests on real genomes."""
 
 import os
+import re
 from pathlib import Path
 import pytest
 from magcluster.core.cluster import ClusterEngine
@@ -202,8 +203,9 @@ def test_force_overwrite_existing_outdir(tmp_path):
     # 1. Run without --force -> should fail and instruct user to use --force
     res = runner.invoke(app, ["run", str(test_faa), "-o", str(out_dir), "--no-plot"])
     assert res.exit_code == 1
-    assert "already exists" in res.output
-    assert "--force" in res.output
+    text = " ".join(re.sub(r"\x1b\[[0-9;?]*[ -/]*[@-~]", "", res.output).split())  # colour/width independent
+    assert "already exists" in text
+    assert "--force" in text
 
     # 2. Run with --force -> should proceed
     res_force = runner.invoke(app, ["run", str(test_faa), "-o", str(out_dir), "--no-plot", "--force"])

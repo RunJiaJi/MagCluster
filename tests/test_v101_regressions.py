@@ -37,9 +37,18 @@ runner = CliRunner()
 HAS_CLINKER = shutil.which("clinker") is not None or (Path(sys.executable).parent / "clinker").exists()
 
 
+ANSI_RE = re.compile(r"\x1b\[[0-9;?]*[ -/]*[@-~]")
+
+
+def strip_ansi(text: str) -> str:
+    """Remove ANSI colour/style codes (Rich adds them when FORCE_COLOR or GITHUB_ACTIONS is set)."""
+    return ANSI_RE.sub("", text)
+
+
 def flat(text: str) -> str:
-    """Collapse Rich line wrapping so substring checks are width independent."""
-    return " ".join(text.split())
+    """Strip ANSI codes and collapse Rich line wrapping, so substring checks do not
+    depend on terminal width or colour settings."""
+    return " ".join(strip_ansi(text).split())
 
 
 def run_cli(*args):
@@ -181,7 +190,7 @@ def test_directory_with_readme_is_processed(tmp_path, mai_fna):
     out = tmp_path / "out"
     res = run_cli("run", d, "-o", out, "--no-plot")
     assert res.exit_code == 0
-    assert "Skipped" in res.output and "README.txt" in res.output
+    assert "Skipped" in flat(res.output) and "README.txt" in flat(res.output)
     assert (out / "MSR-1_MAI90kb_mgc_genes.tsv").exists()
 
 
@@ -428,7 +437,7 @@ def test_cluster_engine_rejects_negative_values():
 def test_dash_h_alias():
     for args in (["-h"], ["run", "-h"], ["db", "-h"]):
         res = run_cli(*args)
-        assert res.exit_code == 0 and re.search(r"--help\s+-h", res.output)
+        assert res.exit_code == 0 and re.search(r"--help\s+-h", flat(res.output))
 
 
 def test_usage_lines_not_blank():
@@ -448,9 +457,9 @@ def test_clinker_help_shows_default():
 def test_no_matplotlib_on_import_or_version():
     code = "import sys, magcluster.cli; print('matplotlib' in sys.modules, 'pygenomeviz' in sys.modules)"
     out = subprocess.run([sys.executable, "-c", code], capture_output=True, text=True, check=True)
-    assert out.stdout.strip() == "False False"
+    assert strip_ansi(out.stdout).strip() == "False False"
     res = subprocess.run([sys.executable, "-c", "from magcluster.cli import app; app()", "--version"],
                          capture_output=True, text=True)
     assert res.returncode == 0
-    assert res.stderr.strip() == ""
-    assert res.stdout.strip().endswith(__import__("magcluster").__version__)
+    assert strip_ansi(res.stderr).strip() == ""
+    assert strip_ansi(res.stdout).strip().endswith(__import__("magcluster").__version__)
