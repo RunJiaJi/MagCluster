@@ -237,7 +237,7 @@ def test_spaces_html_generated(tmp_path, mai_fna):
 def test_dependency_floors():
     text = (REPO / "pyproject.toml").read_text()
     deps = re.search(r"^dependencies = \[(.*?)\]", text, re.S | re.M).group(1)
-    assert '"typer>=0.15.2"' in deps
+    assert '"typer>=0.16.0"' in deps
     assert '"pyhmmer>=0.10.1"' in deps
     assert "pandas" not in deps and "pyfamsa" not in deps
 
@@ -323,17 +323,18 @@ def test_threads_above_cpu_count_are_capped(tmp_path):
     assert res.exit_code == 0 and "exceeds" in flat(res.output)
 
 
-@pytest.mark.parametrize("content,needle", [
-    (b"", "no FASTA records"),
-    (b"just some text\nmore\n", "not a valid FASTA"),
-    (b"\x00\x00\x89PNG", "binary file"),
+@pytest.mark.parametrize("content,needles", [
+    (b"", ["no FASTA records"]),
+    # Biopython >= 1.85 rejects leading text; older versions return no records
+    (b"just some text\nmore\n", ["not a valid FASTA", "no FASTA records"]),
+    (b"\x00\x00\x89PNG", ["binary file"]),
 ])
-def test_unreadable_inputs_give_clear_errors(tmp_path, content, needle):
+def test_unreadable_inputs_give_clear_errors(tmp_path, content, needles):
     f = tmp_path / "bad.fna"
     f.write_bytes(content)
     res = run_cli("run", f, "-o", tmp_path / "o")
     assert res.exit_code == 1
-    assert needle in flat(res.output)
+    assert any(n in flat(res.output) for n in needles)
 
 
 def test_gff_rejected_clearly(tmp_path):

@@ -24,8 +24,11 @@ how genome IDs are now derived).
   Each genome's outputs are written as soon as it is processed.
 - File names with spaces crashed GenBank/HTML writing (`Invalid whitespace ... LOCUS`).
   Genome IDs are now sanitised; the original path is recorded in the run log.
-- Dependency floors: `typer>=0.15.2` (older typer crashes with click >= 8.2) and
-  `pyhmmer>=0.10.1` (0.10.0 is yanked). The unused `pandas` and `pyfamsa` runtime
+- Dependency floors: `typer>=0.16.0` and `pyhmmer>=0.10.1` (0.10.0 is yanked). typer
+  <= 0.15.3 crashes (`TypeError ... make_metavar()`) together with click >= 8.2, which pip and
+  conda install by default. typer 0.15.4 avoids this only through its own `click<8.2` pin.
+  0.16.0 is the first release that works with every click version, and it was tested with
+  click 8.0.0, 8.1.8, 8.2.0 and 8.5.0. The unused `pandas` and `pyfamsa` runtime
   dependencies were removed; `pyfamsa` is now the optional extra `magcluster[build-db]`,
   needed only by `scripts/build_database.py`.
 - `--force` now removes the outputs of the previous run in that folder (tables, FASTA,

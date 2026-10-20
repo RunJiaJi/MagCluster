@@ -85,7 +85,7 @@ MagCluster 在早期（v0.2.x）已收录于 Bioconda。本次 v1.0.0 彻底移�
 - **SHA256**: `63e34f2c6257f5e673152a41d1246d94e9f41cbafc2129d727375031be0f7439`
 - **核心依赖变化**：
   - ❌ 彻底移除：`prokka`、`blast`、`tbl2asn`
-  - ✅ 运行依赖（1.0.1）：`biopython >=1.80`、`pyrodigal >=3.0.0`、`pyhmmer >=0.10.1`、`typer >=0.15.2`、`rich >=13.0.0`、`pyyaml >=6.0`、`pygenomeviz >=1.0.0`、`clinker-py >=0.0.30`（1.0.1 起不再依赖 `pandas` 和 `pyfamsa`）
+  - ✅ 运行依赖（1.0.1）：`biopython >=1.80`、`pyrodigal >=3.0.0`、`pyhmmer >=0.10.1`、`typer >=0.16.0`、`rich >=13.0.0`、`pyyaml >=6.0`、`pygenomeviz >=1.0.0`、`clinker-py >=0.0.30`（1.0.1 起不再依赖 `pandas` 和 `pyfamsa`）
 
 ---
 
