@@ -13,7 +13,6 @@ _candidates = [
     *([Path(os.environ["MAGCLUSTER_MSR1_GBFF"])] if os.environ.get("MAGCLUSTER_MSR1_GBFF") else []),
     Path(__file__).resolve().parent.parent / "MSR-1_genome.gbff",
     Path(__file__).resolve().parent.parent.parent / "MSR-1_genome.gbff",
-    Path("/Users/sybil/.gemini/antigravity-ide/brain/0bc121af-6698-4630-998e-7a76d2146f06/scratch/controls/MSR-1_genome.gbff"),
 ]
 MSR1_GBFF = next((p for p in _candidates if p.exists()), Path("MSR-1_genome.gbff"))
 
