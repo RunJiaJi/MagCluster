@@ -2,9 +2,9 @@
 
 [![Python Version](https://img.shields.io/badge/python-3.10%2B-blue?style=flat-square&logo=python)](https://www.python.org/)
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-green.svg?style=flat-square)](https://www.gnu.org/licenses/gpl-3.0)
-[![Version](https://img.shields.io/badge/version-1.0.1-orange?style=flat-square)](https://github.com/RunJiaJi/magcluster)
+[![Version](https://img.shields.io/badge/version-1.0.1-orange?style=flat-square)](https://github.com/RunJiaJi/MagCluster)
 
-[English](README.md) | [中文说明](README_zh.md)
+[English](https://github.com/RunJiaJi/MagCluster/blob/main/README.md) | [中文说明](https://github.com/RunJiaJi/MagCluster/blob/main/README_zh.md)
 
 **MagCluster** 是一个用于在细菌基因组中**识别、注释和可视化磁小体基因簇（MGCs）**的生信工具。
 
@@ -262,7 +262,7 @@ $$\text{MamA, MamB, MamE, MamI, MamK, MamL, MamM, MamO, MamP, MamQ}$$
 
 MagCluster 底层核心工具引用：
 - **Pyrodigal**: [doi:10.21105/joss.04296](https://doi.org/10.21105/joss.04296)
-- **PyHMMER**: [doi:10.1093/bioinformatics/btad211](https://doi.org/10.1093/bioinformatics/btad211)
+- **PyHMMER**: [doi:10.1093/bioinformatics/btad214](https://doi.org/10.1093/bioinformatics/btad214)
 - **Clinker**: [doi:10.1093/bioinformatics/btab007](https://doi.org/10.1093/bioinformatics/btab007)
 
 ---
@@ -270,5 +270,5 @@ MagCluster 底层核心工具引用：
 ## 联系与反馈
 
 如有任何问题或建议，欢迎联系：
-- **GitHub Issues**：[提交 Issue](https://github.com/RunJiaJi/magcluster/issues)
+- **GitHub Issues**：[提交 Issue](https://github.com/RunJiaJi/MagCluster/issues)
 - **邮箱**：Runjia Ji (`jirunjia@gmail.com`) 或 Wei Lin (`weilin@mail.iggcas.ac.cn`)

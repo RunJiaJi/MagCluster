@@ -133,3 +133,9 @@ test_output*/
 magcluster_results*/
 results/
 *.gbff
+
+# OS / editor files
+.DS_Store
+.vscode/
+.idea/
+*.swp

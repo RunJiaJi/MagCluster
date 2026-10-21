@@ -2,9 +2,9 @@
 
 [![Python Version](https://img.shields.io/badge/python-3.10%2B-blue?style=flat-square&logo=python)](https://www.python.org/)
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-green.svg?style=flat-square)](https://www.gnu.org/licenses/gpl-3.0)
-[![Version](https://img.shields.io/badge/version-1.0.1-orange?style=flat-square)](https://github.com/RunJiaJi/magcluster)
+[![Version](https://img.shields.io/badge/version-1.0.1-orange?style=flat-square)](https://github.com/RunJiaJi/MagCluster)
 
-[English](README.md) | [中文说明](README_zh.md)
+[English](https://github.com/RunJiaJi/MagCluster/blob/main/README.md) | [中文说明](https://github.com/RunJiaJi/MagCluster/blob/main/README_zh.md)
 
 **MagCluster** is a tool for finding, annotating, and visualizing magnetosome gene clusters (MGCs) in bacterial genomes.
 
@@ -263,7 +263,7 @@ If you use MagCluster, please cite:
 
 Dependencies used by MagCluster:
 - **Pyrodigal**: [doi:10.21105/joss.04296](https://doi.org/10.21105/joss.04296)
-- **PyHMMER**: [doi:10.1093/bioinformatics/btad211](https://doi.org/10.1093/bioinformatics/btad211)
+- **PyHMMER**: [doi:10.1093/bioinformatics/btad214](https://doi.org/10.1093/bioinformatics/btad214)
 - **Clinker**: [doi:10.1093/bioinformatics/btab007](https://doi.org/10.1093/bioinformatics/btab007)
 
 ---
@@ -271,5 +271,5 @@ Dependencies used by MagCluster:
 ## Contact
 
 Questions or suggestions? Feel free to reach out:
-- **GitHub Issues**: [Open an issue](https://github.com/RunJiaJi/magcluster/issues)
+- **GitHub Issues**: [Open an issue](https://github.com/RunJiaJi/MagCluster/issues)
 - **Email**: Runjia Ji (`jirunjia@gmail.com`) or Wei Lin (`weilin@mail.iggcas.ac.cn`)
