@@ -243,11 +243,9 @@ magcluster run --clinker-help
 
 `magcluster db` 中列出的 10 个核心判定家族如下：
 
-$$\text{MamA, MamB, MamE, MamI, MamK, MamL, MamM, MamO, MamP, MamQ}$$
+`MamA`、`MamB`、`MamE`、`MamI`、`MamK`、`MamL`、`MamM`、`MamO`、`MamP`、`MamQ`
 
 这 10 个家族仅供参考，判定 MGC 时不要求必须包含它们。
-
-内置 `rules.yaml` 里的 `clustering_params` 和每个模型的 `evalue_cutoff` 只是说明性字段，程序不会读取，请使用上面的命令行参数。
 
 ---
 

@@ -134,8 +134,19 @@ magcluster_results*/
 results/
 *.gbff
 
-# OS / editor files
+# OS / editor / local workspace files
 .DS_Store
 .vscode/
 .idea/
 *.swp
+*~
+*.bak
+~$*
+.~*
+*.docx
+legacy*/
+.claude/
+.cursor/
+.gemini/
+CLAUDE.md
+AGENTS.md

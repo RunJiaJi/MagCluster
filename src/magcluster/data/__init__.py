@@ -1,4 +1,4 @@
-"""Access packaged data assets (HMMs, rules, profiles)."""
+"""Access packaged data assets (HMMs and rules)."""
 
 from pathlib import Path
 from typing import Any, Dict
@@ -25,7 +25,3 @@ def load_rules(custom_rules_path: Path = None) -> Dict[str, Any]:
     target = custom_rules_path or get_rules_path()
     with open(target, "r", encoding="utf-8") as f:
         return yaml.safe_load(f)
-
-def get_profiles_summary_path() -> Path:
-    """Return path to profiles_summary.tsv."""
-    return DATA_DIR / "profiles_summary.tsv"

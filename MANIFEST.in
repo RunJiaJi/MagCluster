@@ -1,3 +1,11 @@
 include LICENSE.txt README.md README_zh.md CHANGELOG.md
 recursive-include tests *.py
-recursive-include tests/data *
+recursive-include tests/data *.gz *.gbk *.faa *.tsv
+
+prune .github
+prune docs
+prune scripts
+prune notebooks
+prune benchmarks
+prune recipes
+global-exclude __pycache__ *.py[cod] *$py.class *.so .DS_Store *.swp *~ *.bak *.log *.docx

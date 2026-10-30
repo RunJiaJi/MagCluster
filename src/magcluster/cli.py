@@ -25,7 +25,7 @@ from .core.parser import (
 from .core.predict import GenePredictor
 from .core.scoring import ClusterScorer
 from .core.search import DEFAULT_SCORE_CUTOFF, MagnetosomeSearcher
-from .data import get_hmm_path, get_profiles_summary_path, load_rules
+from .data import get_hmm_path, load_rules
 from .utils.io import export_genome_magnetosome_fasta, write_genome_cluster_tables
 from .utils.logger import attach_log_file, console, detach_log_file, detail, log, say
 from .viz.clinker_export import (
@@ -129,14 +129,6 @@ OWNED_FILE_PATTERNS = [
     "*_magnetosome_proteins.faa",
     "MGC_align.html",
     "magcluster.log",
-    # obsolete names from pre-release builds
-    "clinker_colour_map.csv",
-    "clinker_gene_functions.csv",
-    "mgc_clusters.tsv",
-    "presence_absence.tsv",
-    "summary.tsv",
-    "mgc_genes.tsv",
-    "magnetosome_proteins.faa",
 ]
 OWNED_DIRS = {"clusters_gbk": ["*.gbk"], "figures": ["*.svg"]}
 
@@ -733,37 +725,35 @@ def _process_one_genome(
 @app.command(name="db", context_settings=CONTEXT_SETTINGS, options_metavar="[OPTIONS]")
 def db_info():
     """Display information about the built-in Magnetosome HMM database and rules."""
-    import csv
-
-    summary_p = get_profiles_summary_path()
     rules = load_rules()
+    profiles = rules.get("profiles", {})
     user_db_path = get_hmm_path().resolve()
 
     console.print("[bold cyan]=== MagCluster Reference Database Info ===[/bold cyan]")
     console.print(f"Rules version: [bold green]{rules.get('version', 'unknown')}[/bold green]")
     console.print(f"HMM database path: [dim]{user_db_path}[/dim]")
-    console.print(f"Total HMM profiles: [bold]{len(rules.get('profiles', {}))}[/bold]")
+    console.print(f"Total HMM profiles: [bold]{len(profiles)}[/bold]")
     console.print(f"Core defining families ({len(rules.get('core_families', []))}): [bold magenta]{', '.join(rules.get('core_families', []))}[/bold magenta]\n")
 
-    if summary_p.exists():
-        table = Table(title="Reference Magnetosome HMM Profiles (92)", show_header=True)
+    if profiles:
+        table = Table(title=f"Reference Magnetosome HMM Profiles ({len(profiles)})", show_header=True)
         table.add_column("Profile", style="bold cyan")
         table.add_column("Protein Family", style="bold green")
         table.add_column("Ref Seqs", justify="right", style="cyan")
         table.add_column("Median length (aa)", justify="right", style="magenta")
 
-        with open(summary_p, "r", encoding="utf-8") as f:
-            rows = list(csv.DictReader(f, delimiter="\t"))
-
         # Sort descending by Ref Seqs count, then alphabetically by Profile name
-        sorted_rows = sorted(rows, key=lambda r: (-int(r["n_seqs"]), r["profile"]))
+        sorted_profiles = sorted(
+            profiles.items(),
+            key=lambda kv: (-int(kv[1].get("n_reference_seqs", 0)), kv[0]),
+        )
 
-        for r in sorted_rows:
+        for prof_name, info in sorted_profiles:
             table.add_row(
-                r["profile"],
-                r["parent_family"],
-                r["n_seqs"],
-                r["median_length"],
+                prof_name,
+                str(info.get("parent_family", prof_name)),
+                str(info.get("n_reference_seqs", "-")),
+                str(info.get("median_length", "-")),
             )
 
         console.print(table)

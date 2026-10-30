@@ -1,10 +1,9 @@
 """Fast, native prokaryotic gene prediction using Pyrodigal (Cython Prodigal)."""
 
 import gzip
-import io
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Dict, Iterator, List, Optional, Tuple, Union
+from typing import Iterator, List, Optional
 from Bio import SeqIO
 from Bio.SeqRecord import SeqRecord
 import pyrodigal

@@ -244,11 +244,9 @@ magcluster run --clinker-help
 
 The 10 core defining families shown by `magcluster db` are:
 
-$$\text{MamA, MamB, MamE, MamI, MamK, MamL, MamM, MamO, MamP, MamQ}$$
+`MamA`, `MamB`, `MamE`, `MamI`, `MamK`, `MamL`, `MamM`, `MamO`, `MamP`, `MamQ`
 
 They are listed for reference; MGC calling does not require them.
-
-The keys `clustering_params` and the per-profile `evalue_cutoff` in the bundled `rules.yaml` are informational only and are not read. Use the command-line options above instead.
 
 ---
 

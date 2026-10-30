@@ -7,8 +7,6 @@ from ..core.predict import PredictedGene
 from ..core.scoring import ClusterScore
 from ..core.search import MagnetosomeHit
 
-CORE_FAMILIES = ["MamA", "MamB", "MamE", "MamI", "MamK", "MamL", "MamM", "MamO", "MamP", "MamQ"]
-
 def write_genome_cluster_tables(
     genome_name: str,
     clusters: List[MGCCluster],
@@ -120,28 +118,3 @@ def export_all_genome_fastas(
         p = export_genome_magnetosome_fasta(gname, clusters, hits, out_dir, genes_lookup=genes_lookup)
         out_paths.append(p)
     return out_paths
-
-# Backward compatibility wrappers
-def write_cluster_tables(
-    clusters: List[MGCCluster],
-    scores: Dict[str, ClusterScore],
-    hits: Dict[str, MagnetosomeHit],
-    out_dir: Path,
-    genes_lookup: Optional[Dict[str, PredictedGene]] = None
-):
-    genomes = list(dict.fromkeys([c.genome_name for c in clusters]))
-    if not genomes and genes_lookup:
-        genomes = list(dict.fromkeys([getattr(g, "genome_name", "genome") for g in genes_lookup.values() if g.gene_id in hits]))
-    write_all_genome_tables(genomes, clusters, scores, hits, out_dir, genes_lookup=genes_lookup)
-
-def export_combined_magnetosome_fasta(
-    clusters: List[MGCCluster],
-    hits: Dict[str, MagnetosomeHit],
-    out_dir: Path,
-    filename: str = "magnetosome_proteins.faa",
-    genes_lookup: Optional[Dict[str, PredictedGene]] = None
-):
-    genomes = list(dict.fromkeys([c.genome_name for c in clusters]))
-    if not genomes and genes_lookup:
-        genomes = list(dict.fromkeys([getattr(g, "genome_name", "genome") for g in genes_lookup.values() if g.gene_id in hits]))
-    export_all_genome_fastas(genomes, clusters, hits, out_dir, genes_lookup=genes_lookup)

@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools>=61.0"]
+requires = ["setuptools>=64.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -45,19 +45,19 @@ Repository = "https://github.com/RunJiaJi/MagCluster.git"
 dev = [
     "pytest>=7.0.0",
 ]
-# Only needed to rebuild the HMM database with scripts/build_database.py
-build-db = [
-    "pyfamsa>=0.6.0",
-]
 
 [project.scripts]
 magcluster = "magcluster.cli:app"
 
+[tool.setuptools]
+include-package-data = false
+
 [tool.setuptools.packages.find]
 where = ["src"]
+include = ["magcluster*"]
 
 [tool.setuptools.package-data]
-"magcluster.data" = ["*.yaml", "*.tsv", "hmms/*.hmm"]
+"magcluster.data" = ["rules.yaml", "hmms/magnetosome.hmm"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

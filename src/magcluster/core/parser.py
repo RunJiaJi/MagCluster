@@ -9,7 +9,7 @@ import gzip
 import re
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Dict, Iterator, List, Optional, Tuple, Union
+from typing import Dict, List, Optional
 from Bio import SeqIO
 from Bio.SeqRecord import SeqRecord
 from .predict import PredictedGene

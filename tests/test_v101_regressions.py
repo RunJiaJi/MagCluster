@@ -490,6 +490,15 @@ def test_clinker_help_shows_default():
     assert res.exit_code == 0 and "[default: 2]" in flat(res.output)
 
 
+def test_db_command_reads_rules_only():
+    res = run_cli("db")
+    out = flat(res.output)
+    assert res.exit_code == 0
+    assert "Total HMM profiles: 92" in out
+    assert "Reference Magnetosome HMM Profiles (92)" in out
+    assert "MamA" in out and "FeoB" in out
+
+
 def test_no_matplotlib_on_import_or_version():
     code = "import sys, magcluster.cli; print('matplotlib' in sys.modules, 'pygenomeviz' in sys.modules)"
     out = subprocess.run([sys.executable, "-c", code], capture_output=True, text=True, check=True)
