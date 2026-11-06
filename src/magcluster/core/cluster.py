@@ -75,13 +75,8 @@ class MGCCluster:
         return self.cluster_core_end - self.cluster_core_start + 1
 
     def format_coordinates(self, sep: str = ", ") -> str:
-        """Format cluster genomic coordinates, avoiding misleading cross-contig min/max spans."""
-        contigs_used = (
-            list(dict.fromkeys(sub.contig_id for sub in self.subclusters))
-            if self.subclusters
-            else [c for c in self.contig_id.split(",") if c]
-        )
-        if len(contigs_used) > 1 and self.subclusters:
+        """Format cluster genomic coordinates, listing discrete subcluster intervals when > 1."""
+        if not self.wraps_origin and self.subclusters and len(self.subclusters) > 1:
             return sep.join(f"{sub.contig_id}:{sub.start_bp}-{sub.end_bp}" for sub in self.subclusters)
         origin = " (spans origin)" if self.wraps_origin else ""
         return f"{self.contig_id}:{self.start_bp}-{self.end_bp}{origin}"
@@ -225,8 +220,9 @@ class ClusterEngine:
                     else:
                         merged_slices.append(q)
 
-            # Build MGCSubcluster objects for each slice
-            for s_idx, s in enumerate(merged_slices, 1):
+            # Build MGCSubcluster objects for each slice (numbered sequentially across the whole genome)
+            for s in merged_slices:
+                sub_idx = len(all_subclusters) + 1
                 region_genes = ctg_genes[s["flank_start_idx"] : s["flank_end_idx"] + 1]
 
                 core_hits = []
@@ -250,7 +246,7 @@ class ClusterEngine:
                 core_end_bp = ctg_genes[s["last_hit_idx"]].end
 
                 sub = MGCSubcluster(
-                    subcluster_id=f"{genome_name}_loc{s_idx}",
+                    subcluster_id=f"{genome_name}_loc{sub_idx}",
                     contig_id=ctg_id,
                     start_bp=start_bp,
                     end_bp=end_bp,

@@ -2,7 +2,7 @@
 
 [![Python Version](https://img.shields.io/badge/python-3.10%2B-blue?style=flat-square&logo=python)](https://www.python.org/)
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-green.svg?style=flat-square)](https://www.gnu.org/licenses/gpl-3.0)
-[![Version](https://img.shields.io/badge/version-1.1.0-orange?style=flat-square)](https://github.com/RunJiaJi/MagCluster)
+[![Version](https://img.shields.io/badge/version-1.1.1-orange?style=flat-square)](https://github.com/RunJiaJi/MagCluster)
 
 [English](https://github.com/RunJiaJi/MagCluster/blob/main/README.md) | [中文说明](https://github.com/RunJiaJi/MagCluster/blob/main/README_zh.md)
 
@@ -187,9 +187,10 @@ Running `magcluster run <inputs> -o results/` produces:
 ```text
 results/
 ├── mgc_summary.tsv                     # Cohort summary table (1 row per input genome)
-├── {genome}_mgc_genes.tsv              # Table of all identified magnetosome genes
+├── {genome}_mgc_genes.tsv              # Table of all identified magnetosome gene hits (clustered + unclustered)
 ├── {genome}_magnetosome_proteins.faa   # Extracted magnetosome protein sequences
 ├── MGC_align.html                      # Interactive gene cluster map (or MGC_align_batch01.html, ... when >50 MGCs)
+├── MGC_align_batches.tsv               # Batch membership index (only when >1 Clinker HTML batch is generated)
 ├── magcluster.log                      # Run log (see below)
 ├── clusters_gbk/                       # Sliced GenBank file for each cluster
 │   └── {cluster_id}.gbk
@@ -197,7 +198,7 @@ results/
     └── {cluster_id}.svg                # Static cluster map (pyGenomeViz)
 ```
 
-Genomes without any magnetosome hit produce no per-genome table or FASTA file, while every input genome is recorded in `mgc_summary.tsv` and `magcluster.log`.
+Genomes without any magnetosome hit produce no per-genome table or FASTA file, while genomes with only isolated homologs (`unclustered`, `status = no_MGC` in `mgc_summary.tsv`) still write `{genome}_mgc_genes.tsv` so scattered hits are not lost. Every input genome is recorded in `mgc_summary.tsv` and `magcluster.log`.
 
 ### 0. Cohort summary (`mgc_summary.tsv`)
 
@@ -273,11 +274,14 @@ Written with `--static-plot`: one SVG per MGC (one track per subcluster), drawn 
 
 ## Helpful Tips
 
-### Faster Clinker plotting on large datasets
-Pairwise sequence alignments between large clusters can take time. Use `--clinker-opts` to speed it up:
+### Faster Clinker plotting & HTML size on large datasets
+With pairwise sequence alignments enabled (the default), Clinker stores gene-to-gene alignment links for all cluster pairs, so HTML file size grows roughly quadratically (`O(N^2)`) with the number of homologous clusters per batch—especially when comparing closely related strains that share 50+ conserved genes. While `--batch-size 50` (default) keeps diverse datasets manageable (and writes `MGC_align_batches.tsv` when multiple batches are created), you can make large or closely related comparisons much lighter with `--batch-size` and `--clinker-opts`:
 
 ```bash
-# Skip pairwise sequence alignment:
+# Use smaller batches (e.g. 20 clusters per HTML) for closely related strain sets:
+magcluster clinker results/ -o plots/ -b 20
+
+# Skip pairwise sequence alignment (reduces HTML size ~10x and runs in <1s):
 magcluster run *.gbff -o results/ --clinker-opts "-na"
 
 # Keep the original file order instead of automatic reordering:

@@ -2,7 +2,7 @@
 
 [![Python Version](https://img.shields.io/badge/python-3.10%2B-blue?style=flat-square&logo=python)](https://www.python.org/)
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-green.svg?style=flat-square)](https://www.gnu.org/licenses/gpl-3.0)
-[![Version](https://img.shields.io/badge/version-1.1.0-orange?style=flat-square)](https://github.com/RunJiaJi/MagCluster)
+[![Version](https://img.shields.io/badge/version-1.1.1-orange?style=flat-square)](https://github.com/RunJiaJi/MagCluster)
 
 [English](https://github.com/RunJiaJi/MagCluster/blob/main/README.md) | [中文说明](https://github.com/RunJiaJi/MagCluster/blob/main/README_zh.md)
 
@@ -154,7 +154,7 @@ magcluster clinker [选项] [输入文件/文件夹...]
 
 | 参数 | 别名 | 默认值 | 作用说明 |
 | :--- | :--- | :--- | :--- |
-| `--outdir` | `-o` | `clinker_results` | 输出目录（写出 `MGC_align.html` 或 `MGC_align_batch01.html`……），或直接指定 `.html` 文件名（例如 `-o custom_mgc.html`） |
+| `--outdir` | `-o`、`--output` | `clinker_results` | 输出目录（写出 `MGC_align.html` 或 `MGC_align_batch01.html`……），或直接指定 `.html` 文件名（例如 `-o custom_mgc.html`） |
 | `--list` | `-l` | `None` | 文本清单文件（每行一个 `.gbk` 路径、文件名或基因簇 ID；`#` 开头为注释），用于筛选子集或固定上下排列顺序（配合 `--clinker-opts "-ufo"` 即可严格按进化树顺序展示） |
 | `--batch-size` | `-b` | `50` | 每个 HTML 文件最多绘制的基因簇数量（按输入/清单顺序切分；设为 `0` 表示全部绘入单张 HTML） |
 | `--identity` | `-i` | `0.3` | Clinker 同源比对条带的最小序列一致度阈值（0.0 ~ 1.0） |
@@ -195,9 +195,10 @@ magcluster db
 ```text
 results/
 ├── mgc_summary.tsv                     # 全队列汇总表（每个输入基因组一行）
-├── {genome}_mgc_genes.tsv              # 磁小体基因注释总表（每个样本一个文件）
+├── {genome}_mgc_genes.tsv              # 磁小体基因命中表（含成簇基因与 unclustered 散落命中）
 ├── {genome}_magnetosome_proteins.faa   # 提取的磁小体蛋白序列（每个样本一个文件）
 ├── MGC_align.html                      # 交互式基因簇可视化图（超过 50 个簇时拆分为 MGC_align_batch01.html 等；--no-plot 时不生成）
+├── MGC_align_batches.tsv               # 分批索引清单（仅在生成多个 HTML 批次时写出，记录每个基因簇所属批次）
 ├── magcluster.log                      # 运行日志（见下文）
 ├── clusters_gbk/                       # 切片好的微型 GenBank 文件
 │   └── {cluster_id}.gbk
@@ -205,7 +206,7 @@ results/
     └── {cluster_id}.svg                # 静态基因簇图（pyGenomeViz）
 ```
 
-没有任何磁小体命中的基因组不会生成单样本表格和 FASTA，但所有输入基因组都会记录在 `mgc_summary.tsv` 和 `magcluster.log` 里。
+没有任何磁小体命中的基因组不会生成单样本表格和 FASTA；仅有散落同源基因但未达到成簇阈值的基因组（`mgc_summary.tsv` 中 `status = no_MGC`）仍会生成 `{genome}_mgc_genes.tsv`（`cluster_id` 列记为 `unclustered`）以保留全部命中信息。所有输入基因组都会记录在 `mgc_summary.tsv` 和 `magcluster.log` 里。
 
 ### 0. 全队列汇总表（`mgc_summary.tsv`）
 
@@ -281,11 +282,14 @@ MSERRPVGRTL...
 
 ## 实用小建议
 
-### 基因组较多时加快 Clinker 绘图
-当比对多个较大基因簇时，基因两两全比对可能会耗费较多时间。可以通过 `--clinker-opts` 透传参数提速：
+### 基因组较多时控制 HTML 体积并加快 Clinker 绘图
+默认开启蛋白两两比对时，Clinker 会把批次内所有基因簇两两之间的同源连线数据都写入单张 HTML 中，因此文件体积随同源基因簇数量大致按平方级（`O(N^2)`）增长——尤其在比较数十株共享大量保守基因的近缘菌株时更为明显。默认 `--batch-size 50` 适合常规跨类群数据集（分批时会自动生成 `MGC_align_batches.tsv` 方便检索每个基因簇所在的网页）；若对大批量近缘菌株绘图觉得网页偏大，可调小分批数量或透传 `--clinker-opts` 提速：
 
 ```bash
-# 跳过两两相似度比对条带，只绘制基因簇图（速度极快）：
+# 对高度同源的近缘菌株调小每批簇数（例如每张 HTML 20 个簇）：
+magcluster clinker results/ -o plots/ -b 20
+
+# 跳过两两相似度比对条带，只绘制基因簇图（体积缩小约 10 倍，速度极快）：
 magcluster run *.gbff -o results/ --clinker-opts "-na"
 
 # 保持文件输入原本的上下排列顺序（不自动按相似度重排）：

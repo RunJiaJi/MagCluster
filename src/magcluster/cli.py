@@ -35,7 +35,9 @@ from .utils.io import (
 from .utils.logger import attach_log_file, console, detach_log_file, detail, say
 from .viz.clinker_export import (
     DEFAULT_CLINKER_BATCH_SIZE,
+    LARGE_HTML_MB_THRESHOLD,
     ClinkerError,
+    batch_index_path,
     export_cluster_to_genbank,
     parse_clinker_opts,
     run_clinker_batches,
@@ -141,6 +143,7 @@ OWNED_FILE_PATTERNS = [
     "mgc_summary.tsv",
     "MGC_align.html",
     "MGC_align_batch*.html",
+    "MGC_align_batches.tsv",
     "magcluster.log",
     "magcluster_clinker.log",
 ]
@@ -578,11 +581,17 @@ def _run_genomes(
             clinker_base_html = outdir / "MGC_align.html"
             hits_by_cluster = {c.cluster_id: hits_by_genome.get(c.genome_name, {}) for c in all_clusters}
 
-            def _announce_batch(b_idx: int, n_batches: int, target_html: Path, n_cls: int):
+            def _announce_batch(b_idx: int, n_batches: int, target_html: Path, batch_gbks: List[Path]):
                 if n_batches == 1:
-                    say(f"[dim]-> Running Clinker to generate interactive comparison: {target_html.name}...[/dim]")
+                    say(f"[dim]-> Running Clinker to generate interactive comparison: {escape(target_html.name)}...[/dim]")
                 else:
-                    say(f"[dim]-> Running Clinker [batch {b_idx}/{n_batches}, {n_cls} clusters]: {target_html.name}...[/dim]")
+                    first_id = Path(batch_gbks[0]).stem
+                    last_id = Path(batch_gbks[-1]).stem
+                    span_txt = first_id if len(batch_gbks) == 1 else f"{first_id} .. {last_id}"
+                    say(
+                        f"[dim]-> Running Clinker (batch {b_idx}/{n_batches}, {len(batch_gbks)} clusters: "
+                        f"{escape(span_txt)}): {escape(target_html.name)}...[/dim]"
+                    )
 
             try:
                 clinker_htmls = run_clinker_batches(
@@ -607,6 +616,14 @@ def _run_genomes(
                 else:
                     say(f"  [bold green]✓ Clinker interactive alignments created ({len(clinker_htmls)} batches): "
                         f"{escape(clinker_htmls[0].name)} .. {escape(clinker_htmls[-1].name)}[/bold green]")
+                max_mb = max((p.stat().st_size for p in clinker_htmls if p.exists()), default=0) / (1024 * 1024)
+                if max_mb >= LARGE_HTML_MB_THRESHOLD:
+                    say(
+                        f"  [yellow]! Tip: Clinker HTML output is {max_mb:.1f} MB due to dense pairwise alignments. "
+                        f"If browser rendering feels slow, re-plot with a smaller --batch-size (e.g. -b 20) or "
+                        f"--clinker-opts \"-na\".[/yellow]",
+                        logging.INFO,
+                    )
 
         if static_plot:
             say(f"[dim]-> Rendering static cluster maps with pyGenomeViz...[/dim]")
@@ -666,6 +683,10 @@ def _run_genomes(
                 f"({escape(clinker_htmls[0].name)} .. {escape(clinker_htmls[-1].name)}) in [underline]{escape(str(outdir))}[/underline]")
             for hp in clinker_htmls:
                 detail(f"  • Clinker Visualization: {hp}")
+        if len(clinker_htmls) > 1:
+            b_idx_tsv = batch_index_path(outdir / "MGC_align.html")
+            if b_idx_tsv.exists():
+                say(f"  • Clinker Batch Index: [underline]{escape(str(b_idx_tsv))}[/underline]")
     for fig in figure_files:
         detail(f"  • Static figure: {fig}")
     for p in gbk_files:
@@ -690,6 +711,8 @@ def _process_one_genome(
     """Parse, predict, search and cluster one input; write its outputs. Returns a status line."""
     # 1. Parse input
     parsed = parse_input(f_path, genome_name=genome_name)
+    for msg in parsed.notices:
+        say(f"  [yellow]! {escape(msg)}[/yellow]", logging.WARNING)
     n_bp = sum(len(r.seq) for r in parsed.contigs.values())
     detail(f"  {genome_name}: format={parsed.file_type}, records={len(parsed.contigs)}, bp={n_bp}")
 
@@ -897,7 +920,7 @@ def clinker_cmd(
         None,
         "--log",
         dir_okay=False,
-        help="Write the Clinker run log to this file instead of <outdir>/magcluster_clinker.log.",
+        help="Write the Clinker run log to this file (default: <outdir>/magcluster_clinker.log when -o is a directory; omitted when -o is an .html file).",
     ),
 ):
     """Generate interactive Clinker gene cluster visualizations from GenBank (.gbk/.gbff) files."""

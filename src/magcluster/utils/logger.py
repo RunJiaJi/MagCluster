@@ -73,6 +73,8 @@ def setup_logger(level: str = "INFO") -> logging.Logger:
     logger.propagate = False
 
     runlog = logging.getLogger(RUNLOG_NAME)
+    if not any(isinstance(h, logging.NullHandler) for h in runlog.handlers):
+        runlog.addHandler(logging.NullHandler())
     runlog.setLevel(logging.DEBUG)
     runlog.propagate = False
     return logger

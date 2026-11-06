@@ -2,6 +2,60 @@
 
 All notable changes to MagCluster are documented here.
 
+## [1.1.1] - 2026-11-07
+
+Bug-fix and UX polish release following real-world user testing of v1.1.0. MGC calling rules,
+HMM profiles and thresholds are unchanged.
+
+### Fixed
+- **Protein FASTA files with `.fasta`/`.fa` extensions**: files containing amino acid
+  sequences (rather than DNA/RNA contigs) under `.fasta`, `.fa`, `.fna` or extensionless
+  names are now automatically detected and parsed as protein FASTA with a notice, instead of
+  being fed to Pyrodigal as nucleotide contigs and silently reporting `0` hits.
+- **Duplicate sequence / locus IDs**: FASTA headers that share the same first whitespace
+  token (e.g. `>genbankID| Magnetosome protein ... AGG16234.1 [FH-1]`) as well as duplicate
+  contig IDs or duplicate GenBank `locus_tag` qualifiers are now automatically disambiguated
+  and deduplicated with a warning, preventing hits from overwriting one another.
+- **GenBank `Partial codon` BiopythonWarning**: `parse_genbank()` now skips untranslated
+  `/pseudo` pseudogene CDS features, honours `codon_start` / `transl_table`, and trims
+  trailing partial codons before *in silico* translation so NCBI `.gbff` files never trigger
+  `BiopythonWarning: Partial codon, len(sequence) not a multiple of three`.
+- **Multi-subcluster coordinate display & `_locN` numbering**:
+  - `MGCCluster.format_coordinates()` now lists individual subcluster intervals whenever an
+    MGC has multiple discrete subclusters—including multiple subclusters on the same
+    chromosome (such as AMB-1's magnetosome island and magnetosome islet)—instead of
+    reporting a chromosome-wide bounding span.
+  - Fixed multi-contig `subcluster_id` numbering in `ClusterEngine.cluster_genome()` so
+    subclusters across different contigs are numbered sequentially (`_loc1`, `_loc2`, ...) in
+    `magcluster.log`, matching `.gbk` slices.
+- **GenBank header consistency & Clinker locus labels**:
+  - Genomes carrying a standard INSDC/RefSeq accession (e.g. `GCF_000009985.1_ASM998v1_genomic`)
+    now consistently use that accession in `.gbk` `ACCESSION`/`VERSION`/`LOCUS` headers even
+    when the full file name is under 68 characters; single-locus `DEFINITION` lines no longer
+    repeat the word `cluster`.
+  - `customize_clinker_html()` now populates untruncated, unique `ACCESSION` locus names
+    (e.g. `GCF_000009985.1_loc1`..`loc4`, `MSR-1_genome_loc1`..`loc4`) in Clinker's HTML
+    JSON instead of 16-character truncated `LOCUS` prefixes.
+- **Rich markup stripping on batch progress lines**: escaped batch progress labels in
+  `magcluster run` and `magcluster clinker` (`(batch 1/2, 50 clusters: first .. last)`) so
+  Rich no longer strips `[batch ...]` as an unknown style tag.
+- **No stray `magcluster_clinker.log` when `-o` targets an `.html` file**: passing a direct
+  HTML file path (`magcluster clinker ... -o figure.html`) no longer drops an unrequested
+  `magcluster_clinker.log` into the current working directory unless `--log` is explicitly
+  provided (directory targets `-o <outdir>` continue writing `<outdir>/magcluster_clinker.log`).
+
+### Added
+- **Batch membership manifest (`MGC_align_batches.tsv`)**: whenever Clinker splits clusters
+  into multiple HTML files (`n_batches > 1`), a companion TSV mapping each `cluster_id` to
+  its `batch` number and `html_file` is written automatically (and cleaned up by `--force`).
+- **Actionable Clinker diagnostics**:
+  - Passing `-l/--list` with bare cluster/genome IDs without an input directory now hints to
+    supply the GenBank/results directory alongside `-l`.
+  - Passing an unsliced whole-genome GenBank file (`> 500` CDSs) to `magcluster clinker`
+    emits a warning recommending `magcluster run` to slice MGC loci first.
+  - When a generated Clinker HTML exceeds 30 MB due to dense pairwise alignments, a tip
+    suggests lowering `--batch-size` (e.g. `-b 20`) or passing `--clinker-opts "-na"`.
+
 ## [1.1.0] - 2026-11-06
 
 Feature and usability release for repository-scale MGC screening and standalone Clinker

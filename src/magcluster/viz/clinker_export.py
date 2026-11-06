@@ -26,6 +26,10 @@ MAX_GBK_ID_LEN = 68
 MAX_LOCUS_LEN = 16
 #: Default maximum number of MGC clusters plotted per Clinker HTML file.
 DEFAULT_CLINKER_BATCH_SIZE = 50
+#: File size threshold (MB) above which a performance tip is printed for Clinker HTMLs.
+LARGE_HTML_MB_THRESHOLD = 30.0
+#: CDS count threshold above which standalone `magcluster clinker` warns about whole-genome inputs.
+WHOLE_GENOME_CDS_WARN_THRESHOLD = 500
 
 # Standard INSDC / RefSeq assembly or sequence accession embedded in genome names.
 _ACCESSION_RE = re.compile(
@@ -110,21 +114,21 @@ def shorten_gbk_record_ids(
 ) -> Tuple[str, str]:
     """Return ``(rec_id, rec_name)`` for a sliced GenBank record.
 
-    When the full identifier fits within Biopython's 68-character ``ACCESSION`` /
-    ``VERSION`` line limit, the original v1.0 identifier and ``[:16]`` LOCUS name
-    are kept unchanged.  When the identifier exceeds 68 characters, an assembly or
-    sequence accession (e.g. ``GCA_002753255.1``) replaces the full genome name—
-    falling back to safe truncation if no standard accession is present—so Biopython
-    never emits header length warnings while the ``.gbk`` file name stays unchanged.
+    Whenever *genome_name* contains a standard INSDC/RefSeq accession (e.g.
+    ``GCA_002753255.1`` or ``GCF_000009985.1``), that accession is used for
+    ``ACCESSION`` / ``VERSION`` (``rec_id``) and ``LOCUS`` (``rec_name``).
+    For custom names without a standard accession, identifiers within 68 characters
+    keep their v1.0 layout unchanged, while longer names are safely truncated so
+    Biopython never emits header length warnings.
     """
     raw_id = f"{genome_name}_loc{slice_idx}" if n_slices > 1 else cluster_id
     raw_id = re.sub(r"\s+", "_", raw_id)
-    if len(raw_id) <= MAX_GBK_ID_LEN:
+    clean_genome = re.sub(r"\s+", "_", genome_name)
+    m = _ACCESSION_RE.search(clean_genome)
+    if m is None and len(raw_id) <= MAX_GBK_ID_LEN:
         return raw_id, raw_id[:MAX_LOCUS_LEN]
 
     suffix = f"_loc{slice_idx}" if n_slices > 1 else "_MGC"
-    clean_genome = re.sub(r"\s+", "_", genome_name)
-    m = _ACCESSION_RE.search(clean_genome)
     base = m.group(1) if m else clean_genome
 
     max_base = max(1, MAX_GBK_ID_LEN - len(suffix))
@@ -202,20 +206,12 @@ def _hit_from_profile_note(
     )
 
 
-def extract_hits_from_genbank(
+def inspect_genbank_for_clinker(
     gbk_path: Path,
     searcher: Optional[MagnetosomeSearcher] = None,
     cpus: int = 0,
-) -> Dict[str, MagnetosomeHit]:
-    """Extract magnetosome hit annotations from a sliced or external GenBank file.
-
-    For GenBank files produced by MagCluster (``clusters_gbk/*.gbk``), hit metadata
-    (``Profile``, ``Family``, ``Score``, ``Evalue``) is read directly from CDS
-    ``/note`` qualifiers without re-running HMM searches.  For external GenBank
-    files that carry no MagCluster ``/note`` metadata, CDS translations are searched
-    against the built-in 92 magnetosome HMMs using *searcher* (lazily initialized if
-    not supplied).
-    """
+) -> Tuple[Dict[str, MagnetosomeHit], int, bool]:
+    """Inspect a GenBank file for Clinker plotting, returning ``(hits, n_cds, is_magcluster_slice)``."""
     _check_not_binary(gbk_path)
     opener = gzip.open if str(gbk_path).lower().endswith(".gz") else open
     try:
@@ -253,14 +249,32 @@ def extract_hits_from_genbank(
                 note_hits[key] = h
 
     if note_hits or is_magcluster_slice:
-        return note_hits
+        return note_hits, gene_idx, True
 
     # External GenBank file: annotate CDS features with the built-in magnetosome HMMs
     parsed = parse_genbank(gbk_path)
     if not parsed.genes:
-        return {}
+        return {}, gene_idx, False
     active_searcher = searcher if searcher is not None else _get_cached_searcher(cpus)
-    return active_searcher.search_genes(parsed.genes)
+    return active_searcher.search_genes(parsed.genes), gene_idx, False
+
+
+def extract_hits_from_genbank(
+    gbk_path: Path,
+    searcher: Optional[MagnetosomeSearcher] = None,
+    cpus: int = 0,
+) -> Dict[str, MagnetosomeHit]:
+    """Extract magnetosome hit annotations from a sliced or external GenBank file.
+
+    For GenBank files produced by MagCluster (``clusters_gbk/*.gbk``), hit metadata
+    (``Profile``, ``Family``, ``Score``, ``Evalue``) is read directly from CDS
+    ``/note`` qualifiers without re-running HMM searches.  For external GenBank
+    files that carry no MagCluster ``/note`` metadata, CDS translations are searched
+    against the built-in 92 magnetosome HMMs using *searcher* (lazily initialized if
+    not supplied).
+    """
+    hits, _, _ = inspect_genbank_for_clinker(gbk_path, searcher=searcher, cpus=cpus)
+    return hits
 
 
 def export_cluster_to_genbank(
@@ -305,11 +319,8 @@ def export_cluster_to_genbank(
         rec_id, rec_name = shorten_gbk_record_ids(
             cluster.genome_name, cluster.cluster_id, slice_idx=i, n_slices=len(slices)
         )
-        desc_label = f"slice {i}" if len(slices) > 1 else "cluster"
-        raw_desc = (
-            f"Magnetosome Gene Cluster {desc_label} from {cluster.genome_name} "
-            f"({ctg_id}:{offset+1}-{end_idx})"
-        )
+        desc_head = f"Magnetosome Gene Cluster slice {i}" if len(slices) > 1 else "Magnetosome Gene Cluster"
+        raw_desc = f"{desc_head} from {cluster.genome_name} ({ctg_id}:{offset+1}-{end_idx})"
         new_rec = SeqRecord(
             sub_seq,
             id=rec_id,
@@ -389,10 +400,42 @@ def export_all_clusters_for_clinker(
 
     return gbk_files
 
+def _read_gbk_record_names(gbk_path: Path) -> List[Tuple[str, str]]:
+    """Return ``[(locus_name, accession_id), ...]`` for each GenBank record in *gbk_path*."""
+    pairs: List[Tuple[str, str]] = []
+    cur_locus: Optional[str] = None
+    cur_acc: Optional[str] = None
+    try:
+        with open(gbk_path, "r", encoding="utf-8", errors="ignore") as f:
+            for line in f:
+                if line.startswith("LOCUS"):
+                    parts = line.split()
+                    cur_locus = parts[1] if len(parts) > 1 else ""
+                    cur_acc = None
+                elif line.startswith("VERSION") and cur_locus is not None and not cur_acc:
+                    parts = line.split()
+                    if len(parts) > 1 and parts[1] != ".":
+                        cur_acc = parts[1]
+                elif line.startswith("ACCESSION") and cur_locus is not None:
+                    parts = line.split()
+                    if len(parts) > 1 and parts[1] != ".":
+                        cur_acc = parts[1]
+                elif line.startswith("//") and cur_locus is not None:
+                    pairs.append((cur_locus, cur_acc or cur_locus))
+                    cur_locus = None
+                    cur_acc = None
+    except OSError:
+        return []
+    if cur_locus is not None:
+        pairs.append((cur_locus, cur_acc or cur_locus))
+    return pairs
+
+
 def customize_clinker_html(
     plot_html: Path,
     hits: Dict[str, MagnetosomeHit],
     hits_by_cluster: Optional[Dict[str, Dict[str, MagnetosomeHit]]] = None,
+    locus_names_by_cluster: Optional[Dict[str, List[Tuple[str, str]]]] = None,
 ) -> bool:
     """Post-process Clinker HTML to apply v0.2.12 family colors and protein name labels.
 
@@ -430,15 +473,23 @@ def customize_clinker_html(
 
     # Iterate over all genes in every cluster locus
     for cluster in data.get("clusters", []):
+        cname = cluster.get("name")
         c_hits = hits
         if hits_by_cluster is not None:
-            c_hits = hits_by_cluster.get(cluster.get("name"), hits)
+            c_hits = hits_by_cluster.get(cname, hits)
         by_coord = {
             (h.start, h.end, h.strand): h
             for h in c_hits.values()
             if h.end > 0
         }
+        remaining_pairs = list((locus_names_by_cluster or {}).get(cname, []))
         for locus in cluster.get("loci", []):
+            cur_lname = locus.get("name", "")
+            for p_idx, (loc_short, loc_full) in enumerate(remaining_pairs):
+                if cur_lname == loc_short or loc_full.startswith(cur_lname):
+                    locus["name"] = loc_full
+                    remaining_pairs.pop(p_idx)
+                    break
             for gene in locus.get("genes", []):
                 names = gene.get("names", {})
                 lt = names.get("locus_tag")
@@ -589,8 +640,17 @@ def run_clinker_visualization(
     if not plot_html.exists():
         return _fail("clinker finished but did not write the HTML figure "
                      f"({plot_html.name}); check --clinker-opts.")
-    # Apply custom coloring & protein labels
-    customize_clinker_html(plot_html, hits, hits_by_cluster=hits_by_cluster)
+    # Apply custom coloring, protein labels & untruncated locus names
+    locus_names_by_cluster = {
+        Path(p).stem: _read_gbk_record_names(Path(p))
+        for p in gbk_files
+    }
+    customize_clinker_html(
+        plot_html,
+        hits,
+        hits_by_cluster=hits_by_cluster,
+        locus_names_by_cluster=locus_names_by_cluster,
+    )
     return True
 
 
@@ -667,6 +727,29 @@ def _per_batch_clinker_opts(
     return shlex.join(out_tokens)
 
 
+def batch_index_path(base_html: Path) -> Path:
+    """Return the batch membership TSV path corresponding to *base_html* (e.g. ``MGC_align_batches.tsv``)."""
+    stem = base_html.stem if base_html.suffix else base_html.name
+    return base_html.parent / f"{stem}_batches.tsv"
+
+
+def write_batch_index_table(
+    batches: List[List[Path]],
+    html_targets: List[Path],
+    out_tsv: Path,
+) -> Path:
+    """Write a TSV manifest mapping each plotted cluster to its Clinker batch HTML file."""
+    lines = ["batch\thtml_file\torder_in_batch\tcluster_id\tgbk_file"]
+    for b_idx, (batch_gbks, target_html) in enumerate(zip(batches, html_targets), 1):
+        for order_idx, gbk_p in enumerate(batch_gbks, 1):
+            lines.append(
+                f"{b_idx}\t{target_html.name}\t{order_idx}\t{Path(gbk_p).stem}\t{Path(gbk_p).name}"
+            )
+    out_tsv.parent.mkdir(parents=True, exist_ok=True)
+    out_tsv.write_text("\n".join(lines) + "\n", encoding="utf-8")
+    return out_tsv
+
+
 def run_clinker_batches(
     gbk_files: List[Path],
     base_html: Path,
@@ -678,7 +761,7 @@ def run_clinker_batches(
     hits_by_cluster: Optional[Dict[str, Dict[str, MagnetosomeHit]]] = None,
     cwd: Optional[Path] = None,
     raise_on_error: bool = False,
-    on_batch_start: Optional[Callable[[int, int, Path, int], None]] = None,
+    on_batch_start: Optional[Callable[[int, int, Path, List[Path]], None]] = None,
 ) -> List[Path]:
     """Run Clinker across one or more batches of GenBank files and return written HTML paths."""
     batches = split_gbk_batches(gbk_files, batch_size=batch_size)
@@ -690,7 +773,7 @@ def run_clinker_batches(
 
     for idx, (batch_gbks, target_html) in enumerate(zip(batches, html_targets), 1):
         if on_batch_start is not None:
-            on_batch_start(idx, n_batches, target_html, len(batch_gbks))
+            on_batch_start(idx, n_batches, target_html, batch_gbks)
         batch_opts = _per_batch_clinker_opts(clinker_opts, idx, n_batches)
         ok = run_clinker_visualization(
             gbk_files=batch_gbks,
@@ -705,4 +788,7 @@ def run_clinker_batches(
         )
         if ok:
             written.append(target_html)
+
+    if n_batches > 1 and written:
+        write_batch_index_table(batches, html_targets, batch_index_path(base_html))
     return written

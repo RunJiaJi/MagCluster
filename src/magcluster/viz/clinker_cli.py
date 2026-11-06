@@ -24,8 +24,11 @@ from ..core.parser import (
 )
 from ..utils.logger import attach_log_file, console, detach_log_file, detail, say
 from .clinker_export import (
+    LARGE_HTML_MB_THRESHOLD,
+    WHOLE_GENOME_CDS_WARN_THRESHOLD,
     ClinkerError,
-    extract_hits_from_genbank,
+    batch_index_path,
+    inspect_genbank_for_clinker,
     parse_clinker_opts,
     run_clinker_batches,
 )
@@ -114,6 +117,12 @@ def collect_clinker_inputs(
                 ordered.append(cand_cwd)
             elif cand_rel.is_file():
                 ordered.append(cand_rel)
+            elif not inputs and "/" not in entry and "\\" not in entry and not is_genbank_path(Path(entry)):
+                missing_entries.append((
+                    entry,
+                    f"listed entry '{entry}' not found (pass a GenBank/results directory along with -l, "
+                    f"or write file paths in {list_file.name})",
+                ))
             else:
                 missing_entries.append((entry, f"listed entry '{entry}' not found"))
         candidates = ordered
@@ -218,6 +227,10 @@ def run_clinker_subcommand(
         for p in existing_htmls:
             p.unlink()
             removed.append(p)
+        stale_idx = batch_index_path(base_html)
+        if stale_idx.is_file() or stale_idx.is_symlink():
+            stale_idx.unlink()
+            removed.append(stale_idx)
 
     try:
         work_dir.mkdir(parents=True, exist_ok=True)
@@ -225,12 +238,16 @@ def run_clinker_subcommand(
         console.print(f"[bold red]Error:[/bold red] cannot create directory '{escape(str(work_dir))}': {e.strerror or e}")
         raise typer.Exit(code=1)
 
-    log_file = log_path if log_path is not None else work_dir / "magcluster_clinker.log"
-    try:
-        log_handler = attach_log_file(log_file)
-    except OSError as e:
-        console.print(f"[bold red]Error:[/bold red] cannot write log file '{escape(str(log_file))}': {e.strerror or e}")
-        raise typer.Exit(code=1)
+    log_file: Optional[Path] = (
+        log_path if log_path is not None else (None if is_html_target else work_dir / "magcluster_clinker.log")
+    )
+    log_handler = None
+    if log_file is not None:
+        try:
+            log_handler = attach_log_file(log_file)
+        except OSError as e:
+            console.print(f"[bold red]Error:[/bold red] cannot write log file '{escape(str(log_file))}': {e.strerror or e}")
+            raise typer.Exit(code=1)
 
     try:
         eff_threads = available_cpus if threads == 0 else min(threads, available_cpus)
@@ -245,7 +262,7 @@ def run_clinker_subcommand(
             ("inputs", ", ".join(str(p) for p in (inputs or [])) or "-"),
             ("list_file", str(list_file.resolve()) if list_file else "-"),
             ("output", str((base_html if is_html_target else work_dir).resolve())),
-            ("log", str(Path(log_file).resolve())),
+            ("log", str(Path(log_file).resolve()) if log_file is not None else "-"),
             ("threads", f"{eff_threads} (0 = all {available_cpus} available cores)" if threads == 0 else str(eff_threads)),
             ("batch_size", f"{batch_size} (0 = single HTML)" if batch_size == 0 else str(batch_size)),
             ("identity", f"{identity:g}"),
@@ -272,7 +289,8 @@ def run_clinker_subcommand(
             say(f"  [bold red]Error:[/bold red] {escape(reason)}.", logging.ERROR)
 
         if not expanded_files:
-            say(f"\n[bold red]✗ No valid GenBank inputs to plot ({len(failed)} failed).[/bold red] See the log: {escape(str(log_file))}",
+            log_note = f" See the log: {escape(str(log_file))}" if log_file is not None else ""
+            say(f"\n[bold red]✗ No valid GenBank inputs to plot ({len(failed)} failed).[/bold red]{log_note}",
                 logging.ERROR)
             raise typer.Exit(code=1)
 
@@ -286,7 +304,7 @@ def run_clinker_subcommand(
             tmp_dir = Path(tmp_dir_str)
             for p in expanded_files:
                 try:
-                    c_hits = extract_hits_from_genbank(p, cpus=eff_threads)
+                    c_hits, n_cds, is_mc_slice = inspect_genbank_for_clinker(p, cpus=eff_threads)
                 except InputFormatError as e:
                     failed.append((str(p), str(e)))
                     say(f"  [bold red]Error:[/bold red] cannot read {escape(p.name)}: {escape(str(e))}. Skipped.",
@@ -299,6 +317,13 @@ def run_clinker_subcommand(
                         logging.ERROR)
                     detail(traceback.format_exc(), logging.ERROR)
                     continue
+
+                if not is_mc_slice and n_cds > WHOLE_GENOME_CDS_WARN_THRESHOLD:
+                    say(
+                        f"[yellow]! {escape(p.name)} contains {n_cds} CDS features and appears to be an unsliced "
+                        f"whole genome (run 'magcluster run' first if you want to slice MGC loci).[/yellow]",
+                        logging.WARNING,
+                    )
 
                 raw_stem = gbk_cluster_stem(p)
                 unique_stem = raw_stem
@@ -331,18 +356,25 @@ def run_clinker_subcommand(
                 hits_by_cluster[unique_stem] = c_hits
 
             if not staged_gbks:
-                say(f"\n[bold red]✗ No valid GenBank files could be plotted ({len(failed)} failed).[/bold red] "
-                    f"See the log: {escape(str(log_file))}", logging.ERROR)
+                log_note = f" See the log: {escape(str(log_file))}" if log_file is not None else ""
+                say(f"\n[bold red]✗ No valid GenBank files could be plotted ({len(failed)} failed).[/bold red]{log_note}",
+                    logging.ERROR)
                 raise typer.Exit(code=1)
 
             clinker_failed = False
             clinker_htmls: List[Path] = []
 
-            def _announce(b_idx: int, n_batches: int, target_html: Path, n_cls: int):
+            def _announce(b_idx: int, n_batches: int, target_html: Path, batch_gbks: List[Path]):
                 if n_batches == 1:
-                    say(f"[dim]-> Running Clinker on {n_cls} cluster(s): {target_html.name}...[/dim]")
+                    say(f"[dim]-> Running Clinker on {len(batch_gbks)} cluster(s): {escape(target_html.name)}...[/dim]")
                 else:
-                    say(f"[dim]-> Running Clinker [batch {b_idx}/{n_batches}, {n_cls} clusters]: {target_html.name}...[/dim]")
+                    first_id = Path(batch_gbks[0]).stem
+                    last_id = Path(batch_gbks[-1]).stem
+                    span_txt = first_id if len(batch_gbks) == 1 else f"{first_id} .. {last_id}"
+                    say(
+                        f"[dim]-> Running Clinker (batch {b_idx}/{n_batches}, {len(batch_gbks)} clusters: "
+                        f"{escape(span_txt)}): {escape(target_html.name)}...[/dim]"
+                    )
 
             try:
                 clinker_htmls = run_clinker_batches(
@@ -375,6 +407,14 @@ def run_clinker_subcommand(
             say(f"\n[bold green]✓ Done in {elapsed:.1f}s![/bold green]")
 
         if clinker_htmls and not clinker_failed:
+            max_mb = max((p.stat().st_size for p in clinker_htmls if p.exists()), default=0) / (1024 * 1024)
+            if max_mb >= LARGE_HTML_MB_THRESHOLD:
+                say(
+                    f"  [yellow]! Tip: Clinker HTML output is {max_mb:.1f} MB due to dense pairwise alignments. "
+                    f"If browser rendering feels slow, re-plot with a smaller --batch-size (e.g. -b 20) or "
+                    f"--clinker-opts \"-na\".[/yellow]",
+                    logging.INFO,
+                )
             if len(clinker_htmls) <= MAX_CONSOLE_HTML_LIST:
                 for hp in clinker_htmls:
                     say(f"  • Clinker Visualization: [underline]{escape(str(hp))}[/underline]")
@@ -383,7 +423,12 @@ def run_clinker_subcommand(
                     f"({escape(clinker_htmls[0].name)} .. {escape(clinker_htmls[-1].name)}) in [underline]{escape(str(work_dir))}[/underline]")
                 for hp in clinker_htmls:
                     detail(f"  • Clinker Visualization: {hp}")
-        console.print(f"  • Run Log: [underline]{escape(str(log_file))}[/underline]")
+            if len(clinker_htmls) > 1:
+                b_idx_tsv = batch_index_path(base_html)
+                if b_idx_tsv.exists():
+                    say(f"  • Clinker Batch Index: [underline]{escape(str(b_idx_tsv))}[/underline]")
+        if log_file is not None:
+            console.print(f"  • Run Log: [underline]{escape(str(log_file))}[/underline]")
 
         for item, reason in failed:
             detail(f"Failed input: {item}: {reason}", logging.ERROR)

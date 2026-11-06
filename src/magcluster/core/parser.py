@@ -7,9 +7,10 @@ FASTA or Prodigal-style protein FASTA instead.
 
 import gzip
 import re
+from collections import Counter
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Tuple
 from Bio import SeqIO
 from Bio.SeqRecord import SeqRecord
 from .predict import PredictedGene
@@ -35,6 +36,45 @@ CIRCULAR_HDR_RE = re.compile(r"complete\s+(genome|sequence)|\bcircular\b|topolog
 # Characters kept in genome IDs; everything else (whitespace, shell/filesystem
 # specials) is replaced by '_'.  \w is Unicode-aware, so e.g. Chinese is kept.
 _UNSAFE_NAME_RE = re.compile(r"[^\w.\-]+")
+
+# Amino-acid-specific letters strictly absent from standard + IUPAC nucleotide codes.
+_AA_ONLY_CHARS = frozenset("EFILPQZJO")
+_NT_CORE_CHARS = frozenset("ACGTUN")
+_PROT_ACC_RE = re.compile(r"\b(?:[A-Z]{2}_[A-Z0-9]+(?:\.\d+)?|[A-Z]{3}\d{5,}(?:\.\d+)?)\b")
+
+
+def _unique_id(candidate: str, used: Dict[str, int]) -> str:
+    """Return *candidate* if unused, else ``candidate_2``, ``candidate_3``, ..."""
+    if candidate not in used:
+        used[candidate] = 1
+        return candidate
+    n = used[candidate] + 1
+    while f"{candidate}_{n}" in used:
+        n += 1
+    used[candidate] = n
+    resolved = f"{candidate}_{n}"
+    used[resolved] = 1
+    return resolved
+
+
+def _is_protein_records(records: List[SeqRecord]) -> bool:
+    """True if sampled FASTA records contain amino acid sequences rather than DNA/RNA."""
+    chunks: List[str] = []
+    collected = 0
+    for rec in records[:25]:
+        s = re.sub(r"[\s*\-.]+", "", str(rec.seq)).upper()
+        if s:
+            chunks.append(s[:500])
+            collected += min(len(s), 500)
+            if collected >= 4000:
+                break
+    sample = "".join(chunks)
+    total = len(sample)
+    if total < 10:
+        return False
+    aa_only = sum(1 for ch in sample if ch in _AA_ONLY_CHARS)
+    nt_core = sum(1 for ch in sample if ch in _NT_CORE_CHARS)
+    return (aa_only / total >= 0.03) or (aa_only >= 2 and nt_core / total < 0.70)
 
 
 class InputFormatError(ValueError):
@@ -66,6 +106,7 @@ class ParsedGenome:
     needs_prediction: bool = False
     has_coordinates: bool = True
     circular_contigs: Dict[str, bool] = field(default_factory=dict)
+    notices: List[str] = field(default_factory=list)
 
 
 def _strip_gz(name: str) -> str:
@@ -168,6 +209,10 @@ def parse_genbank(gbk_path: Path, genome_name: Optional[str] = None) -> ParsedGe
     contigs = {}
     circular: Dict[str, bool] = {}
     genes: List[PredictedGene] = []
+    notices: List[str] = []
+    used_contigs: Dict[str, int] = {}
+    used_genes: Dict[str, int] = {}
+    dup_gene_examples: List[Tuple[str, str]] = []
     gene_idx = 1
 
     try:
@@ -179,8 +224,12 @@ def parse_genbank(gbk_path: Path, genome_name: Optional[str] = None) -> ParsedGe
         raise InputFormatError("no GenBank records found (expected a 'LOCUS' line)")
 
     for rec in records:
-        contigs[rec.id] = rec
-        circular[rec.id] = str(rec.annotations.get("topology", "")).lower() == "circular"
+        ctg_id = _unique_id(rec.id, used_contigs)
+        if ctg_id != rec.id:
+            notices.append(f"Duplicate GenBank record ID '{rec.id}' in {gbk_path.name} renamed to '{ctg_id}'.")
+            rec.id = ctg_id
+        contigs[ctg_id] = rec
+        circular[ctg_id] = str(rec.annotations.get("topology", "")).lower() == "circular"
         ctg_gene_idx = 0
 
         for feat in rec.features:
@@ -195,34 +244,54 @@ def parse_genbank(gbk_path: Path, genome_name: Optional[str] = None) -> ParsedGe
             # Extract translation
             trans = feat.qualifiers.get("translation", [None])[0]
             if not trans:
-                # If translation is missing, attempt in silico translation if nucleotide sequence exists
+                if "pseudo" in feat.qualifiers or "pseudogene" in feat.qualifiers:
+                    continue
+                # If translation is missing on a non-pseudo CDS, translate in silico after trimming partial codons
                 if len(rec.seq) > 0:
                     try:
                         sub_seq = feat.extract(rec.seq)
-                        trans = str(sub_seq.translate()).rstrip("*")
+                        codon_start = max(0, int(feat.qualifiers.get("codon_start", [1])[0]) - 1)
+                        if codon_start:
+                            sub_seq = sub_seq[codon_start:]
+                        rem = len(sub_seq) % 3
+                        if rem:
+                            sub_seq = sub_seq[:-rem]
+                        if len(sub_seq) < 3:
+                            continue
+                        table_id = int(feat.qualifiers.get("transl_table", [11])[0])
+                        trans = str(sub_seq.translate(table=table_id)).rstrip("*")
                     except Exception:
                         continue
                 else:
                     continue
 
-            locus_tag = feat.qualifiers.get("locus_tag", [f"{rec.id}_{gene_idx}"])[0]
+            locus_tag = feat.qualifiers.get("locus_tag", [f"{ctg_id}_{gene_idx}"])[0]
             product = feat.qualifiers.get("product", [None])[0]
-            gene_id = locus_tag
+            gene_id = _unique_id(locus_tag, used_genes)
+            if gene_id != locus_tag:
+                dup_gene_examples.append((locus_tag, gene_id))
 
             pg = PredictedGene(
                 gene_id=gene_id,
-                contig_id=rec.id,
+                contig_id=ctg_id,
                 start=start_pos,
                 end=end_pos,
                 strand=strand,
                 gene_index=ctg_gene_idx,
                 translation=trans,
-                locus_tag=locus_tag,
+                locus_tag=gene_id,
                 product=product
             )
             genes.append(pg)
             ctg_gene_idx += 1
             gene_idx += 1
+
+    if dup_gene_examples:
+        raw0, new0 = dup_gene_examples[0]
+        notices.append(
+            f"Resolved {len(dup_gene_examples)} duplicate CDS locus_tag(s) in {gbk_path.name} "
+            f"(e.g. '{raw0}' -> '{new0}')."
+        )
 
     return ParsedGenome(
         name=prefix,
@@ -232,72 +301,76 @@ def parse_genbank(gbk_path: Path, genome_name: Optional[str] = None) -> ParsedGe
         genes=genes,
         needs_prediction=len(genes) == 0,
         circular_contigs=circular,
+        notices=notices,
     )
 
-def parse_fasta(fasta_path: Path, genome_name: Optional[str] = None) -> ParsedGenome:
-    """Parse nucleotide FASTA, populating contigs, flagged for gene prediction."""
-    prefix = genome_name or sanitize_genome_name(genome_name_from_path(fasta_path))
-    _check_not_binary(fasta_path)
 
-    contigs = {}
-    circular: Dict[str, bool] = {}
-    try:
-        with _open_text(fasta_path) as f:
-            for rec in SeqIO.parse(f, "fasta"):
-                contigs[rec.id] = rec
-                circular[rec.id] = bool(CIRCULAR_HDR_RE.search(rec.description))
-    except Exception as e:  # Biopython raises ValueError on text that is not FASTA
-        raise InputFormatError(f"not a valid FASTA file ({_short_reason(e)})") from None
-    if not contigs:
-        raise InputFormatError("no FASTA records found (expected a '>' header line)")
-    if not any(len(rec.seq) for rec in contigs.values()):
-        raise InputFormatError("FASTA records contain no sequence")
+def _disambiguate_faa_id(rec: SeqRecord) -> str:
+    """Derive a more specific sequence ID when multiple FASTA records share ``rec.id``."""
+    raw = rec.id
+    rest = rec.description[len(raw):].strip()
+    if not rest:
+        return raw
+    acc_m = _PROT_ACC_RE.search(rest)
+    if acc_m:
+        acc = acc_m.group(0)
+        return f"{raw}{acc}" if raw.endswith("|") else f"{raw}_{acc}"
+    extra = re.sub(r"[^\w.\-|]+", "_", "_".join(rest.split()[:2])).strip("_")
+    if extra:
+        extra = extra[:40]
+        return f"{raw}{extra}" if raw.endswith("|") else f"{raw}_{extra}"
+    return raw
 
-    return ParsedGenome(
-        name=prefix,
-        file_path=fasta_path,
-        file_type="fasta",
-        contigs=contigs,
-        genes=[],
-        needs_prediction=True,
-        circular_contigs=circular,
-    )
 
-def parse_faa(faa_path: Path, genome_name: Optional[str] = None) -> ParsedGenome:
-    """Parse protein FASTA, extracting coordinates if in Prodigal header format."""
-    prefix = genome_name or sanitize_genome_name(genome_name_from_path(faa_path))
-    _check_not_binary(faa_path)
+def _parse_faa_records(
+    records: List[SeqRecord],
+    faa_path: Path,
+    prefix: str,
+    switched_from_fasta: bool = False,
+) -> ParsedGenome:
+    """Build a protein :class:`ParsedGenome` from parsed FASTA records with ID deduplication."""
+    notices: List[str] = []
+    if switched_from_fasta:
+        notices.append(
+            f"{faa_path.name} contains amino acid sequences rather than nucleotide contigs; "
+            f"parsed as protein FASTA."
+        )
+
+    raw_ids = []
+    for rec in records:
+        m = PRODIGAL_HDR_RE.match(rec.description)
+        raw_ids.append(m["id"] if m else rec.id)
+    id_counts = Counter(raw_ids)
 
     genes: List[PredictedGene] = []
-    contig_counts = {}
+    contig_counts: Dict[str, int] = {}
+    used_genes: Dict[str, int] = {}
+    dup_examples: List[Tuple[str, str]] = []
     any_prodigal = False
 
-    try:
-        with _open_text(faa_path) as f:
-            records = list(SeqIO.parse(f, "fasta"))
-    except Exception as e:
-        raise InputFormatError(f"not a valid protein FASTA file ({_short_reason(e)})") from None
-    if not records:
-        raise InputFormatError("no FASTA records found (expected a '>' header line)")
-
-    for i, rec in enumerate(records):
+    for rec in records:
         m = PRODIGAL_HDR_RE.match(rec.description)
         if m:
             any_prodigal = True
-            gene_id = m["id"]
+            raw_id = m["id"]
+            cand_id = raw_id
             start = int(m["start"])
             end = int(m["end"])
             strand = int(m["strand"])
             attr = m["attr"]
-            # Try to extract contig from attributes or header
             ctg_match = re.search(r"contig=([^;]+)", attr)
-            ctg_id = ctg_match.group(1) if ctg_match else gene_id.rsplit("_", 1)[0]
+            ctg_id = ctg_match.group(1) if ctg_match else raw_id.rsplit("_", 1)[0]
         else:
-            gene_id = rec.id
+            raw_id = rec.id
+            cand_id = _disambiguate_faa_id(rec) if id_counts[raw_id] > 1 else raw_id
             start = 0
             end = 0
             strand = 0
             ctg_id = "unplaced"
+
+        gene_id = _unique_id(cand_id, used_genes)
+        if gene_id != raw_id:
+            dup_examples.append((raw_id, gene_id))
 
         c_idx = contig_counts.get(ctg_id, 0)
         contig_counts[ctg_id] = c_idx + 1
@@ -314,6 +387,13 @@ def parse_faa(faa_path: Path, genome_name: Optional[str] = None) -> ParsedGenome
         )
         genes.append(pg)
 
+    if dup_examples:
+        raw0, new0 = dup_examples[0]
+        notices.append(
+            f"Resolved {len(dup_examples)} duplicate protein sequence ID(s) in {faa_path.name} "
+            f"(e.g. '{raw0}' -> '{new0}')."
+        )
+
     return ParsedGenome(
         name=prefix,
         file_path=faa_path,
@@ -321,8 +401,78 @@ def parse_faa(faa_path: Path, genome_name: Optional[str] = None) -> ParsedGenome
         contigs={},
         genes=genes,
         needs_prediction=False,
-        has_coordinates=any_prodigal
+        has_coordinates=any_prodigal,
+        notices=notices,
     )
+
+
+def parse_fasta(fasta_path: Path, genome_name: Optional[str] = None) -> ParsedGenome:
+    """Parse nucleotide FASTA, populating contigs, flagged for gene prediction."""
+    prefix = genome_name or sanitize_genome_name(genome_name_from_path(fasta_path))
+    _check_not_binary(fasta_path)
+
+    try:
+        with _open_text(fasta_path) as f:
+            records = list(SeqIO.parse(f, "fasta"))
+    except Exception as e:  # Biopython raises ValueError on text that is not FASTA
+        raise InputFormatError(f"not a valid FASTA file ({_short_reason(e)})") from None
+    if not records:
+        raise InputFormatError("no FASTA records found (expected a '>' header line)")
+    if not any(len(rec.seq) for rec in records):
+        raise InputFormatError("FASTA records contain no sequence")
+
+    if _is_protein_records(records):
+        return _parse_faa_records(records, fasta_path, prefix, switched_from_fasta=True)
+
+    contigs = {}
+    circular: Dict[str, bool] = {}
+    used_contigs: Dict[str, int] = {}
+    notices: List[str] = []
+    dup_contigs: List[Tuple[str, str]] = []
+    for rec in records:
+        raw_id = rec.id
+        ctg_id = _unique_id(raw_id, used_contigs)
+        if ctg_id != raw_id:
+            dup_contigs.append((raw_id, ctg_id))
+            rec.id = ctg_id
+        contigs[ctg_id] = rec
+        circular[ctg_id] = bool(CIRCULAR_HDR_RE.search(rec.description))
+
+    if dup_contigs:
+        raw0, new0 = dup_contigs[0]
+        notices.append(
+            f"Resolved {len(dup_contigs)} duplicate contig ID(s) in {fasta_path.name} "
+            f"(e.g. '{raw0}' -> '{new0}')."
+        )
+
+    return ParsedGenome(
+        name=prefix,
+        file_path=fasta_path,
+        file_type="fasta",
+        contigs=contigs,
+        genes=[],
+        needs_prediction=True,
+        circular_contigs=circular,
+        notices=notices,
+    )
+
+
+def parse_faa(faa_path: Path, genome_name: Optional[str] = None) -> ParsedGenome:
+    """Parse protein FASTA, extracting coordinates if in Prodigal header format."""
+    prefix = genome_name or sanitize_genome_name(genome_name_from_path(faa_path))
+    _check_not_binary(faa_path)
+
+    try:
+        with _open_text(faa_path) as f:
+            records = list(SeqIO.parse(f, "fasta"))
+    except Exception as e:
+        raise InputFormatError(f"not a valid protein FASTA file ({_short_reason(e)})") from None
+    if not records:
+        raise InputFormatError("no FASTA records found (expected a '>' header line)")
+    if not any(len(rec.seq) for rec in records):
+        raise InputFormatError("FASTA records contain no sequence")
+
+    return _parse_faa_records(records, faa_path, prefix, switched_from_fasta=False)
 
 def parse_input(path: Path, genome_name: Optional[str] = None) -> ParsedGenome:
     """Automatically detect and parse input file into ParsedGenome.
