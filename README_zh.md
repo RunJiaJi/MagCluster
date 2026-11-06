@@ -2,13 +2,20 @@
 
 [![Python Version](https://img.shields.io/badge/python-3.10%2B-blue?style=flat-square&logo=python)](https://www.python.org/)
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-green.svg?style=flat-square)](https://www.gnu.org/licenses/gpl-3.0)
-[![Version](https://img.shields.io/badge/version-1.0.1-orange?style=flat-square)](https://github.com/RunJiaJi/MagCluster)
+[![Version](https://img.shields.io/badge/version-1.1.0-orange?style=flat-square)](https://github.com/RunJiaJi/MagCluster)
 
 [English](https://github.com/RunJiaJi/MagCluster/blob/main/README.md) | [中文说明](https://github.com/RunJiaJi/MagCluster/blob/main/README_zh.md)
 
 **MagCluster** 是一个用于在细菌基因组中**识别、注释和可视化磁小体基因簇（MGCs）**的生信工具。
 
 ---
+
+## v1.1 新增了哪些功能？
+
+- **独立的 `magcluster clinker` 绘图子命令**：不再需要为了调配色、调阈值或换顺序而重跑基因预测和 HMM 比对，直接基于已生成的 `clusters_gbk/` 或 `.gbk` 文件即可秒级重绘，自动保留 8 大磁小体蛋白家族配色和结构域标签；支持用 `-l/--list` 指定基因簇排列顺序（例如按进化树顺序），也支持直接传入外部 GenBank 文件进行磁小体基因自动注释与可视化。
+- **大规模基因组自动分批绘图（`--batch-size`）**：当检测到的 MGC 数量较多时，默认按输入顺序每 **50 个基因簇** 自动拆分为多个交互式网页（`MGC_align_batch01.html`、`MGC_align_batch02.html`……），避免上百个基因簇塞进单张 HTML 导致的渲染与浏览器打开卡顿；设为 `0` 可关闭分批。
+- **全队列汇总表（`mgc_summary.tsv`）**：输出目录新增样本级总表，每个输入基因组占一行，汇总成簇状态、预测基因数、HMM 命中数、亚簇数、各亚簇精确坐标、矿物类型、边界/跨原点标签和 `.gbk` 相对路径，方便大批量筛选统计。
+- **超长基因组名零告警兼容**：针对携带完整物种名的长文件名（如 `GCA_002753255.1_Candidatus_...`），保持 `{cluster_id}.gbk` 文件名及 Clinker 轨道标题完整不变，仅将 `.gbk` 内部 `LOCUS` / `ACCESSION` / `VERSION` 头信息智能缩短为标准登录号，彻底消除 Biopython 长度告警。
 
 ## v1.0 做了哪些更新？
 
@@ -88,6 +95,12 @@ magcluster run proteins.faa -o results/
 magcluster run genome.gbff -o results/ --force
 ```
 
+### 6. 对已有基因簇重新绘图（无需重跑预测与比对）
+已经生成了 `clusters_gbk/`（或外部 `.gbk` 文件）时，用 `magcluster clinker` 即可快速调整配色、阈值、排序或分批：
+```bash
+magcluster clinker results/ -o results/MGC_replot.html --clinker-opts "-na -ufo"
+```
+
 ---
 
 ## 常用命令与参数说明
@@ -103,16 +116,17 @@ magcluster run [选项] 输入文件/文件夹...
 | 参数 | 别名 | 默认值 | 作用说明 |
 | :--- | :--- | :--- | :--- |
 | `--outdir` | `-o` | `magcluster_results` | 输出结果存放目录（不能是已存在的普通文件） |
-| `--force` | `-f` | `False` | 允许使用非空的输出目录。会先删除该目录里上一次 MagCluster 运行的输出（表格、FASTA、`MGC_align.html`、`clusters_gbk/`、`figures/`、`magcluster.log`），其他文件保留 |
-| `--threads` | `-t` | `0` | CPU 线程数（`0` 表示使用全部核心；超过可用核心数时自动降到可用核心数） |
+| `--force` | `-f` | `False` | 允许使用非空的输出目录。会先删除该目录里上一次 MagCluster 运行的输出（`mgc_summary.tsv`、样本表格、FASTA、`MGC_align*.html`、`clusters_gbk/`、`figures/`、`magcluster.log`），其他文件保留 |
+| `--threads` | `-t` | `0` | CPU 线程数（`0` 表示自动检测当前可用/分配的 CPU 核心数，兼容 SLURM 等集群 `os.sched_getaffinity` 配额；超过可用核心数时自动降到可用核心数） |
 | `--evalue` | `-e` | `1e-5` | HMM 比对的 E-value 阈值（≥ 0） |
 | `--score` | `-s` | 各模型的 `trusted_cutoff`（25.0） | HMM 比对的最小 bit score。不指定时使用 `rules.yaml` 里每个模型的 `trusted_cutoff`（92 个内置模型都是 25.0）。指定后对所有模型统一使用这个值，也可以低于 25 |
 | `--max-gap` | | `5` | 基因簇内两个磁小体基因之间允许插入的最大非磁小体基因数（≥ 0）。另有固定的 25 kb 距离上限 |
 | `--threshold` | `-th`、`--min-families` | `3` | 判定一个 MGC 所需的最少磁小体家族数（任意非 Feo 家族都算，≥ 1） |
 | `--flank` | `-un`、`--unmag-num` | `3` | 基因簇两端各保留的非磁小体基因数（≥ 0） |
 | `--meta / --single` | | 自动判断 | 强制指定 Pyrodigal 的宏基因组模式或单菌模式。自动模式下，输入小于 100 kb，或者 contig 多于 200 条且都短于 20 kb 时，使用 meta 模式。`--single` 遇到序列太短（< 20 kb）无法训练时，会自动改用 meta 模式并给出警告。输入里已有 CDS 或蛋白时，这个参数不起作用 |
+| `--batch-size` | `-b` | `50` | 每个交互式 Clinker HTML 网页最多容纳的基因簇（MGC）数量，按输入顺序自动切分（`1` 个批次输出 `MGC_align.html`，多个批次输出 `MGC_align_batch01.html`、`MGC_align_batch02.html`……；设为 `0` 关闭分批） |
 | `--identity` | `-i` | `0.3` | Clinker 同源比对条带的最小一致度阈值（0.0 ~ 1.0） |
-| `--clinker-opts` | | `None` | 透传给 Clinker 的参数（例如 `"-na -ufo"`）。`-mo matrix.tsv` 这类相对路径的输出文件会写到输出目录里 |
+| `--clinker-opts` | | `None` | 透传给 Clinker 的参数（例如 `"-na -ufo"`）。`-mo matrix.tsv` 这类相对路径的输出文件会写到输出目录里（多分批时自动添加 `_batchNN` 后缀） |
 | `--clinker-help` | | | 在终端打印 Clinker 常用参数指南并退出 |
 | `--static-plot` | | `False` | 额外在 `figures/` 里生成静态 SVG 矢量图 |
 | `--no-plot` | | `False` | 跳过 Clinker 绘图，只输出表格、序列和 GenBank 切片 |
@@ -124,6 +138,45 @@ magcluster run [选项] 输入文件/文件夹...
 基因组 ID 用于输出文件名、`genome` 列和预测基因的 gene ID。它取自输入文件名，去掉 `.gz` 和基因组扩展名，例如 `GCF_000513295.1.fna` → `GCF_000513295.1`，`strainX.v1.fna` → `strainX.v1`。空格和特殊字符会替换成 `_`（`my strain.fna` → `my_strain`）。两个输入得到同一个 ID 时（例如 NCBI Datasets 下载的 `genomic.gbff`），后面的会加后缀（`genomic_2`），并给出警告。同一个文件重复输入只处理一次。
 
 退出码：成功为 `0`。有输入文件读不了、Clinker 失败，或者输出目录不可用时为 `1`，其他基因组的结果照常写出。命令行参数不合法时为 `2`。
+
+### `magcluster clinker`
+
+```bash
+magcluster clinker [选项] [输入文件/文件夹...]
+```
+
+单独运行 Clinker 交互式基因簇可视化，并自动着色 MagCluster 的 8 大磁小体蛋白家族与结构域标签。输入支持：
+- 单个或多个 `.gbk` / `.gbff` 文件（支持 `.gz` 压缩）；
+- 包含 `.gbk` 文件的文件夹（例如 `results/clusters_gbk/`）；
+- `magcluster run` 的输出根目录（会自动识别并读取其中的 `clusters_gbk/` 子目录）。
+
+由 MagCluster 切片生成的 `.gbk` 文件已自带家族与模型注释，绘图时无需重跑 HMM 比对；若传入外部第三方 GenBank 文件（无 MagCluster `/note` 注释），程序会自动对其中的 CDS 运行内置 92 个磁小体 HMM 模型完成家族上色。
+
+| 参数 | 别名 | 默认值 | 作用说明 |
+| :--- | :--- | :--- | :--- |
+| `--outdir` | `-o` | `clinker_results` | 输出目录（写出 `MGC_align.html` 或 `MGC_align_batch01.html`……），或直接指定 `.html` 文件名（例如 `-o custom_mgc.html`） |
+| `--list` | `-l` | `None` | 文本清单文件（每行一个 `.gbk` 路径、文件名或基因簇 ID；`#` 开头为注释），用于筛选子集或固定上下排列顺序（配合 `--clinker-opts "-ufo"` 即可严格按进化树顺序展示） |
+| `--batch-size` | `-b` | `50` | 每个 HTML 文件最多绘制的基因簇数量（按输入/清单顺序切分；设为 `0` 表示全部绘入单张 HTML） |
+| `--identity` | `-i` | `0.3` | Clinker 同源比对条带的最小序列一致度阈值（0.0 ~ 1.0） |
+| `--threads` | `-t` | `0` | 传给 Clinker 的 CPU 线程数（`0` 表示自动检测当前可用/分配核心数） |
+| `--clinker-opts` | | `None` | 透传给 Clinker 的附加参数（例如 `"-na -ufo"`、`"-asc"`、`"-mo matrix.tsv"`） |
+| `--clinker-help` | | | 在终端打印 Clinker 常用参数指南并退出 |
+| `--force` | `-f` | `False` | 允许覆盖已存在的目标 HTML 文件（不会删除输出目录中已有的 TSV、FASTA 或 `clusters_gbk/`） |
+| `--log` | | `<outdir>/magcluster_clinker.log` | 把绘图运行日志写到指定文件 |
+| `--help` | `-h` | | 显示帮助并退出 |
+
+常用示例：
+```bash
+# 1. 直接对已有结果目录重新绘图（调高一致度阈值并加快速度）：
+magcluster clinker results/ -o replot/ -i 0.5 --clinker-opts "-na"
+
+# 2. 先用 --no-plot 跑完大规模基因组注释，再按每批 30 个基因簇分批绘图：
+magcluster run genomes_dir/ -o results/ --no-plot
+magcluster clinker results/ -o results/ -b 30 --force
+
+# 3. 严格按照进化树叶节点清单顺序（tree_order.txt）输出单张对齐图：
+magcluster clinker results/ -l tree_order.txt -o tree_mgc.html --batch-size 0 --clinker-opts "-ufo"
+```
 
 ### `magcluster db`
 
@@ -141,9 +194,10 @@ magcluster db
 
 ```text
 results/
+├── mgc_summary.tsv                     # 全队列汇总表（每个输入基因组一行）
 ├── {genome}_mgc_genes.tsv              # 磁小体基因注释总表（每个样本一个文件）
 ├── {genome}_magnetosome_proteins.faa   # 提取的磁小体蛋白序列（每个样本一个文件）
-├── MGC_align.html                      # 交互式基因簇可视化图（用浏览器打开；--no-plot 时不生成）
+├── MGC_align.html                      # 交互式基因簇可视化图（超过 50 个簇时拆分为 MGC_align_batch01.html 等；--no-plot 时不生成）
 ├── magcluster.log                      # 运行日志（见下文）
 ├── clusters_gbk/                       # 切片好的微型 GenBank 文件
 │   └── {cluster_id}.gbk
@@ -151,7 +205,21 @@ results/
     └── {cluster_id}.svg                # 静态基因簇图（pyGenomeViz）
 ```
 
-没有任何磁小体命中的基因组不会生成表格和 FASTA，但会记录在 `magcluster.log` 里。
+没有任何磁小体命中的基因组不会生成单样本表格和 FASTA，但所有输入基因组都会记录在 `mgc_summary.tsv` 和 `magcluster.log` 里。
+
+### 0. 全队列汇总表（`mgc_summary.tsv`）
+
+每个输入基因组一行，方便在大批量数据集中快速筛选成簇阳性样本、矿物类型和切片文件路径：
+
+| 列名 | 说明 |
+| :--- | :--- |
+| `genome`, `input_file` | 标准化后的基因组 ID 与原始输入文件名 |
+| `status` | 成簇状态：`MGC_detected`、`no_MGC`、`no_coordinates`、`no_genes` 或 `failed` |
+| `n_genes`, `n_hits`, `n_clustered_hits` | 预测/读取的 CDS 总数、磁小体 HMM 命中总数、归入 MGC 的命中数 |
+| `cluster_id`, `n_subclusters`, `coordinates` | MGC 编号、共线性亚簇数量，以及各亚簇精确基因组区间坐标 |
+| `n_distinct_families`, `families` | MGC 内去重后的非 Feo 磁小体蛋白家族数及排序列表 |
+| `mineral_type`, `flags` | 预测矿物类型（`Magnetite` / `Greigite` / `Putative/Mixed`）及质控标签（`Contig_Edge`、`Spans_Origin`） |
+| `gbk_file` | 切片 GenBank 文件相对路径（`clusters_gbk/{cluster_id}.gbk`） |
 
 ### 1. 基因注释表格（`{genome}_mgc_genes.tsv`）
 
@@ -230,6 +298,8 @@ magcluster run *.gbff -o results/ --clinker-opts "-na -ufo"
 如果想查看 Clinker 支持的所有可视化参数，直接输入：
 ```bash
 magcluster run --clinker-help
+# 或
+magcluster clinker --clinker-help
 ```
 
 ---

@@ -1,11 +1,76 @@
 """Tabular and FASTA export utilities for MagCluster results."""
 
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Dict, List, Optional
 from ..core.cluster import MGCCluster
 from ..core.predict import PredictedGene
 from ..core.scoring import ClusterScore
 from ..core.search import MagnetosomeHit
+
+
+@dataclass
+class GenomeSummaryRow:
+    """One-row per-genome summary written to ``mgc_summary.tsv``."""
+    genome: str
+    input_file: str
+    status: str
+    n_genes: int = 0
+    n_hits: int = 0
+    n_clustered_hits: int = 0
+    cluster_id: str = "-"
+    n_subclusters: int = 0
+    coordinates: str = "-"
+    n_distinct_families: int = 0
+    mineral_type: str = "-"
+    flags: str = "-"
+    families: str = "-"
+    gbk_file: str = "-"
+
+
+SUMMARY_COLUMNS = (
+    "genome",
+    "input_file",
+    "status",
+    "n_genes",
+    "n_hits",
+    "n_clustered_hits",
+    "cluster_id",
+    "n_subclusters",
+    "coordinates",
+    "n_distinct_families",
+    "mineral_type",
+    "flags",
+    "families",
+    "gbk_file",
+)
+
+
+def write_cohort_summary_table(rows: List[GenomeSummaryRow], out_dir: Path) -> Path:
+    """Write ``mgc_summary.tsv`` summarizing every input genome in a batch run."""
+    out_dir.mkdir(parents=True, exist_ok=True)
+    summary_tsv = out_dir / "mgc_summary.tsv"
+    with open(summary_tsv, "w", encoding="utf-8") as f:
+        f.write("\t".join(SUMMARY_COLUMNS) + "\n")
+        for r in rows:
+            vals = [
+                r.genome,
+                r.input_file,
+                r.status,
+                str(r.n_genes),
+                str(r.n_hits),
+                str(r.n_clustered_hits),
+                r.cluster_id,
+                str(r.n_subclusters),
+                r.coordinates,
+                str(r.n_distinct_families),
+                r.mineral_type,
+                r.flags,
+                r.families,
+                r.gbk_file,
+            ]
+            f.write("\t".join(vals) + "\n")
+    return summary_tsv
 
 def write_genome_cluster_tables(
     genome_name: str,

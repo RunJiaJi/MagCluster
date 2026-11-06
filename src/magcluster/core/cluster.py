@@ -74,6 +74,18 @@ class MGCCluster:
     def core_span_bp(self) -> int:
         return self.cluster_core_end - self.cluster_core_start + 1
 
+    def format_coordinates(self, sep: str = ", ") -> str:
+        """Format cluster genomic coordinates, avoiding misleading cross-contig min/max spans."""
+        contigs_used = (
+            list(dict.fromkeys(sub.contig_id for sub in self.subclusters))
+            if self.subclusters
+            else [c for c in self.contig_id.split(",") if c]
+        )
+        if len(contigs_used) > 1 and self.subclusters:
+            return sep.join(f"{sub.contig_id}:{sub.start_bp}-{sub.end_bp}" for sub in self.subclusters)
+        origin = " (spans origin)" if self.wraps_origin else ""
+        return f"{self.contig_id}:{self.start_bp}-{self.end_bp}{origin}"
+
 def _origin_wrapped_span(subclusters: List[MGCSubcluster], contig_length: int):
     """Return (start, end) of the shortest arc covering *subclusters* on a circular
     replicon if that arc crosses the origin, else ``None``.

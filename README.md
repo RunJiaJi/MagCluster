@@ -2,7 +2,7 @@
 
 [![Python Version](https://img.shields.io/badge/python-3.10%2B-blue?style=flat-square&logo=python)](https://www.python.org/)
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-green.svg?style=flat-square)](https://www.gnu.org/licenses/gpl-3.0)
-[![Version](https://img.shields.io/badge/version-1.0.1-orange?style=flat-square)](https://github.com/RunJiaJi/MagCluster)
+[![Version](https://img.shields.io/badge/version-1.1.0-orange?style=flat-square)](https://github.com/RunJiaJi/MagCluster)
 
 [English](https://github.com/RunJiaJi/MagCluster/blob/main/README.md) | [中文说明](https://github.com/RunJiaJi/MagCluster/blob/main/README_zh.md)
 
@@ -10,14 +10,13 @@
 
 ---
 
-## What's New in v1.0
+## What's New in v1.1
 
-- **One command**: `magcluster run` runs everything from gene prediction to cluster visualization in a single step.
-- **No Prokka needed**: gene calling is handled natively by [Pyrodigal](https://github.com/althonos/pyrodigal) (fast, no Perl or external setup).
-- **92 HMM profiles**: curated protein HMMs covering 8 magnetosome families (`Mam`, `Mms`, `Mad`, `Man`, `Mae`, `Maq`, `Mca`, `Feo`), searched using [PyHMMER](https://github.com/althonos/pyhmmer).
-- **Flexible inputs**: accepts GenBank (`.gbk`/`.gbff`), nucleotide FASTA contigs (`.fasta`/`.fna`/`.fa`), and protein FASTA (`.faa`), including `.gz` compressed files.
-- **Per-genome outputs**: writes separate `{genome}_mgc_genes.tsv` and `{genome}_magnetosome_proteins.faa` files for each genome.
-- **Run log** (v1.0.1): every run saves `magcluster.log` in the output folder, so you can review the parameters, software versions and per-genome results later. See [CHANGELOG.md](https://github.com/RunJiaJi/MagCluster/blob/main/CHANGELOG.md).
+- **Standalone `magcluster clinker` command**: plot or re-plot sliced MGC GenBank files (`clusters_gbk/*.gbk`) anytime—with MagCluster's 8-family color scheme and domain labels—without re-running gene calling or HMM search.
+- **Automatic batch plotting (`--batch-size 50`)**: large datasets (> 50 MGC clusters) are automatically split in input order into `MGC_align_batch01.html`, `MGC_align_batch02.html`, … so Clinker alignments stay fast and browser rendering never freezes.
+- **Cohort summary table (`mgc_summary.tsv`)**: every `magcluster run` writes a single overview table across all input genomes, including MGC status, subcluster counts, coordinates, predicted mineral type (`Magnetite` / `Greigite` / `Putative/Mixed`), and `.gbk` paths.
+- **One-step Prokka-free pipeline** (v1.0): `magcluster run` predicts genes natively with [Pyrodigal](https://github.com/althonos/pyrodigal) and searches 92 curated magnetosome HMMs (`Mam`, `Mms`, `Mad`, `Man`, `Mae`, `Maq`, `Mca`, `Feo`) in memory via [PyHMMER](https://github.com/althonos/pyhmmer).
+- **Flexible inputs & run log**: accepts GenBank (`.gbk`/`.gbff`), nucleotide FASTA contigs (`.fasta`/`.fna`/`.fa`), and protein FASTA (`.faa`), including `.gz` compressed files, and records full provenance in `magcluster.log`. See [CHANGELOG.md](https://github.com/RunJiaJi/MagCluster/blob/main/CHANGELOG.md).
 
 
 ---
@@ -84,7 +83,16 @@ Prodigal-style headers (`>id # start # end # strand # ...`) keep the genomic coo
 magcluster run proteins.faa -o results/
 ```
 
-### 5. Overwrite an existing output folder
+### 5. High-throughput screening + standalone Clinker plotting
+```bash
+# Step 1: fast screening on hundreds of genomes without plotting
+magcluster run genomes_dir/ -o results/ --no-plot -t 16
+
+# Step 2: plot all or selected MGC slices anytime with `magcluster clinker`
+magcluster clinker results/ -o plots/
+```
+
+### 6. Overwrite an existing output folder
 ```bash
 magcluster run genome.gbff -o results/ --force
 ```
@@ -104,8 +112,8 @@ magcluster run [OPTIONS] INPUTS...
 | Option | Aliases | Default | Description |
 | :--- | :--- | :--- | :--- |
 | `--outdir` | `-o` | `magcluster_results` | Output directory (must not be an existing file) |
-| `--force` | `-f` | `False` | Allow a non-empty output directory. Outputs of a previous MagCluster run there (tables, FASTA, `MGC_align.html`, `clusters_gbk/`, `figures/`, `magcluster.log`) are deleted first; other files are kept |
-| `--threads` | `-t` | `0` | Number of CPU threads (`0` = all cores; values above the available cores are capped) |
+| `--force` | `-f` | `False` | Allow a non-empty output directory. Outputs of a previous MagCluster run there (`mgc_summary.tsv`, per-genome tables, FASTA, `MGC_align*.html`, `clusters_gbk/`, `figures/`, `magcluster*.log`) are deleted first; other files are kept |
+| `--threads` | `-t` | `0` | Number of CPU threads (`0` = all available cores; values above the available cores are capped) |
 | `--evalue` | `-e` | `1e-5` | HMM search E-value cutoff (≥ 0) |
 | `--score` | `-s` | per-profile `trusted_cutoff` (25.0) | Minimum HMM bit score. If omitted, each profile's `trusted_cutoff` from `rules.yaml` is used (25.0 for all 92 built-in profiles). An explicit value replaces it for every profile, including values below 25 |
 | `--max-gap` | | `5` | Maximum non-magnetosome genes allowed between hits in a cluster (≥ 0). Hits must also be ≤ 25 kb apart (fixed) |
@@ -113,6 +121,7 @@ magcluster run [OPTIONS] INPUTS...
 | `--flank` | `-un`, `--unmag-num` | `3` | Number of non-magnetosome flanking genes to keep on each side (≥ 0) |
 | `--meta / --single` | | Auto | Force metagenome or single-genome mode for gene prediction. Auto uses meta mode for inputs < 100 kb or with > 200 contigs all < 20 kb. `--single` falls back to meta mode (with a warning) when there is too little sequence (< 20 kb) to train. Ignored for inputs that already contain CDS/proteins |
 | `--identity` | `-i` | `0.3` | Minimum sequence identity cutoff for Clinker alignments (0.0–1.0) |
+| `--batch-size` | `-b` | `50` | Maximum number of MGC clusters plotted per Clinker HTML file in input order (`0` = plot all clusters in a single `MGC_align.html`) |
 | `--clinker-opts` | | `None` | Extra arguments passed to Clinker (e.g. `"-na -ufo"`). Relative output paths such as `-mo matrix.tsv` are written inside the output directory |
 | `--clinker-help` | | | Show available Clinker options guide and exit |
 | `--static-plot` | | `False` | Also generate static SVG figures in `figures/` |
@@ -125,6 +134,41 @@ Global options: `magcluster --version` (`-v`) and `magcluster --help` (`-h`).
 Genome IDs (used in output file names, the `genome` column and gene IDs of predicted genes) are taken from the input file name minus `.gz` and the genome extension, e.g. `GCF_000513295.1.fna` → `GCF_000513295.1` and `strainX.v1.fna` → `strainX.v1`. Spaces and special characters are replaced by `_` (e.g. `my strain.fna` → `my_strain`). If two inputs give the same ID (e.g. NCBI Datasets' `genomic.gbff`), the later one gets a suffix (`genomic_2`) and a warning is printed. The same input file listed twice is used once.
 
 Exit status: `0` on success. `1` if any input could not be read, Clinker failed, or the output directory cannot be used. Results of the other genomes are still written. `2` for invalid command-line options.
+
+### `magcluster clinker`
+
+Generate interactive Clinker gene cluster comparison HTML figures directly from sliced MGC GenBank files (`clusters_gbk/*.gbk`) or external GenBank loci, without re-running gene prediction or HMM search:
+
+```bash
+magcluster clinker [OPTIONS] [INPUTS]...
+```
+
+`INPUTS` can be individual `.gbk`/`.gbff` files (including `.gz`), a `clusters_gbk/` directory, or a `magcluster run` results directory (its `clusters_gbk/` subfolder is detected automatically). MagCluster's 8-family color palette and domain labels are restored from embedded GenBank `/note` metadata; external GenBank files are annotated automatically with the built-in 92 magnetosome HMMs.
+
+| Option | Aliases | Default | Description |
+| :--- | :--- | :--- | :--- |
+| `--outdir` | `-o`, `--output` | `clinker_results` | Output directory (writes `MGC_align.html` or `MGC_align_batch*.html`), or a specific `.html` file path (e.g. `-o custom.html`) |
+| `--list` | `-l` | `None` | Plain-text file listing `.gbk` paths, file names, or cluster/genome IDs (one per line) in the exact top-to-bottom plotting order |
+| `--batch-size` | `-b` | `50` | Maximum number of clusters per Clinker HTML file in input order (`0` = plot all clusters in a single HTML) |
+| `--identity` | `-i` | `0.3` | Minimum sequence identity cutoff for Clinker alignments (0.0–1.0) |
+| `--threads` | `-t` | `0` | Number of CPU threads (`0` = all available cores) |
+| `--clinker-opts` | | `None` | Extra arguments passed to Clinker (e.g. `"-na -ufo"`) |
+| `--clinker-help` | | | Show available Clinker options guide and exit |
+| `--force` | `-f` | `False` | Overwrite existing Clinker HTML output file(s) (never deletes TSV/FASTA/GBK files) |
+| `--log` | | `<outdir>/magcluster_clinker.log` | Write the Clinker run log to another file |
+| `--help` | `-h` | | Show help and exit |
+
+Examples:
+```bash
+# Plot all MGC slices from a previous `magcluster run --no-plot` output directory:
+magcluster clinker results/ -o results/
+
+# Compare specific GenBank files into a single named HTML:
+magcluster clinker AMB-1_MGC.gbk MSR-1_MGC.gbk -o amb1_vs_msr1.html
+
+# Plot a selected subset in exact custom order (e.g. matching a phylogenetic tree):
+magcluster clinker results/ -l tree_order.txt -o tree_mgc.html --clinker-opts "-ufo"
+```
 
 ### `magcluster db`
 
@@ -142,9 +186,10 @@ Running `magcluster run <inputs> -o results/` produces:
 
 ```text
 results/
+├── mgc_summary.tsv                     # Cohort summary table (1 row per input genome)
 ├── {genome}_mgc_genes.tsv              # Table of all identified magnetosome genes
 ├── {genome}_magnetosome_proteins.faa   # Extracted magnetosome protein sequences
-├── MGC_align.html                      # Interactive gene cluster map (open in browser; not with --no-plot)
+├── MGC_align.html                      # Interactive gene cluster map (or MGC_align_batch01.html, ... when >50 MGCs)
 ├── magcluster.log                      # Run log (see below)
 ├── clusters_gbk/                       # Sliced GenBank file for each cluster
 │   └── {cluster_id}.gbk
@@ -152,7 +197,21 @@ results/
     └── {cluster_id}.svg                # Static cluster map (pyGenomeViz)
 ```
 
-Genomes without any magnetosome hit produce no table or FASTA file. They are still listed in `magcluster.log`.
+Genomes without any magnetosome hit produce no per-genome table or FASTA file, while every input genome is recorded in `mgc_summary.tsv` and `magcluster.log`.
+
+### 0. Cohort summary (`mgc_summary.tsv`)
+
+One row per input genome, making it easy to filter MGC-positive genomes, mineral types, and `.gbk` paths across large batches:
+
+| Column | Meaning |
+| :--- | :--- |
+| `genome`, `input_file` | Sanitized genome ID and original file name |
+| `status` | `MGC_detected`, `no_MGC`, `no_coordinates`, `no_genes`, or `failed` |
+| `n_genes`, `n_hits`, `n_clustered_hits` | Total CDSs, total HMM hits, and hits inside the MGC |
+| `cluster_id`, `n_subclusters`, `coordinates` | MGC identifier, number of syntenic slices, and genomic coordinates |
+| `n_distinct_families`, `families` | Count and sorted list of distinct non-Feo magnetosome families in the MGC |
+| `mineral_type`, `flags` | `Magnetite` / `Greigite` / `Putative/Mixed`, and quality flags (`Contig_Edge`, `Spans_Origin`) |
+| `gbk_file` | Relative path to the sliced GenBank file (`clusters_gbk/{cluster_id}.gbk`) |
 
 ### 1. Gene table (`{genome}_mgc_genes.tsv`)
 
@@ -231,6 +290,8 @@ magcluster run *.gbff -o results/ --clinker-opts "-na -ufo"
 To see all Clinker visualization options, run:
 ```bash
 magcluster run --clinker-help
+# or
+magcluster clinker --clinker-help
 ```
 
 ---

@@ -2,6 +2,56 @@
 
 All notable changes to MagCluster are documented here.
 
+## [1.1.0] - 2026-11-06
+
+Feature and usability release for repository-scale MGC screening and standalone Clinker
+visualization. MGC detection rules, HMM search parameters and output contents for normal
+short genome names remain identical to 1.0.1.
+
+### Added
+- Standalone `magcluster clinker` subcommand: generate interactive Clinker HTML figures
+  directly from sliced MGC GenBank files (`clusters_gbk/*.gbk`, `.gbff`, `.gbk.gz`),
+  directories (including a `magcluster run` results folder, where `clusters_gbk/` is
+  auto-detected), or a custom ordered list (`-l/--list FILE`). MagCluster's 8-family color
+  palette and domain labels (`MamE_Cter`, `MamQ_greigite`, stripped `_full` suffixes) are
+  restored automatically from embedded GenBank `/note` metadata without needing the original
+  genomes or TSV tables; external third-party GenBank files are annotated on the fly with the
+  built-in 92 magnetosome HMMs.
+- Automatic Clinker batching (`-b/--batch-size`, default `50`; `0` disables splitting) in
+  both `magcluster run` and `magcluster clinker`: when more than `--batch-size` MGC clusters
+  are plotted, clusters are partitioned sequentially in input file order into
+  `MGC_align_batch01.html`, `MGC_align_batch02.html`, ... so pairwise alignments stay fast
+  and browser SVG rendering remains responsive. Runs with at most `--batch-size` MGC clusters
+  continue to write a single `MGC_align.html`.
+- Cohort summary table (`mgc_summary.tsv`) written to the output directory on every
+  `magcluster run`, with one row per input genome reporting detection status, total genes,
+  total and clustered HMM hits, cluster ID, subcluster count, coordinates, distinct family
+  count, predicted mineral type (`Magnetite`, `Greigite`, `Putative/Mixed`), flags
+  (`Contig_Edge`, `Spans_Origin`), family list, and sliced `.gbk` path.
+
+### Fixed
+- Long genome names (> 68 characters with `_MGC` or `_locN`) no longer trigger
+  `BiopythonWarning: Annotation '...' too long for 'ACCESSION'/'VERSION' line` during GenBank
+  export. While the `.gbk` file name (and thus Clinker's displayed cluster title) stays
+  unchanged, internal GenBank `ACCESSION`/`VERSION`/`LOCUS` headers now retain only the
+  extracted assembly/sequence accession (e.g. `GCA_002753255.1_loc1`, falling back to safe
+  truncation when no standard accession is present), and `LOCUS` names preserve `_locN`
+  suffixes across multi-locus slices. Full genome names remain recorded in `DEFINITION`
+  (soft-wrapped across lines when exceeding 68 characters) and `/organism`.
+- Multi-contig MGCs were displayed in console/log summaries with global `min(start)-max(end)`
+  appended to a comma-joined contig list (e.g. `ctg1,ctg2,ctg3:3-7681`). Coordinates are now
+  formatted per subcluster (`ctg1:s1-e1, ctg2:s2-e2, ...`) whenever an MGC spans multiple
+  contigs.
+- Default `--threads 0` on HPC schedulers (SLURM/PBS cgroups) now resolves the effective
+  CPU affinity count via `os.sched_getaffinity(0)` and passes that concrete integer to both
+  PyHMMER and Clinker (`-j`), preventing Clinker's `multiprocessing.Pool` from spawning
+  workers for all physical host CPUs.
+
+### Changed
+- Terminal output at the end of large batch runs (> 10 genomes with hits or > 10 Clinker
+  HTML batches) folds per-file path listings into concise summary counts while still
+  recording every file path in `magcluster.log`.
+
 ## [1.0.1] - 2026-10-21
 
 Bug-fix release. MGC detection (gene prediction, HMM search, clustering rules and

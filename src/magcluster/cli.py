@@ -1,4 +1,4 @@
-"""Command-line interface for MagCluster v1.0 using Typer and Rich."""
+"""Command-line interface for MagCluster using Typer and Rich."""
 
 import logging
 import os
@@ -26,27 +26,33 @@ from .core.predict import GenePredictor
 from .core.scoring import ClusterScorer
 from .core.search import DEFAULT_SCORE_CUTOFF, MagnetosomeSearcher
 from .data import get_hmm_path, load_rules
-from .utils.io import export_genome_magnetosome_fasta, write_genome_cluster_tables
-from .utils.logger import attach_log_file, console, detach_log_file, detail, log, say
+from .utils.io import (
+    GenomeSummaryRow,
+    export_genome_magnetosome_fasta,
+    write_cohort_summary_table,
+    write_genome_cluster_tables,
+)
+from .utils.logger import attach_log_file, console, detach_log_file, detail, say
 from .viz.clinker_export import (
+    DEFAULT_CLINKER_BATCH_SIZE,
     ClinkerError,
     export_cluster_to_genbank,
     parse_clinker_opts,
-    run_clinker_visualization,
+    run_clinker_batches,
 )
 
 HELP_TEXT = f"MagCluster (v{__version__}): Magnetosome Gene Cluster (MGC) identification & visualization."
 
 EPILOG_TEXT = """
 Examples:
-  # Run MGC analysis on a single GenBank/GBFF genome:
+  # Run full MGC pipeline on a single GenBank/GBFF genome:
   $ magcluster run genome.gbff -o results/
 
-  # Run MGC analysis on FASTA contigs with 8 CPU threads:
-  $ magcluster run contigs.fasta -o results/ -t 8
+  # Run MGC screening on a folder of genomes without Clinker plotting:
+  $ magcluster run genomes_dir/ -o results/ --no-plot -t 8
 
-  # Batch process multiple genomes or a folder of genomes:
-  $ magcluster run genomes_dir/ -o results/
+  # Run standalone Clinker visualization on sliced MGC GenBank files:
+  $ magcluster clinker results/clusters_gbk/ -o plots/
 
   # Inspect built-in Magnetosome HMM database and reference family summary:
   $ magcluster db
@@ -99,6 +105,11 @@ def show_clinker_help():
         '--clinker-opts "-o alignments.tsv"'
     )
     table.add_row(
+        "-asc, --all_subclusters",
+        "Plot multiple subcluster loci of a genome on separate horizontal tracks.",
+        '--clinker-opts "-asc"'
+    )
+    table.add_row(
         "-dc, --decimals <int>",
         "Number of decimal places in alignment scores \\[default: 2].",
         '--clinker-opts "-dc 4"'
@@ -127,10 +138,14 @@ def main_callback(
 OWNED_FILE_PATTERNS = [
     "*_mgc_genes.tsv",
     "*_magnetosome_proteins.faa",
+    "mgc_summary.tsv",
     "MGC_align.html",
+    "MGC_align_batch*.html",
     "magcluster.log",
+    "magcluster_clinker.log",
 ]
 OWNED_DIRS = {"clusters_gbk": ["*.gbk"], "figures": ["*.svg"]}
+MAX_CONSOLE_FILE_LIST = 10
 
 LOG_DEPENDENCIES = [
     "biopython", "pyrodigal", "pyhmmer", "pyyaml", "typer", "click", "rich",
@@ -332,6 +347,12 @@ def run_pipeline(
         min=0.0, max=1.0,
         help="Minimum alignment sequence identity for Clinker (0-1)."
     ),
+    batch_size: int = typer.Option(
+        DEFAULT_CLINKER_BATCH_SIZE,
+        "-b", "--batch-size",
+        min=0,
+        help="Maximum number of MGC clusters plotted per Clinker HTML file (0 = all clusters in one HTML)."
+    ),
     clinker_opts: Optional[str] = typer.Option(
         None,
         "--clinker-opts",
@@ -422,7 +443,8 @@ def run_pipeline(
             skipped_files=skipped_files, duplicate_files=duplicate_files, removed=removed,
             outdir=outdir, log_file=log_file, threads=threads, evalue=evalue, score=score,
             max_gap=max_gap, threshold=threshold, flank=flank, meta=meta, identity=identity,
-            clinker_opts=clinker_opts, static_plot=static_plot, no_plot=no_plot, force=force,
+            batch_size=batch_size, clinker_opts=clinker_opts, static_plot=static_plot,
+            no_plot=no_plot, force=force,
         )
     except BaseException as e:
         if not isinstance(e, (typer.Exit, SystemExit)):
@@ -437,7 +459,7 @@ def run_pipeline(
 def _run_genomes(
     *, start_time, inputs, expanded_files, skipped_files, duplicate_files, removed,
     outdir, log_file, threads, evalue, score, max_gap, threshold, flank, meta,
-    identity, clinker_opts, static_plot, no_plot, force,
+    identity, batch_size, clinker_opts, static_plot, no_plot, force,
 ) -> int:
     """Body of `magcluster run` after the output directory and log are ready."""
     # --- Run-log header (file only) ------------------------------------------
@@ -449,15 +471,13 @@ def _run_genomes(
     detail("Dependencies: " + ", ".join(f"{k} {v}" for k, v in _dependency_versions().items()))
 
     available = _available_cpus()
-    eff_threads = threads
-    if threads > available:
-        eff_threads = available
+    eff_threads = available if threads == 0 else min(threads, available)
     detail("Effective parameters:")
     params = [
         ("inputs", ", ".join(str(p) for p in inputs)),
         ("outdir", str(outdir.resolve())),
         ("log", str(Path(log_file).resolve())),
-        ("threads", f"{eff_threads} (0 = all {available} available cores)" if eff_threads == 0 else str(eff_threads)),
+        ("threads", f"{eff_threads} (0 = all {available} available cores)" if threads == 0 else str(eff_threads)),
         ("evalue", f"{evalue:g}"),
         ("score", f"{score:g} (explicit, applied to all profiles)" if score is not None
                   else f"per-profile trusted cutoff from rules.yaml (default {DEFAULT_SCORE_CUTOFF:g})"),
@@ -467,6 +487,7 @@ def _run_genomes(
         ("flank (unmag-num)", str(flank)),
         ("gene prediction mode", "automatic" if meta is None else ("meta" if meta else "single")),
         ("identity (clinker)", f"{identity:g}"),
+        ("batch_size (clinker)", f"{batch_size} (0 = single HTML)" if batch_size == 0 else str(batch_size)),
         ("clinker_opts", clinker_opts or "-"),
         ("static_plot", str(static_plot)),
         ("no_plot", str(no_plot)),
@@ -510,6 +531,7 @@ def _run_genomes(
     written_faas: List[Path] = []
     failed: List[Tuple[Path, str]] = []
     summary_rows: List[str] = []
+    cohort_rows: List[GenomeSummaryRow] = []
     gbk_dir = outdir / "clusters_gbk"
 
     n_files = len(expanded_files)
@@ -519,16 +541,19 @@ def _run_genomes(
         try:
             status = _process_one_genome(
                 f_path, genome_name, predictor, searcher, clusterer, threshold, meta, outdir,
-                gbk_dir, all_clusters, all_scores, hits_by_genome, gbk_files, written_tsvs, written_faas,
+                gbk_dir, all_clusters, all_scores, hits_by_genome, gbk_files, written_tsvs,
+                written_faas, cohort_rows,
             )
         except InputFormatError as e:
             status = f"FAILED: {e}"
             failed.append((f_path, str(e)))
+            cohort_rows.append(GenomeSummaryRow(genome=genome_name, input_file=f_path.name, status="failed"))
             say(f"  [bold red]Error:[/bold red] cannot read {escape(f_path.name)}: {escape(str(e))}. Skipped.",
                 logging.ERROR)
         except Exception as e:  # keep the batch going; details go to the log
             status = f"FAILED: {type(e).__name__}: {e}"
             failed.append((f_path, f"{type(e).__name__}: {e}"))
+            cohort_rows.append(GenomeSummaryRow(genome=genome_name, input_file=f_path.name, status="failed"))
             say(f"  [bold red]Error:[/bold red] failed to process {escape(f_path.name)} "
                 f"({escape(type(e).__name__)}: {escape(str(e))}). Skipped; see the log for details.",
                 logging.ERROR)
@@ -539,8 +564,9 @@ def _run_genomes(
 
     # 5. Export results (per-genome tables and FASTA were written right after each genome)
     say("\n[bold cyan]Writing per-genome reports and magnetosome sequences...[/bold cyan]")
+    summary_tsv = write_cohort_summary_table(cohort_rows, outdir)
 
-    clinker_ok = False
+    clinker_htmls: List[Path] = []
     clinker_failed = False
     plot_failed = False
     figure_files: List[Path] = []
@@ -549,26 +575,38 @@ def _run_genomes(
         say("[dim]-> Preparing sliced GenBank files for Clinker visualization...[/dim]")
 
         if not no_plot:
-            clinker_html = outdir / "MGC_align.html"
-            say(f"[dim]-> Running Clinker to generate interactive comparison: {clinker_html.name}...[/dim]")
+            clinker_base_html = outdir / "MGC_align.html"
             hits_by_cluster = {c.cluster_id: hits_by_genome.get(c.genome_name, {}) for c in all_clusters}
+
+            def _announce_batch(b_idx: int, n_batches: int, target_html: Path, n_cls: int):
+                if n_batches == 1:
+                    say(f"[dim]-> Running Clinker to generate interactive comparison: {target_html.name}...[/dim]")
+                else:
+                    say(f"[dim]-> Running Clinker [batch {b_idx}/{n_batches}, {n_cls} clusters]: {target_html.name}...[/dim]")
+
             try:
-                clinker_ok = run_clinker_visualization(
+                clinker_htmls = run_clinker_batches(
                     gbk_files=gbk_files,
-                    plot_html=clinker_html,
+                    base_html=clinker_base_html,
                     hits={},
+                    batch_size=batch_size,
                     jobs=eff_threads,
                     identity=identity,
                     clinker_opts=clinker_opts,
                     hits_by_cluster=hits_by_cluster,
                     cwd=outdir,
                     raise_on_error=True,
+                    on_batch_start=_announce_batch,
                 )
             except ClinkerError as e:
                 clinker_failed = True
                 say(f"  [bold red]Error:[/bold red] {escape(str(e))}", logging.ERROR)
-            if clinker_ok:
-                say(f"  [bold green]✓ Clinker interactive alignment created: {escape(str(clinker_html))}[/bold green]")
+            if clinker_htmls and not clinker_failed:
+                if len(clinker_htmls) == 1:
+                    say(f"  [bold green]✓ Clinker interactive alignment created: {escape(str(clinker_htmls[0]))}[/bold green]")
+                else:
+                    say(f"  [bold green]✓ Clinker interactive alignments created ({len(clinker_htmls)} batches): "
+                        f"{escape(clinker_htmls[0].name)} .. {escape(clinker_htmls[-1].name)}[/bold green]")
 
         if static_plot:
             say(f"[dim]-> Rendering static cluster maps with pyGenomeViz...[/dim]")
@@ -599,12 +637,35 @@ def _run_genomes(
             f"Results saved to: [bold]{escape(str(outdir.resolve()))}[/bold]", logging.WARNING)
     else:
         say(f"\n[bold green]✓ Done in {elapsed:.1f}s![/bold green] Results saved to: [bold]{escape(str(outdir.resolve()))}[/bold]")
-    for tsv_p in written_tsvs:
-        say(f"  • Magnetosome Genes: [underline]{escape(str(tsv_p))}[/underline]")
-    for faa_p in written_faas:
-        say(f"  • Magnetosome Proteins: [underline]{escape(str(faa_p))}[/underline]")
-    if clinker_ok:
-        say(f"  • Clinker Visualization: [underline]{escape(str(outdir))}/MGC_align.html[/underline]")
+
+    say(f"  • Cohort Summary: [underline]{escape(str(summary_tsv))}[/underline]")
+    if len(written_tsvs) <= MAX_CONSOLE_FILE_LIST:
+        for tsv_p in written_tsvs:
+            say(f"  • Magnetosome Genes: [underline]{escape(str(tsv_p))}[/underline]")
+    else:
+        say(f"  • Magnetosome Genes: {len(written_tsvs)} TSV files in [underline]{escape(str(outdir))}[/underline] (*_mgc_genes.tsv)")
+        for tsv_p in written_tsvs:
+            detail(f"  • Magnetosome Genes: {tsv_p}")
+
+    if len(written_faas) <= MAX_CONSOLE_FILE_LIST:
+        for faa_p in written_faas:
+            say(f"  • Magnetosome Proteins: [underline]{escape(str(faa_p))}[/underline]")
+    else:
+        say(f"  • Magnetosome Proteins: {len(written_faas)} FASTA files in [underline]{escape(str(outdir))}[/underline] (*_magnetosome_proteins.faa)")
+        for faa_p in written_faas:
+            detail(f"  • Magnetosome Proteins: {faa_p}")
+
+    if clinker_htmls and not clinker_failed:
+        if len(clinker_htmls) == 1:
+            say(f"  • Clinker Visualization: [underline]{escape(str(clinker_htmls[0]))}[/underline]")
+        elif len(clinker_htmls) <= MAX_CONSOLE_FILE_LIST:
+            for hp in clinker_htmls:
+                say(f"  • Clinker Visualization: [underline]{escape(str(hp))}[/underline]")
+        else:
+            say(f"  • Clinker Visualization: {len(clinker_htmls)} HTML files "
+                f"({escape(clinker_htmls[0].name)} .. {escape(clinker_htmls[-1].name)}) in [underline]{escape(str(outdir))}[/underline]")
+            for hp in clinker_htmls:
+                detail(f"  • Clinker Visualization: {hp}")
     for fig in figure_files:
         detail(f"  • Static figure: {fig}")
     for p in gbk_files:
@@ -624,7 +685,7 @@ def _run_genomes(
 
 def _process_one_genome(
     f_path, genome_name, predictor, searcher, clusterer, threshold, meta, outdir, gbk_dir,
-    all_clusters, all_scores, hits_by_genome, gbk_files, written_tsvs, written_faas,
+    all_clusters, all_scores, hits_by_genome, gbk_files, written_tsvs, written_faas, cohort_rows,
 ) -> str:
     """Parse, predict, search and cluster one input; write its outputs. Returns a status line."""
     # 1. Parse input
@@ -656,6 +717,7 @@ def _process_one_genome(
 
     if not genes:
         say(f"  [yellow]No genes found in {escape(f_path.name)}, skipping.[/yellow]", logging.WARNING)
+        cohort_rows.append(GenomeSummaryRow(genome=genome_name, input_file=f_path.name, status="no_genes"))
         return "no genes found"
 
     # 3. Search HMMs
@@ -665,6 +727,9 @@ def _process_one_genome(
     say(f"  [dim]-> Identified {len(hits)} significant magnetosome gene hits.[/dim]")
 
     if not hits:
+        cohort_rows.append(GenomeSummaryRow(
+            genome=genome_name, input_file=f_path.name, status="no_MGC", n_genes=len(genes), n_hits=0
+        ))
         return f"{len(genes)} genes, 0 magnetosome hits"
 
     # 4. Cluster
@@ -686,9 +751,9 @@ def _process_one_genome(
                 all_scores[c.cluster_id] = score_obj
                 sub_count = len(c.subclusters) if getattr(c, "subclusters", None) else 1
                 sub_info = f" ({sub_count} subclusters, {len(c.all_genes)} genes)" if sub_count > 1 else f" ({len(c.all_genes)} genes)"
-                origin = " (spans origin)" if c.wraps_origin else ""
+                coord_display = c.format_coordinates(sep=", ")
                 say(
-                    f"     • [bold]{escape(c.cluster_id)}[/bold]{sub_info}: {escape(c.contig_id)}:{c.start_bp}-{c.end_bp}{origin} "
+                    f"     • [bold]{escape(c.cluster_id)}[/bold]{sub_info}: {escape(coord_display)} "
                     f"| Families: {score_obj.n_mag_families} "
                     f"| Mineral: [bold]{score_obj.mineral_type}[/bold]"
                 )
@@ -714,12 +779,142 @@ def _process_one_genome(
     if clusters:
         c = clusters[0]
         sc = all_scores[c.cluster_id]
+        row_flags = list(sc.flags)
+        if c.wraps_origin and "Spans_Origin" not in row_flags:
+            row_flags.append("Spans_Origin")
+        cohort_rows.append(GenomeSummaryRow(
+            genome=genome_name,
+            input_file=f_path.name,
+            status="MGC_detected",
+            n_genes=len(genes),
+            n_hits=len(hits),
+            n_clustered_hits=n_clustered,
+            cluster_id=c.cluster_id,
+            n_subclusters=len(c.subclusters) if c.subclusters else 1,
+            coordinates=c.format_coordinates(sep=";"),
+            n_distinct_families=sc.n_mag_families,
+            mineral_type=sc.mineral_type,
+            flags=",".join(row_flags) if row_flags else "-",
+            families=",".join(sc.magnetosome_families_found) if sc.magnetosome_families_found else "-",
+            gbk_file=f"clusters_gbk/{c.cluster_id}.gbk",
+        ))
         return (f"{len(genes)} genes, {len(hits)} hits ({n_clustered} in MGC); MGC {c.cluster_id} "
-                f"{c.contig_id}:{c.start_bp}-{c.end_bp}{' (spans origin)' if c.wraps_origin else ''}, "
+                f"{c.format_coordinates(sep=', ')}, "
                 f"{len(c.subclusters)} subcluster(s), {sc.n_mag_families} families, {sc.mineral_type}")
     if not parsed.has_coordinates:
+        cohort_rows.append(GenomeSummaryRow(
+            genome=genome_name, input_file=f_path.name, status="no_coordinates",
+            n_genes=len(genes), n_hits=len(hits),
+        ))
         return f"{len(genes)} proteins, {len(hits)} hits (no coordinates, clustering skipped)"
+    cohort_rows.append(GenomeSummaryRow(
+        genome=genome_name, input_file=f_path.name, status="no_MGC",
+        n_genes=len(genes), n_hits=len(hits),
+    ))
     return f"{len(genes)} genes, {len(hits)} hits, no MGC"
+
+
+@app.command(
+    name="clinker",
+    context_settings=CONTEXT_SETTINGS,
+    options_metavar="[OPTIONS]",
+    epilog="""
+Examples:
+  # Plot all sliced MGC GenBank files in a folder (auto-batched at 50 clusters per HTML):
+  $ magcluster clinker results/clusters_gbk/ -o plots/
+
+  # Pass a MagCluster results folder directly and write HTML into it:
+  $ magcluster clinker results/ -o results/
+
+  # Plot specific GenBank files into a single named HTML file:
+  $ magcluster clinker AMB-1_MGC.gbk MSR-1_MGC.gbk -o amb1_vs_msr1.html
+
+  # Plot a custom ordered subset from a text list (one path/cluster ID per line):
+  $ magcluster clinker results/ -l selected_clusters.txt -o custom.html --clinker-opts "-ufo"
+
+  # Customize batch size (e.g. 30 per HTML, or 0 to disable batch splitting):
+  $ magcluster clinker results/clusters_gbk/ -o plots/ --batch-size 30
+
+  # View available Clinker alignment & layout options:
+  $ magcluster clinker --clinker-help
+""",
+)
+def clinker_cmd(
+    inputs: Optional[List[Path]] = typer.Argument(
+        None,
+        help="Sliced MGC GenBank files (.gbk/.gbff, optionally .gz) or directories (e.g. clusters_gbk/ or a MagCluster results directory).",
+        exists=True,
+    ),
+    output: Path = typer.Option(
+        Path("clinker_results"),
+        "-o", "--outdir", "--output",
+        help="Output directory (writes MGC_align.html / MGC_align_batch*.html), or target HTML file path if ending with .html.",
+    ),
+    list_file: Optional[Path] = typer.Option(
+        None,
+        "-l", "--list",
+        exists=True,
+        dir_okay=False,
+        help="Plain-text file listing GenBank paths, file names, or cluster/genome IDs (one per line) in desired plotting order.",
+    ),
+    batch_size: int = typer.Option(
+        DEFAULT_CLINKER_BATCH_SIZE,
+        "-b", "--batch-size",
+        min=0,
+        help="Maximum number of MGC clusters plotted per Clinker HTML file (0 = all clusters in one HTML).",
+    ),
+    identity: float = typer.Option(
+        0.3,
+        "-i", "--identity",
+        min=0.0, max=1.0,
+        help="Minimum alignment sequence identity for Clinker (0-1).",
+    ),
+    threads: int = typer.Option(
+        0,
+        "-t", "--threads",
+        min=0,
+        help="Number of CPU threads for Clinker alignments (0 = all available cores).",
+    ),
+    clinker_opts: Optional[str] = typer.Option(
+        None,
+        "--clinker-opts",
+        help="Additional options passed directly to clinker (e.g. '--clinker-opts \"-na -ufo\"'). "
+             "Tip: use '--clinker-help' to see available clinker options.",
+    ),
+    clinker_help: Optional[bool] = typer.Option(
+        None,
+        "--clinker-help",
+        help="Display help and available options for Clinker, then exit.",
+        callback=clinker_help_callback,
+        is_eager=True,
+    ),
+    force: bool = typer.Option(
+        False,
+        "-f", "--force",
+        help="Overwrite existing Clinker HTML output file(s).",
+    ),
+    log_path: Optional[Path] = typer.Option(
+        None,
+        "--log",
+        dir_okay=False,
+        help="Write the Clinker run log to this file instead of <outdir>/magcluster_clinker.log.",
+    ),
+):
+    """Generate interactive Clinker gene cluster visualizations from GenBank (.gbk/.gbff) files."""
+    from .viz.clinker_cli import run_clinker_subcommand
+    run_clinker_subcommand(
+        inputs=inputs,
+        list_file=list_file,
+        output=output,
+        batch_size=batch_size,
+        identity=identity,
+        threads=threads,
+        clinker_opts=clinker_opts,
+        force=force,
+        log_path=log_path,
+        available_cpus=_available_cpus(),
+        dep_versions=_dependency_versions(),
+    )
 
 
 @app.command(name="db", context_settings=CONTEXT_SETTINGS, options_metavar="[OPTIONS]")

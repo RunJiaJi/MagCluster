@@ -39,4 +39,5 @@ jobs:
           magcluster -h
           magcluster --version
           magcluster run --help
+          magcluster clinker --help
           magcluster db --help
