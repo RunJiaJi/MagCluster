@@ -135,7 +135,7 @@ magcluster run [选项] 输入文件/文件夹...
 
 全局选项：`magcluster --version`（`-v`）和 `magcluster --help`（`-h`）。
 
-基因组 ID 用于输出文件名、`genome` 列和预测基因的 gene ID。它取自输入文件名，去掉 `.gz` 和基因组扩展名，例如 `GCF_000513295.1.fna` → `GCF_000513295.1`，`strainX.v1.fna` → `strainX.v1`。空格和特殊字符会替换成 `_`（`my strain.fna` → `my_strain`）。两个输入得到同一个 ID 时（例如 NCBI Datasets 下载的 `genomic.gbff`），后面的会加后缀（`genomic_2`），并给出警告。同一个文件重复输入只处理一次。
+基因组 ID 用于输出文件名和 `mgc_summary.tsv` 汇总表。它取自输入文件名，去掉 `.gz` 和基因组扩展名，例如 `GCF_000513295.1.fna` → `GCF_000513295.1`，`strainX.v1.fna` → `strainX.v1`。空格和特殊字符会替换成 `_`（`my strain.fna` → `my_strain`）。两个输入得到同一个 ID 时（例如 NCBI Datasets 下载的 `genomic.gbff`），后面的会加后缀（`genomic_2`），并给出警告。同一个文件重复输入只处理一次。
 
 退出码：成功为 `0`。有输入文件读不了、Clinker 失败，或者输出目录不可用时为 `1`，其他基因组的结果照常写出。命令行参数不合法时为 `2`。
 
@@ -226,9 +226,8 @@ results/
 
 | 列名 | 说明 |
 | :--- | :--- |
-| `cluster_id` | 所属基因簇 ID（如 `MSR-1_genome_MGC`）；若未成簇则记为 `unclustered` |
-| `genome` | 基因组样本名称 |
-| `gene_id` | 基因名称或 Locus tag |
+| `cluster_id` | 成簇基因记为 `MGC`；若未成簇则记为 `unclustered` |
+| `gene_id` | 基因编号或 Locus tag（如 `gene_00405` 或 `MGMSRV2_RS11765`） |
 | `contig` | 所在的 Contig / 染色体 ID |
 | `start`, `end` | 基因在染色体上的起止坐标（1-based） |
 | `strand` | 正负链方向（`+` 或 `-`） |
@@ -239,10 +238,10 @@ results/
 
 ### 2. 磁小体蛋白序列（`{genome}_magnetosome_proteins.faa`）
 
-提取出的磁小体蛋白氨基酸序列，FASTA 表头附带详细的比对和簇信息：
+提取出的磁小体蛋白氨基酸序列，FASTA 表头简洁附带比对和簇信息（不再重复冗长的基因组文件名）：
 ```text
->MGMSRV2_RS11765 [MSR-1_genome] cluster=MSR-1_genome_MGC family=MamE profile=MamE_full score=1000.4 evalue=1.97e-301
-MSERRPVGRTL...
+>gene_00405 cluster=MGC family=MamK profile=MamK score=448.8 evalue=2.40e-135
+MSEGEGQAKNRL...
 ```
 
 ### 3. 交互式基因簇对齐图（`MGC_align.html`）

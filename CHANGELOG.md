@@ -43,6 +43,13 @@ HMM profiles and thresholds are unchanged.
   HTML file path (`magcluster clinker ... -o figure.html`) no longer drops an unrequested
   `magcluster_clinker.log` into the current working directory unless `--log` is explicitly
   provided (directory targets `-o <outdir>` continue writing `<outdir>/magcluster_clinker.log`).
+- **Concise, non-redundant per-genome TSV and FASTA outputs**:
+  - Removed the redundant `genome` column from per-genome `{genome}_mgc_genes.tsv` tables
+    (whose file names already carry the full genome name), shortened `cluster_id` inside
+    per-genome tables and FASTA headers from `{genome}_MGC` to `MGC` (or `unclustered`), and
+    dropped `[genome]` from `{genome}_magnetosome_proteins.faa` headers.
+  - Pyrodigal-predicted gene IDs now use concise `gene_00001` numbering rather than repeating
+    the full `{genome}_00001` prefix across `.tsv`, `.faa`, and `.gbk` `/locus_tag` qualifiers.
 
 ### Added
 - **Batch membership manifest (`MGC_align_batches.tsv`)**: whenever Clinker splits clusters

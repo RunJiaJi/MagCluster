@@ -11,7 +11,7 @@ FEATURES             Location/Qualifiers
      source          1..20230
                      /organism="MSR-1_MAI90kb"
      CDS             complement(1..1164)
-                     /locus_tag="MSR-1_MAI90kb_00005"
+                     /locus_tag="gene_00005"
                      /translation="MTFPVLADYKAALSNAKARFATLQVTPFKDSRGHPQFLAGNFAGV
                      FRVTDSEGSLLAIKCFIRDLPDLERRYQAVAGFVGASGSPYMVPLRLHRDELYVTSSIA
                      KHGEYPVISMPWVPGRTIGALVQTLCDSDKRGGIAGLSRAWARLCLDLLNRGVAHGDLK
@@ -23,7 +23,7 @@ FEATURES             Location/Qualifiers
                      /gene=""
                      /label=""
      CDS             complement(1161..2081)
-                     /locus_tag="MSR-1_MAI90kb_00006"
+                     /locus_tag="gene_00006"
                      /translation="MAYSQEISRDQRGAFIFLVDQSKSMNTTFGVDDSGQTISRAQVVA
                      EALNRTLDELINRCMRDEGVRDYFDIGVIGYGRTNRAEFCWLGNLAGRTLVPISEVAEN
                      AETIEEETTTMVRGQPVVERVAVSRWVAPVAVESTPMNGALRLAQSILEPWISANPGSF
@@ -34,13 +34,13 @@ FEATURES             Location/Qualifiers
                      /gene=""
                      /label=""
      CDS             2172..2273
-                     /locus_tag="MSR-1_MAI90kb_00007"
+                     /locus_tag="gene_00007"
                      /translation="MEQPEALNLTRHHFSKDYGSIKFLDKTAGNADC"
                      /product="hypothetical protein"
                      /gene=""
                      /label=""
      CDS             2409..3044
-                     /locus_tag="MSR-1_MAI90kb_00008"
+                     /locus_tag="gene_00008"
                      /translation="MAAQMATGMAGGTAANAAAPAAGGAAMAAAAAPEIEREGAAQAAG
                      MKAGGAKAGAAAKTGAAKAAAAEVEREAVTAKAAGMKAAGTKAAAGGANQAAMAAKGAG
                      TVGSTVGGATKVAATGVKGKAMVAAGGTGAAGAAAGAATGASVTASPIAAATSSSAMLS
@@ -52,7 +52,7 @@ FEATURES             Location/Qualifiers
                      /note="Profile=MamG; Family=MamG; Score=325.3;
                      Evalue=1.10e-99"
      CDS             3056..3391
-                     /locus_tag="MSR-1_MAI90kb_00009"
+                     /locus_tag="gene_00009"
                      /translation="MIAQTVGLSQETGTSYKPLVMAALSYLGILCFVPLMRNKDDEYVQ
                      FHAKQGLVLWMVAVLSMFVLEIPGIGKWFFGFSSMLVLVLSVAGLASVAFRRAWKLPLV
                      GYIADRI"
@@ -63,14 +63,14 @@ FEATURES             Location/Qualifiers
                      /note="Profile=MamF; Family=MamF; Score=176.1;
                      Evalue=1.07e-54"
      CDS             complement(3471..3620)
-                     /locus_tag="MSR-1_MAI90kb_00010"
+                     /locus_tag="gene_00010"
                      /translation="MISRDQLPRNGRLKIGILLGLAAVAMGIIEIADTGPALLCGALDW
                      WRRM"
                      /product="hypothetical protein"
                      /gene=""
                      /label=""
      CDS             complement(3876..5990)
-                     /locus_tag="MSR-1_MAI90kb_00011"
+                     /locus_tag="gene_00011"
                      /translation="MKSPVTVALVGNPNAGSTSLFNALTGAQSAVANYQRVTTSLNVRE
                      ITHGGVSLRIVDVPGIFSTSSQSPEEKVGCDYIHGEEPDIIVNVLDAGHLDRSLFLTTQ
                      LIETGLPRITVLNMMDEVRRAGIRIDTALLASALGSPVVETCALKKEGIDALLDAVAAM
@@ -91,7 +91,7 @@ FEATURES             Location/Qualifiers
                      /note="Profile=FeoB; Family=FeoB; Score=961.0;
                      Evalue=1.97e-291"
      CDS             complement(6027..6281)
-                     /locus_tag="MSR-1_MAI90kb_00012"
+                     /locus_tag="gene_00012"
                      /translation="MDQQVKIDTLTLADLCPEQQGEIVKIETEDGVFKRRMQSLGVVSG
                      TAVTLDRSAPLGDPRIYSLMGYSLGLRNAEARQIRIRLK"
                      /product="FeoA"
@@ -101,14 +101,14 @@ FEATURES             Location/Qualifiers
                      /note="Profile=FeoA; Family=FeoA; Score=88.0;
                      Evalue=3.86e-27"
      CDS             6399..6584
-                     /locus_tag="MSR-1_MAI90kb_00013"
+                     /locus_tag="gene_00013"
                      /translation="MLGHPASRITKVIQPTCDGNKQMFSLGTSIGADDKKMLFVGIVSG
                      ARGNQQRSLFEDFIDP"
                      /product="hypothetical protein"
                      /gene=""
                      /label=""
      CDS             7022..7873
-                     /locus_tag="MSR-1_MAI90kb_00014"
+                     /locus_tag="gene_00014"
                      /translation="MIATELDVNAARLAHLRWEAALEATVNGEGTQEPLMGHEDCDLGA
                      WIYGTGLSRYGKLGAVWQLKTAHKRFHHLAEETLSACAAGKAERAVEKLAAVRKLSGEI
                      LFLLTSLELDVIEAAISSAQPNDIPSRLMRAFFPKPLPLNIISIQALGGAGSGRHTLNV
@@ -119,7 +119,7 @@ FEATURES             Location/Qualifiers
                      /gene=""
                      /label=""
      CDS             7908..8414
-                     /locus_tag="MSR-1_MAI90kb_00015"
+                     /locus_tag="gene_00015"
                      /translation="MPLRLHSMPAGQGCPMNGSSALGSKAGALKGLGAKTGSGAGLGLG
                      QCSTTTVGKMAVGAKGVPIGWGAGAGAGTGAGTGLGGIGPCGTAVGKVVVGAKSATPIV
                      WSTGAGAASGHGISLGLGLGLGAWGPVLLGAGIAALGYYLYANRNRKPIPNKDELAVAL
@@ -131,7 +131,7 @@ FEATURES             Location/Qualifiers
                      /note="Profile=Mms6; Family=Mms6; Score=49.1;
                      Evalue=4.22e-15"
      CDS             8672..9037
-                     /locus_tag="MSR-1_MAI90kb_00016"
+                     /locus_tag="gene_00016"
                      /translation="MDRNSTGRRRNRSWPEDLKREIVAATYEPGASVAGVARRYGVNDN
                      QVFTWRKRFGGQQGETVPAHMVPVVVAEDMAASGRKEASSSAGVVEIDLAGGYRVRVGD
                      GVGAQLLCRVLDVLERR"
@@ -139,7 +139,7 @@ FEATURES             Location/Qualifiers
                      /gene=""
                      /label=""
      CDS             9034..9381
-                     /locus_tag="MSR-1_MAI90kb_00017"
+                     /locus_tag="gene_00017"
                      /translation="MIPVPTGVRVWLAVGRTDMRRGMNGLALQVQEALGRDPHAGDLFV
                      FRGARGDLIKVLWHDGLGMSLYAKRLEKGRFIWPSPADGVVAISSAQLAYMLDGIDWRN
                      PRHTFRPRSAG"
@@ -147,7 +147,7 @@ FEATURES             Location/Qualifiers
                      /gene=""
                      /label=""
      CDS             9439..11046
-                     /locus_tag="MSR-1_MAI90kb_00018"
+                     /locus_tag="gene_00018"
                      /translation="MEIGRETPTDDIDALRAELAVARARAAEDQALIAHQKLQIEKLKR
                      ELYGPQAERSARLIDQMELAFEELAAAATEDEITAEKAAARTTNVAAFTRNRPARKPFP
                      EHLPRERVVEPAPSACSCCGGDRLRKIGEDVTETLEVIPRQWKVIQRVREKFSCRDCEK
@@ -162,7 +162,7 @@ FEATURES             Location/Qualifiers
                      /gene=""
                      /label=""
      CDS             complement(11263..12228)
-                     /locus_tag="MSR-1_MAI90kb_00019"
+                     /locus_tag="gene_00019"
                      /translation="MPLPLINDYKTAIANAKGRFATLEFEPRLDARRSPVFLAGNFAGV
                      FRVVTRDGEHLAIKCFTREVPDLPRRYSAVAKFCRSAQCPYVVPLQFLSAEVFVTSRVA
                      PHADYAVVTMPWIDGRSIGAVAEILCQRGNAAALAGLTRAWSRLCLDLLQRGIAHGDLK
@@ -173,7 +173,7 @@ FEATURES             Location/Qualifiers
                      /gene=""
                      /label=""
      CDS             complement(12235..13140)
-                     /locus_tag="MSR-1_MAI90kb_00020"
+                     /locus_tag="gene_00020"
                      /translation="MLSWTAQGRSVVKPRNDSFASGDQLLWRQNEDRLRLTRTPDGLLA
                      AVSDGAGGAGLFCGPWAETLVTRLPKTPITSMKALNQWMDGFCLNFRADHAALSKATPA
                      RHSKFIREGSFATLVAGWLAYRRGRAMLQWLGYGDSQLMVFDRTGRQPALAASYPATLS
@@ -184,7 +184,7 @@ FEATURES             Location/Qualifiers
                      /gene=""
                      /label=""
      CDS             complement(13169..14149)
-                     /locus_tag="MSR-1_MAI90kb_00021"
+                     /locus_tag="gene_00021"
                      /translation="MSYSQEISRECKGVFLFLVDQSRSMNKEFGPDQSGRMVSRAVVVA
                      NALNGTLEELVNRCMRDEGVRDYFDIGIIGYGRTNRPEFCWRGALAGRRLVPISEVADN
                      AEIEEVDIETEVRGQVLIERLTLSRWIDPVGVDSTPMNAAFRLAHSTLDEWVRHNPDSF
@@ -195,7 +195,7 @@ FEATURES             Location/Qualifiers
                      /gene=""
                      /label=""
      CDS             14452..15567
-                     /locus_tag="MSR-1_MAI90kb_00022"
+                     /locus_tag="gene_00022"
                      /translation="MLMNFVNNVSKTINGGARIVYVGSFSWAVLSLLFVTAFSGWNNIF
                      SMLPHEIFILVLTISLPIALIVLIFMLSQIVRTVESVKSEISTLSQRDPVSEEAVTMLA
                      DLFREHRDAVAAQVAAQVEATAQLVQINQDNRALAAPSPDSGDENPLALLAQMFREYRE
@@ -210,7 +210,7 @@ FEATURES             Location/Qualifiers
                      /note="Profile=MamY; Family=MamY; Score=636.9;
                      Evalue=6.43e-194"
      CDS             15775..16539
-                     /locus_tag="MSR-1_MAI90kb_00023"
+                     /locus_tag="gene_00023"
                      /translation="MALGIAFSMALVLTALFNANPWEDHTYDLAPPIVAGMAAPHRDGR
                      EKMVCSSCHIVTPASAATGPGAGTLPIVEGTPAPHVDGREKMACASCHTIVKKGSVAKS
                      GKASPAPVAFSQGMPLPEAMSVALAVTPAPAPLGNEAHERMVPFRYQGKIVSVAGAGTR
@@ -223,7 +223,7 @@ FEATURES             Location/Qualifiers
                      /note="Profile=MamX; Family=MamX; Score=406.1;
                      Evalue=6.27e-124"
      CDS             16523..18454
-                     /locus_tag="MSR-1_MAI90kb_00024"
+                     /locus_tag="gene_00024"
                      /translation="MPKSGKPSTGTTPADFAPTQWNIIYLLMTVGSLVAALSISIQPLL
                      LDKIFGIAFEKEGAVNADIQVVAEIVSIVCVGWFGLLSDRIGRVRIIATGFLIAVAGAA
                      MSLLSLQIGLAFGAAGLVLFYLTRVLLTVGADTVQLQLSTLVGDVSSRANRPRLMGNLV
@@ -243,7 +243,7 @@ FEATURES             Location/Qualifiers
                      /note="Profile=MamZ; Family=MamZ; Score=1104.8;
                      Evalue=0.00e+00"
      CDS             18496..19431
-                     /locus_tag="MSR-1_MAI90kb_00025"
+                     /locus_tag="gene_00025"
                      /translation="MTMIRPRIIVIGVGGAGGNAVNNMILSKIEGVEFIAANTDAQALG
                      LSLADRRIPLGGYVTKGLGAGSRPELGRSAAQESIDDILTAIDDANMVFITAGMGGGTG
                      SGAAPVIAQAARERGILTIGVVTKPFHFEGGHRMGTAEAAIEELQHVVDTLIIIPNQNL
@@ -254,14 +254,14 @@ FEATURES             Location/Qualifiers
                      /gene=""
                      /label=""
      CDS             complement(19447..19671)
-                     /locus_tag="MSR-1_MAI90kb_00026"
+                     /locus_tag="gene_00026"
                      /translation="MSDDLTRRAWLVGHSRRMIAVIRQNIGFAIALRAVFMVLAVFDIA
                      TLWGAIAADMGAALLLAFNGLRLLRAADA"
                      /product="hypothetical protein"
                      /gene=""
                      /label=""
      CDS             complement(19754..20230)
-                     /locus_tag="MSR-1_MAI90kb_00027"
+                     /locus_tag="gene_00027"
                      /translation="MTRRYGRAPRGQRLLAAVPHGHWKMTTFVGALRHDGISAPFVIDK
                      AMNGAIFLAYVEQVLAPTLRPGDIVVMDNLPAHKVAGVKQLIEARGATLRYLPPYSPDL
                      NPIELAFAKLKSLLRKAQARTINTLWDVIGKLIDLFPPEECANFFAHDGYGRSM"
@@ -621,7 +621,7 @@ FEATURES             Location/Qualifiers
      source          1..7007
                      /organism="MSR-1_MAI90kb"
      CDS             complement(1..375)
-                     /locus_tag="MSR-1_MAI90kb_00041"
+                     /locus_tag="gene_00041"
                      /translation="MKVEVLSGVERRRRWPWDAKIRLVEETLAPGMTVAEVSRRHGVAQ
                      SLLFYWRRLARDVQLGPHGAPVLLPVEVTPSAAVAPVTPEPAPRRGLIEIELGDGRFVR
                      VDSDVDAGALRRVLDVLERR"
@@ -629,7 +629,7 @@ FEATURES             Location/Qualifiers
                      /gene=""
                      /label=""
      CDS             complement(618..1814)
-                     /locus_tag="MSR-1_MAI90kb_00042"
+                     /locus_tag="gene_00042"
                      /translation="MKTLSACRGLIGIADDGLRRVMRELLLGVKMHEFEFLADVGGLAY
                      AIRASHQAFDLIIIQNDLPGGGAAAVARCVRWDMPAPLNNLPIISIGRDWTHEMLAEVR
                      DAGICEIITMPTSLTTVQAKLVCAMDGKRPFLSTDMYRGRCRRRLSAKGYQGPFRRAED
@@ -641,14 +641,14 @@ FEATURES             Location/Qualifiers
                      /gene=""
                      /label=""
      CDS             1973..2206
-                     /locus_tag="MSR-1_MAI90kb_00043"
+                     /locus_tag="gene_00043"
                      /translation="MSKLPKTRFHLVFSLIMGAMMISLMTFVITAVNVGFGADFLGRWL
                      KAFAIAYVVGVPVIYFLAPVARRLTGRLVEMP"
                      /product="hypothetical protein"
                      /gene=""
                      /label=""
      CDS             2373..3335
-                     /locus_tag="MSR-1_MAI90kb_00044"
+                     /locus_tag="gene_00044"
                      /translation="MGNSGCISCVEKAARLDLGGTLAQAIFRSLLGVMSGSMGMAAQGL
                      YSIGDAITKSLTLASIRISKIPPSKTFPFGAGKILFVTSLIIGISLIGTGVFLASTSFN
                      EPNTVGATGSLFAIVGVIVSAAFSELMSRYLSCVATENDNIALRSASRDNRIDAITSIV
@@ -662,7 +662,7 @@ FEATURES             Location/Qualifiers
                      /note="Profile=MamV; Family=MamV; Score=568.0;
                      Evalue=3.24e-173"
      CDS             3365..3718
-                     /locus_tag="MSR-1_MAI90kb_00045"
+                     /locus_tag="gene_00045"
                      /translation="MIDISKARLVHLRWLLQLEKKIRHESAPALESCRTCELGKWIYSE
                      ALEKYSAYPEISFLEKRHRHFHETADILVKLFGQRNFVEAEVALDELKRDSQDLIFMLT
                      MFEYRYTGFNETS"
@@ -670,7 +670,7 @@ FEATURES             Location/Qualifiers
                      /gene=""
                      /label=""
      CDS             3732..4037
-                     /locus_tag="MSR-1_MAI90kb_00046"
+                     /locus_tag="gene_00046"
                      /translation="MAKSSRSLVSIDKILEILASAVSIVLGLFGLSQHYGSNTIKPSRI
                      YSSGDAAEFLDMARLDVLKLIKSGAIQATKGGNGNYLIVGQSLINYLASPNVSSTD"
                      /product="MamR"
@@ -680,7 +680,7 @@ FEATURES             Location/Qualifiers
                      /note="Profile=MamR; Family=MamR; Score=103.7;
                      Evalue=2.46e-32"
      CDS             complement(4034..4993)
-                     /locus_tag="MSR-1_MAI90kb_00047"
+                     /locus_tag="gene_00047"
                      /translation="MTHSALAPEEVARLKKAATAASLATATVMIGLKVGAWAITDSISV
                      LTSMMDSILDFSVGLMNFVAVRKALSPANRFHRFGFGKVEPLAVLAEAVFLFGVAIMII
                      IEAIDRLRHPHPISHAELGAWAMAAVIVLTIGLLIYQRHVIRKTGSLVVQADAIHYAAD
@@ -694,7 +694,7 @@ FEATURES             Location/Qualifiers
                      /note="Profile=MamM; Family=MamM; Score=124.2;
                      Evalue=3.32e-38"
      CDS             complement(5584..5967)
-                     /locus_tag="MSR-1_MAI90kb_00048"
+                     /locus_tag="gene_00048"
                      /translation="MTLRQLTAIQQELSTAEIELAALINLPPGTVLKLDVPAEMNVPAW
                      ELSLDRMEELAFLNNADLREQGYQSRITVNDTRKAIARLFPGITFSTSRQYDHNSFLMD
                      NHWYEAGAKLSWNLMNLISARTL"
@@ -702,7 +702,7 @@ FEATURES             Location/Qualifiers
                      /gene=""
                      /label=""
      CDS             complement(6046..6522)
-                     /locus_tag="MSR-1_MAI90kb_00049"
+                     /locus_tag="gene_00049"
                      /translation="MTRRYGRAPRGQRLLAAVPHGHWKMTTFVGALRHDGISAPFVIDK
                      AMNGAIFLAYVEQVLAPTLRPGDIVVMDNLPAHKVAGVKQLIEARGATLRYLPPYSPDL
                      NPIELAFAKLKSLLRKAQARTINTLWDVIGKLIDLFPPEECANFFAHDGYGRSM"
@@ -710,7 +710,7 @@ FEATURES             Location/Qualifiers
                      /gene=""
                      /label=""
      CDS             complement(6612..7007)
-                     /locus_tag="MSR-1_MAI90kb_00050"
+                     /locus_tag="gene_00050"
                      /translation="MTWRSGQSYSQDLRDRVLAAVDSGMSAYEVAPLFRVSVSYIYKAQ
                      GRRRATGETTVKPRPGRPGQKLAAHLEALQAQIKVEPDATLAELRAWVLAELGVSISVG
                      GLWNTLERLDLSLKKRVRMLPSRNVPT"
@@ -849,7 +849,7 @@ FEATURES             Location/Qualifiers
      source          1..26346
                      /organism="MSR-1_MAI90kb"
      CDS             1..363
-                     /locus_tag="MSR-1_MAI90kb_00053"
+                     /locus_tag="gene_00053"
                      /translation="MGLRIPRLRKGSYLPCFLEPRRMAEKALTAVIQEAYVQGISTRSV
                      DDLVKAMGMTGISKSQVSRLCAEIDGKISTFLERPHRGRLALCLARRHLRQGPPGRPHR
                      QRRGDHRGGRQQSRAA"
@@ -857,7 +857,7 @@ FEATURES             Location/Qualifiers
                      /gene=""
                      /label=""
      CDS             374..985
-                     /locus_tag="MSR-1_MAI90kb_00054"
+                     /locus_tag="gene_00054"
                      /translation="MAIGPSEAETFWTDFLRKLARRGVKLVVSDAHEGLKAAIAKVLNA
                      TWQRCRVHFMRNVLAHAGKQGRRVVSAFIGTAFAQENAPAAHAQWRQVADQLRPRAYKL
                      ADLMDEAEMDVLAYMDFPQTLRAKLHSTNPIERLNGEIKRRTEVVGIFPNEAAITRLIC
@@ -866,7 +866,7 @@ FEATURES             Location/Qualifiers
                      /gene=""
                      /label=""
      CDS             complement(1389..2003)
-                     /locus_tag="MSR-1_MAI90kb_00055"
+                     /locus_tag="gene_00055"
                      /translation="MSGFRQVTKAQARGHLSRDERIARLEGTVLTLDRREEFVEEISRL
                      WRDAQDTFLTIGRYLVQAAERLEHGEYQAMVDNQLPFGYQVSYQLRKVAEAIDGKRLLL
                      EELPPSYATIYQFTTLTDEQLTLARQTEPPLLRPTVKREEIVTFKREMARKVASESPAN
@@ -875,7 +875,7 @@ FEATURES             Location/Qualifiers
                      /gene=""
                      /label=""
      CDS             complement(2006..2635)
-                     /locus_tag="MSR-1_MAI90kb_00056"
+                     /locus_tag="gene_00056"
                      /translation="MRRLVISGPKGGIGKATLSRNLAVAAAIDGLSVATLDLDMQRSLT
                      KWYSKRPDDMAPIQHYESTMAKDDVKDALDGIQVHDLLIIDTPPSIEDHPESFRMLANV
                      ATLMLIPTGQSDDDLDSVRPWMRFVRKNQVEAAFVLNRVKPRARSFVEAKAILVKEGRV
@@ -887,7 +887,7 @@ FEATURES             Location/Qualifiers
                      /note="Profile=Mad29; Family=Mad29; Score=30.5;
                      Evalue=1.30e-09"
      CDS             complement(2791..3138)
-                     /locus_tag="MSR-1_MAI90kb_00057"
+                     /locus_tag="gene_00057"
                      /translation="MTVTHGRDNDIMSGSDNKEAALAIIRGIVGAATDITKLAREMEQD
                      DSVIVAALTTPLPAPPPVESIKPAAAASAPTPTLPAAPLAEAPRASSQADVMSQLLKRK
                      PSKTHKKDEDD"
@@ -895,14 +895,14 @@ FEATURES             Location/Qualifiers
                      /gene=""
                      /label=""
      CDS             complement(3191..3400)
-                     /locus_tag="MSR-1_MAI90kb_00058"
+                     /locus_tag="gene_00058"
                      /translation="MYPPSMTGMKLAASKLLSGALLAPPLTISIGPGLVAIGIFGAACI
                      SVYMYTVNSLSHGKSSLSVATPPI"
                      /product="hypothetical protein"
                      /gene=""
                      /label=""
      CDS             complement(3528..4553)
-                     /locus_tag="MSR-1_MAI90kb_00059"
+                     /locus_tag="gene_00059"
                      /translation="MSHFGRRAVSLLAMILFEKFGQHQPLNRQAERYAKEGVPLSLSTL
                      ADQVGAGCAALEPLIRRIEAHVFAAERLHGDDTTVPVLAKGKTDTGRCWVYVRDDRPFG
                      GQTPPAAMFYYSRDRGGEHPQGHLATYAGLFQADAYGGYNKLCAPDREPGQILEVACWV
@@ -914,7 +914,7 @@ FEATURES             Location/Qualifiers
                      /gene=""
                      /label=""
      CDS             4939..5700
-                     /locus_tag="MSR-1_MAI90kb_00060"
+                     /locus_tag="gene_00060"
                      /translation="MFYYSRDRGGEHPQAHLAAYSGLFQADAYGGYGKVYAPDRTPGPI
                      LAAACWVHARRPFFIMADLAENARRKARGKTTAPISPLALEAVQRIDALFEIERTINGQ
                      TAEQRRAVRQELSAPLVADLEGWLRGQRAKLSRGNDLAKAMDYMLKRWHAFTRFLDDGR
@@ -924,7 +924,7 @@ FEATURES             Location/Qualifiers
                      /gene=""
                      /label=""
      CDS             complement(5946..7169)
-                     /locus_tag="MSR-1_MAI90kb_00061"
+                     /locus_tag="gene_00061"
                      /translation="MKNIADPLPFDGDEPMPRRLHIVSGQVEPLPDDNTDQALIAQQPA
                      AMEETDIVALLQECEGDEDGLPTAAFDTPFPSLPKPEPEALAEKVRAPVPMSGIGDHGD
                      AIMAVIRDALEAERHHADQDLVAARIRTETLSAEIDDLRRSVEDVRRSASEQVEATRAV
@@ -937,7 +937,7 @@ FEATURES             Location/Qualifiers
                      /gene=""
                      /label=""
      CDS             complement(7500..8393)
-                     /locus_tag="MSR-1_MAI90kb_00062"
+                     /locus_tag="gene_00062"
                      /translation="MRIAAIINARAGTVLRMSPSAVTERLSVVWGSLGHDAAIILAEGK
                      DMGRMVRKACRDPDIRAIIIGGGDGSLSRALEHVLASGKSLGVLPLGTMNYMARQIGMP
                      LDLAQAAVALAGAVQTPMDVGRVNDRYFLIRACFGAFPEFIQSRDRVRRKGGSFLEGAL
@@ -951,7 +951,7 @@ FEATURES             Location/Qualifiers
                      /note="Profile=MamU; Family=MamU; Score=538.6;
                      Evalue=1.80e-164"
      CDS             complement(8435..8959)
-                     /locus_tag="MSR-1_MAI90kb_00063"
+                     /locus_tag="gene_00063"
                      /translation="MGTPGGGRRWMTLISITLLMVVGLGLYWDELSLSAGISPATSPRR
                      AEGLLLGRLPLPMEPSILSPLEHLIEPPLQYKLMTIRHIPPVMPGTGMPHPYVGDCIQC
                      HLMVGGPAAGSQFKTPYGAVLENLSRVRKLGPPILPTTRQPHPPAGRCIKCHDIVVKVP
@@ -963,7 +963,7 @@ FEATURES             Location/Qualifiers
                      /note="Profile=MamT; Family=MamT; Score=260.8;
                      Evalue=4.15e-80"
      CDS             complement(8985..9527)
-                     /locus_tag="MSR-1_MAI90kb_00064"
+                     /locus_tag="gene_00064"
                      /translation="MDFRPDQVVARIRGAVEGALTAQSVLGIGGALVLILVVIALLPDR
                      FTRGEGKTATAVSSGAAQALPAALPGLSPFTPAKPLQFSGRVTQVASIGNDVGWGQVHV
                      WIDNGTGALQEISVAPQSYLNQIGCPSFDGARISGIGFLFDAGRPNAELYAKSVLVGGR
@@ -975,7 +975,7 @@ FEATURES             Location/Qualifiers
                      /note="Profile=MamS; Family=MamS; Score=204.0;
                      Evalue=1.36e-62"
      CDS             complement(9544..10437)
-                     /locus_tag="MSR-1_MAI90kb_00065"
+                     /locus_tag="gene_00065"
                      /translation="MKFENCRDCREEVVWWAFTADICMTLFKGILGLMSGSVALVADSL
                      HSGADVVASGVTQLSLKISNKPADERYPFGYGNIQYISSAIVGSLLLIGASFLMYGSVV
                      KLISGTYEAPSIFAALGASVTVIVNELMYRYQICVGNENNSPAIIANAWDNRSDAISSA
@@ -989,7 +989,7 @@ FEATURES             Location/Qualifiers
                      /note="Profile=MamB; Family=MamB; Score=458.5;
                      Evalue=5.05e-140"
      CDS             complement(10434..10673)
-                     /locus_tag="MSR-1_MAI90kb_00066"
+                     /locus_tag="gene_00066"
                      /translation="MIKGSALMTFVQGAMALVDKVFGEEILPHRIYSSGEAAQLLGMER
                      LQVLEMVRAGTIKAKKVGDNYRILGSNLVEYMNR"
                      /product="MamR"
@@ -999,7 +999,7 @@ FEATURES             Location/Qualifiers
                      /note="Profile=MamR; Family=MamR; Score=121.7;
                      Evalue=6.00e-38"
      CDS             complement(10685..11503)
-                     /locus_tag="MSR-1_MAI90kb_00067"
+                     /locus_tag="gene_00067"
                      /translation="MAVSDADASSVDKVESITLQRVKQSEELLAQLYVVEESPRRMGRG
                      PVQLMLAISVLSLVAFITTLLMRYNAFVTMYEDAQAKRSNFEVMIQRRDNLFGNLVKLT
                      LNHAALEHSIFSHTSDKRKESVEAGKGGPIGSAIEQLMKQGGIGKLLGDGGAGKALLGA
@@ -1012,7 +1012,7 @@ FEATURES             Location/Qualifiers
                      /note="Profile=MamQ; Family=MamQ; Score=296.8;
                      Evalue=6.31e-91"
      CDS             complement(11554..12207)
-                     /locus_tag="MSR-1_MAI90kb_00068"
+                     /locus_tag="gene_00068"
                      /translation="MSSKPSNMLDEVTLYTHYGLSVAKKLGANMVDAFRSAFSVNDDIR
                      QVYYRDKGISHAKAGRYSEAVVMLEQVYDADAFDVEVALHLGIAYVKTGAVDRGTELLE
                      RSIADAPDNIKVATVLGLTYVQVQKYDLAVPLLVKVAEANPVNFNVRFRLGVALDNLGR
@@ -1024,7 +1024,7 @@ FEATURES             Location/Qualifiers
                      /note="Profile=MamA; Family=MamA; Score=196.7;
                      Evalue=3.97e-60"
      CDS             complement(12242..13054)
-                     /locus_tag="MSR-1_MAI90kb_00069"
+                     /locus_tag="gene_00069"
                      /translation="MNSKLVLLVVGVVFALVLVIGRQGGVVAPQSISVSPQMSTAAPVA
                      APIAFPQATNVAMAVEPMAAAGGTVAAMESPLPNFVPRNLKVFEGHWQGMDGRLMTEEL
                      ARKLNYPRGVQGVLLGEVTLNAAFSGLLGGDVVVRIDDTPVTNMENFQAATRNVANRSE
@@ -1037,7 +1037,7 @@ FEATURES             Location/Qualifiers
                      /note="Profile=MamP; Family=MamP; Score=350.5;
                      Evalue=8.83e-107"
      CDS             complement(13082..14980)
-                     /locus_tag="MSR-1_MAI90kb_00070"
+                     /locus_tag="gene_00070"
                      /translation="MIEIGETMGDQPTNKIVFCERSWKAPVSILAFLILVTFAWGAYLL
                      DNYDEDDYFRGSDDMSVGQFLVRNVAMPDVQRLYYTVPPAVVGVGGGGVNAGPVASGAI
                      VGANGYVITTLHSVANVPDITVQVATSAGIRRFPAQVVKTIPGHNLALLKLQTTEKFLH
@@ -1056,7 +1056,7 @@ FEATURES             Location/Qualifiers
                      /note="Profile=MamO_full; Family=MamO; Score=951.6;
                      Evalue=1.18e-288"
      CDS             complement(15021..16334)
-                     /locus_tag="MSR-1_MAI90kb_00071"
+                     /locus_tag="gene_00071"
                      /translation="MVGFITLAVFIATFAVIYRWAEGSHLAVLAGAAVLVVIGTISGTY
                      TPRMAVQSIYFETLALIFGMAAISALLARSGVYAYLAAGTAELSQGQGRWILVMMALVT
                      YGISLASNSLITVAVVVPVTLTVCFRTGIDPVPVIIAEIIAANLGGSSTMIGDFPNMIL
@@ -1072,7 +1072,7 @@ FEATURES             Location/Qualifiers
                      /note="Profile=MamN; Family=MamN; Score=698.7;
                      Evalue=1.42e-212"
      CDS             complement(16335..17291)
-                     /locus_tag="MSR-1_MAI90kb_00072"
+                     /locus_tag="gene_00072"
                      /translation="MRKSGCAVCSRSIGWVGLAVSTVLMVMKAFVGLIGGSQAMLADAM
                      YSLKDMLNALMVIIGTTISSKPLDAEHPYGHGKVEFILSMVVSVVFIVLTGYLLVHAVQ
                      ILLDESLHRTPHLIVLWAALVSIGVNVGMYFYSRCVAIETNSPLIKTMAKHHHGDATAS
@@ -1086,7 +1086,7 @@ FEATURES             Location/Qualifiers
                      /note="Profile=MamM; Family=MamM; Score=466.7;
                      Evalue=1.70e-142"
      CDS             complement(17340..17576)
-                     /locus_tag="MSR-1_MAI90kb_00073"
+                     /locus_tag="gene_00073"
                      /translation="MVRVIGSLVFGGLILLLASSNAHMVETRFGPLIMLAPHFVVLGIT
                      FFLGFAIGIVLVFANVMKRRKHKLPGKNIVIKR"
                      /product="MamL"
@@ -1096,7 +1096,7 @@ FEATURES             Location/Qualifiers
                      /note="Profile=MamL; Family=MamL; Score=82.9;
                      Evalue=6.46e-26"
      CDS             complement(17629..18672)
-                     /locus_tag="MSR-1_MAI90kb_00074"
+                     /locus_tag="gene_00074"
                      /translation="MSEGEGQAKNRLFLGIDLGTSHTAVMTSRGKKFLLKSVVGYPKDV
                      IGLKLLGRPYVVGDEAFEMRSYLDLRYPLQDGVLSEISDRDIEVARHLLTHVVKSAEPG
                      ANDEICAVIGVPARASGANKALLLKMAQEVVHTALVVSEPFMVGYGLDKLNNTIIVDIG
@@ -1111,7 +1111,7 @@ FEATURES             Location/Qualifiers
                      /note="Profile=MamK; Family=MamK; Score=543.4;
                      Evalue=1.00e-165"
      CDS             complement(18716..20116)
-                     /locus_tag="MSR-1_MAI90kb_00075"
+                     /locus_tag="gene_00075"
                      /translation="MAKNRRDRGTDLPGDGDQKISTGPEIVSVTVHPSPNLAAAAKPVQ
                      GDIWASLLESSPWSANQGGLVETAQPPSAPIRSQDPVPVADLVNRWSQPIWRTAPLAGN
                      AESSEEGVVAPSLTQSDSVLAVSDLVIDVQPETDAEVEVSIEPEPALVEPVIEIEAEAA
@@ -1128,7 +1128,7 @@ FEATURES             Location/Qualifiers
                      /note="Profile=MamJ; Family=MamJ; Score=612.1;
                      Evalue=3.42e-186"
      CDS             complement(20132..22450)
-                     /locus_tag="MSR-1_MAI90kb_00076"
+                     /locus_tag="gene_00076"
                      /translation="MTMFNGDVEDGGRSNVSCGKDLKRYLMLMGVVALVVLFGAFIYRQ
                      SSGGLRLGAMMEQMTGARGAVNVPAQHGAPSAVVDPAMSVPARARVAPPSAAGAIATFP
                      PVVDFGPAPVVSGGPFTGVVTLLRNSVVSVTASSSGGQVMPDPLGLVNPDGLPRFANPT
@@ -1150,7 +1150,7 @@ FEATURES             Location/Qualifiers
                      /note="Profile=MamE_full; Family=MamE; Score=1000.4;
                      Evalue=5.41e-303"
      CDS             complement(22450..22659)
-                     /locus_tag="MSR-1_MAI90kb_00077"
+                     /locus_tag="gene_00077"
                      /translation="MPSVIFGLLALAIGLLGLTAWWWSVTEFLRGAVPVALIIFGLVAL
                      AAGVQSVRVPPAGKRANSDPNIDG"
                      /product="MamI"
@@ -1160,7 +1160,7 @@ FEATURES             Location/Qualifiers
                      /note="Profile=MamI; Family=MamI; Score=85.6;
                      Evalue=1.46e-26"
      CDS             complement(22697..23992)
-                     /locus_tag="MSR-1_MAI90kb_00078"
+                     /locus_tag="gene_00078"
                      /translation="MTGMEPGRSEVEGHQRNALYLLSALCMVFMTLVVAIQPLFLRNVL
                      NIPFETAGAVNANVQVVTEVLDLFIFAYLGYLSDRIGRVRIIVAGFLVAAVGAVIAPLS
                      PWVGGASIGALVVYYVSRVIMSAGSGAVWPQLSALAGDFSDDSNRARLLSNTAFMMAFG
@@ -1176,7 +1176,7 @@ FEATURES             Location/Qualifiers
                      /note="Profile=MamH; Family=MamH; Score=743.8;
                      Evalue=3.37e-226"
      CDS             24172..25419
-                     /locus_tag="MSR-1_MAI90kb_00079"
+                     /locus_tag="gene_00079"
                      /translation="MLSFLEDKDNRTQQAGLTRMRTYATTLLAFVTAIFAFAVWGLETW
                      PWLAPVKAFAEAALVGGVADWFAVTALFRRPFGLPIPHTAVIPRNHGRIAAAIGRFVAD
                      NLLASQALAQCLEELDTAGRLGRWLGQPDTRPMIAARIAGSLPPIVYTIGEERWRDAIG
@@ -1189,7 +1189,7 @@ FEATURES             Location/Qualifiers
                      /gene=""
                      /label=""
      CDS             complement(25474..25851)
-                     /locus_tag="MSR-1_MAI90kb_00080"
+                     /locus_tag="gene_00080"
                      /translation="MILAAHIQPADVQDRDGALPVLKEVRRLFPFIERVFADGGYQGAA
                      TAAAVRELGAWHLEIVKRSDTAKGFEVLPKRWIVERTFGWLGRCRCLAKDFENLSRMAL
                      AFLRLALIRVMLRRIARNRKS"
@@ -1197,7 +1197,7 @@ FEATURES             Location/Qualifiers
                      /gene=""
                      /label=""
      CDS             complement(26017..26346)
-                     /locus_tag="MSR-1_MAI90kb_00081"
+                     /locus_tag="gene_00081"
                      /translation="MALQTNSGGSMWTKESRRIYERHGLRYPSDLTDEEWAVVEPLIPP
                      AKRGGRQRTVNVREVLNGVFYVLMTGCQWRALPKDLPPRSTVHEYLGLWEMGWHPGPHP
                      PCAFR"
@@ -1659,7 +1659,7 @@ FEATURES             Location/Qualifiers
      source          1..10114
                      /organism="MSR-1_MAI90kb"
      CDS             complement(1..477)
-                     /locus_tag="MSR-1_MAI90kb_00087"
+                     /locus_tag="gene_00087"
                      /translation="MTRRYGRAPRGQRLLAAVPHGHWKMTTFVGALRHDGISAPFVIDK
                      AMNGAIFLAYVEQVLAPTLRPGDIVVMDNLPAHKVAGVKQLIEARGATLRYLPPYSPDL
                      NPIELAFAKLKSLLRKAQARTINTLWDVIGKLIDLFPPEECANFFAHDGYGRSM"
@@ -1667,7 +1667,7 @@ FEATURES             Location/Qualifiers
                      /gene=""
                      /label=""
      CDS             complement(567..962)
-                     /locus_tag="MSR-1_MAI90kb_00088"
+                     /locus_tag="gene_00088"
                      /translation="MTWRSGQSYSQDLRDRVLAAVDSGMSAYEVAPLFRVSVSYIYKAQ
                      GRRRATGETTVKPRPGRPGQKLAAHLEALQAQIKVEPDATLAELRAWVLAELGVSISVG
                      GLWNTLERLDLSLKKRVRMLPSRNVPT"
@@ -1675,7 +1675,7 @@ FEATURES             Location/Qualifiers
                      /gene=""
                      /label=""
      CDS             1087..1923
-                     /locus_tag="MSR-1_MAI90kb_00089"
+                     /locus_tag="gene_00089"
                      /translation="MIEKLKSEGNNSSADIFQTTDVARLNRARVEGLLLPISSPVLDNS
                      VPTKYRDPQGYWFGQSARARVIFFSKDRVKPSDLSTFDDLASPKWKGRVCVCSSASAYN
                      QSLLAGMIAVDGAEVSEKWAKGVVDNMARKPQGGDRDQIAAVASGQCDIAIANTYYFAG
@@ -1685,7 +1685,7 @@ FEATURES             Location/Qualifiers
                      /gene=""
                      /label=""
      CDS             complement(2219..2596)
-                     /locus_tag="MSR-1_MAI90kb_00090"
+                     /locus_tag="gene_00090"
                      /translation="MSFQLAPYLAKSVPGIGILGGIVGGAAALAKNARLLKDKQITGTE
                      AAIDTGKEAAGAGLATAFSAVAATAVGGGLVVSLGAALIAGVAAKYAWDLGVDFIEKEL
                      RHGKSAEATASDEDILREELA"
@@ -1696,7 +1696,7 @@ FEATURES             Location/Qualifiers
                      /note="Profile=MamC; Family=MamC; Score=192.3;
                      Evalue=1.27e-59"
      CDS             complement(2626..3570)
-                     /locus_tag="MSR-1_MAI90kb_00091"
+                     /locus_tag="gene_00091"
                      /translation="MQDLFLAKVESAMQASQVGALAGQTATVSSVSATTNLATITPTTA
                      GQAPIIVKLDAARQVTELQALMGKTVLVGKTPTTIGGIGNWIALTPAAGAKTGAAVAGT
                      GQLVMMKVEGTGAAIKLPALAGKSFIVAQPPVAAGTKAAGMLYLNPVGGGDMVAINIQN
@@ -1710,7 +1710,7 @@ FEATURES             Location/Qualifiers
                      /note="Profile=MamD; Family=MamD; Score=368.0;
                      Evalue=3.09e-112"
      CDS             complement(3691..4026)
-                     /locus_tag="MSR-1_MAI90kb_00092"
+                     /locus_tag="gene_00092"
                      /translation="MAETILIETKTAGGNCRSYLMAGASYLGILCFVPLLMSRDDEYVY
                      FHAKQGLVLWMWSILAMFALHLPGIGKWLFGFSSMGVLMLSVVGLVSVALRRTWRLPLI
                      SHVVALI"
@@ -1721,14 +1721,14 @@ FEATURES             Location/Qualifiers
                      /note="Profile=MamF; Family=MamF; Score=168.7;
                      Evalue=2.20e-52"
      CDS             complement(4085..4318)
-                     /locus_tag="MSR-1_MAI90kb_00093"
+                     /locus_tag="gene_00093"
                      /translation="MHTLAGDQMIKGIAGVGGTALGVGGGVPPLRSLPLLSAAPCWPAR
                      GCAWGWGLASVLGVPFFSALPDWLAPPPYVII"
                      /product="hypothetical protein"
                      /gene=""
                      /label=""
      CDS             4951..5430
-                     /locus_tag="MSR-1_MAI90kb_00094"
+                     /locus_tag="gene_00094"
                      /translation="MPAQIANGMVCPPGVPVGTKAAALGEMEREGATAKVGAGKVGAGK
                      VGAAKAGAAPAAAQGAGTKVVAAQGAGTKVVAAQGAGAKAAAVGVGKVGAGAKAVGGTI
                      WSGKGLALGLGMGLGAWGPLILGVVGAGAVYAYMKSRDIEAAQSDEEVELRDALS"
@@ -1739,7 +1739,7 @@ FEATURES             Location/Qualifiers
                      /note="Profile=Mms6; Family=Mms6; Score=193.2;
                      Evalue=1.89e-59"
      CDS             5446..5769
-                     /locus_tag="MSR-1_MAI90kb_00095"
+                     /locus_tag="gene_00095"
                      /translation="MVEAILRSTLGARTTVMAALSYLSVLCFVPLLVDRDDEFVYFHAK
                      QGLVIWMWGVLALFALHVPVLGKWIFGFSSMGVLVFSLLGLVSVVFQRAWKLPVVSWVA
                      DRI"
@@ -1750,7 +1750,7 @@ FEATURES             Location/Qualifiers
                      /note="Profile=MmsF; Family=MmsF; Score=181.9;
                      Evalue=1.46e-56"
      CDS             5945..6988
-                     /locus_tag="MSR-1_MAI90kb_00096"
+                     /locus_tag="gene_00096"
                      /translation="MDINEKAPGPSGRRPARRRDGGGQVLVLYLAIAVVVAVLAWPWLA
                      PRLGSFPGSLLSWIGDGGSVGAPRPATLDERMDMVEAALAPLAMRIAEADRRLAMLEAN
                      PRTAGEDPRKEAAGVSADPEQMSWMAAEIATLKGDLEIVRKLAADEGGATKLSGAVEKA
@@ -1765,7 +1765,7 @@ FEATURES             Location/Qualifiers
                      /note="Profile=Mms36; Family=Mms36; Score=623.5;
                      Evalue=5.33e-190"
      CDS             6992..8341
-                     /locus_tag="MSR-1_MAI90kb_00097"
+                     /locus_tag="gene_00097"
                      /translation="MLLRLIVLLIFMSPVVFATLWFSDNVGSVQVEWLGWHVDSNMPVL
                      LAVILVVFLIFSALSRLSALVADLPSKLGKSRQARGLEKGMSALLAALDAAESGDVGEG
                      RRFAAEAARLLNNPGLAARLDRLLPRPPAQPVAPTRLEAAKGRLFARKPGPPPPPTPVV
@@ -1781,21 +1781,21 @@ FEATURES             Location/Qualifiers
                      /note="Profile=Mms48; Family=Mms48; Score=861.5;
                      Evalue=1.05e-261"
      CDS             8439..8654
-                     /locus_tag="MSR-1_MAI90kb_00098"
+                     /locus_tag="gene_00098"
                      /translation="MSGSRMKAFTEEFRREAIRLVQTSDRTIGEVADNLGIGKSMLGKW
                      LARHRETELLSGPHDDVQKELARLRR"
                      /product="hypothetical protein"
                      /gene=""
                      /label=""
      CDS             8726..8926
-                     /locus_tag="MSR-1_MAI90kb_00099"
+                     /locus_tag="gene_00099"
                      /translation="MMFRIIGEKKAKELSLARICALFGVSASGFYAWKRRKPSLRQLDD
                      MARPLLSPQAPLPRQRFRSIP"
                      /product="hypothetical protein"
                      /gene=""
                      /label=""
      CDS             9119..10114
-                     /locus_tag="MSR-1_MAI90kb_00100"
+                     /locus_tag="gene_00100"
                      /translation="MRPDLTSANLRGANLAGMDLSGSLLSLANLRKAVLSGANLRDSNL
                      PRASLEDADLSGAKLQGANLAGATLLRANFSGANMRMANLAGANLAGRMDLSGVDLTGA
                      NLAGAKLMGANFSGATLTGANLAGADARNANFSGADLTDAVTAGTLLDGANMSGAVIRR

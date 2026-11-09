@@ -93,7 +93,7 @@ def test_protein_fasta_with_fasta_extension_and_duplicate_pipe_headers(tmp_path)
     rows = tsv.read_text(encoding="utf-8").splitlines()[1:]
     # All 3 magnetosome proteins are retained rather than collapsing into a single 'genbankID|' key
     assert len(rows) == 3
-    assert {r.split("\t")[2] for r in rows} == {
+    assert {r.split("\t")[1] for r in rows} == {
         "genbankID|AGG16218.1",
         "genbankID|AGG16234.1",
         "genbankID|AGG16219.1",
@@ -296,3 +296,37 @@ def test_clinker_warns_when_given_unsliced_whole_genome_genbank(tmp_path):
     # Direct .html output target does not drop a stray magcluster_clinker.log without --log
     assert not (tmp_path / "magcluster_clinker.log").exists()
     assert not Path("magcluster_clinker.log").exists()
+
+
+def test_per_genome_tsv_and_faa_do_not_repeat_genome_name(tmp_path):
+    """Per-genome TSV and FAA files must stay concise and never repeat the genome name."""
+    import gzip as _gz
+    gname = "GCA_000009985.1_Magnetospirillum_magneticum_AMB-1"
+    fna = tmp_path / f"{gname}.fna"
+    with _gz.open(MAI_GZ, "rt") as src:
+        fna.write_text(src.read())
+
+    out_dir = tmp_path / "out"
+    res = run_cli("run", fna, "-o", out_dir, "--no-plot")
+    assert res.exit_code == 0
+
+    tsv_path = out_dir / f"{gname}_mgc_genes.tsv"
+    faa_path = out_dir / f"{gname}_magnetosome_proteins.faa"
+    assert tsv_path.exists() and faa_path.exists()
+
+    tsv_text = tsv_path.read_text(encoding="utf-8")
+    faa_text = faa_path.read_text(encoding="utf-8")
+
+    # Neither file body may repeat the genome name
+    assert gname not in tsv_text
+    assert gname not in faa_text
+
+    tsv_lines = tsv_text.splitlines()
+    assert tsv_lines[0] == "cluster_id\tgene_id\tcontig\tstart\tend\tstrand\tprofile\tparent_family\trole\tscore\tevalue"
+    first_cols = tsv_lines[1].split("\t")
+    assert first_cols[0] == "MGC"
+    assert first_cols[1] == "gene_00008"
+
+    faa_first = faa_text.splitlines()[0]
+    assert faa_first.startswith(">gene_00008 cluster=MGC family=MamG profile=MamG ")
+

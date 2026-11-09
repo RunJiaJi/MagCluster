@@ -155,7 +155,7 @@ def test_cli_score_changes_hits(tmp_path):
     d = tsv_rows(tmp_path / "d" / "MSR-1_MAI90kb_mgc_genes.tsv")
     h = tsv_rows(tmp_path / "h" / "MSR-1_MAI90kb_mgc_genes.tsv")
     assert 0 < len(h) < len(d)
-    assert min(float(r.split("\t")[10]) for r in h) >= 300
+    assert min(float(r.split("\t")[9]) for r in h) >= 300
     log = (tmp_path / "h" / "magcluster.log").read_text()
     assert "score: 300 (explicit" in log
 
@@ -188,8 +188,8 @@ def test_same_file_name_in_two_folders(tmp_path, mai_fna):
     a = tsv_rows(out / "genomic_mgc_genes.tsv")
     b = tsv_rows(out / "genomic_2_mgc_genes.tsv")
     assert len(a) == len(b) == 37
-    assert all(r.split("\t")[1] == "genomic" for r in a)
-    assert all(r.split("\t")[1] == "genomic_2" for r in b)
+    assert all(r.split("\t")[0] in ("MGC", "unclustered") for r in a)
+    assert all(r.split("\t")[0] in ("MGC", "unclustered") for r in b)
     assert sorted((out / "clusters_gbk").iterdir()) == [
         out / "clusters_gbk" / "genomic_2_MGC.gbk", out / "clusters_gbk" / "genomic_MGC.gbk"]
 
@@ -204,8 +204,8 @@ def test_dotted_versions_do_not_overwrite(tmp_path, mai_fna):
     v1 = tsv_rows(out / "strainX.v1_mgc_genes.tsv")
     v2 = tsv_rows(out / "strainX.v2_mgc_genes.tsv")
     assert len(v1) == len(v2) == 37                  # nothing lost to ID collisions
-    assert all(r.split("\t")[2].startswith("strainX.v1_") for r in v1)
-    assert all(r.split("\t")[2].startswith("strainX.v2_") for r in v2)
+    assert all(r.split("\t")[1].startswith("gene_") for r in v1)
+    assert all(r.split("\t")[1].startswith("gene_") for r in v2)
 
 
 def test_identical_gene_ids_in_two_genbank_genomes_stay_separate(tmp_path):

@@ -22,4 +22,4 @@ def test_gene_predictor_basic():
     g = genes[0]
     assert g.contig_id == "test_contig_1"
     assert g.length_aa >= 30
-    assert g.gene_id.startswith("test_genome_")
+    assert g.gene_id == "gene_00001"

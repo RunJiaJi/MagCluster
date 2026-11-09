@@ -131,7 +131,7 @@ magcluster run [OPTIONS] INPUTS...
 
 Global options: `magcluster --version` (`-v`) and `magcluster --help` (`-h`).
 
-Genome IDs (used in output file names, the `genome` column and gene IDs of predicted genes) are taken from the input file name minus `.gz` and the genome extension, e.g. `GCF_000513295.1.fna` → `GCF_000513295.1` and `strainX.v1.fna` → `strainX.v1`. Spaces and special characters are replaced by `_` (e.g. `my strain.fna` → `my_strain`). If two inputs give the same ID (e.g. NCBI Datasets' `genomic.gbff`), the later one gets a suffix (`genomic_2`) and a warning is printed. The same input file listed twice is used once.
+Genome IDs (used in output file names and `mgc_summary.tsv`) are taken from the input file name minus `.gz` and the genome extension, e.g. `GCF_000513295.1.fna` → `GCF_000513295.1` and `strainX.v1.fna` → `strainX.v1`. Spaces and special characters are replaced by `_` (e.g. `my strain.fna` → `my_strain`). If two inputs give the same ID (e.g. NCBI Datasets' `genomic.gbff`), the later one gets a suffix (`genomic_2`) and a warning is printed. The same input file listed twice is used once.
 
 Exit status: `0` on success. `1` if any input could not be read, Clinker failed, or the output directory cannot be used. Results of the other genomes are still written. `2` for invalid command-line options.
 
@@ -218,9 +218,8 @@ One row per input genome, making it easy to filter MGC-positive genomes, mineral
 
 | Column | Meaning |
 | :--- | :--- |
-| `cluster_id` | Cluster ID (e.g. `MSR-1_genome_MGC`), or `unclustered` for isolated genes |
-| `genome` | Genome name |
-| `gene_id` | Locus tag or gene identifier |
+| `cluster_id` | `MGC` for clustered genes, or `unclustered` for isolated genes |
+| `gene_id` | Locus tag or predicted gene identifier (e.g. `gene_00405`) |
 | `contig` | Contig or scaffold name |
 | `start`, `end` | Gene coordinates (1-based) |
 | `strand` | Strand (`+` or `-`) |
@@ -231,10 +230,10 @@ One row per input genome, making it easy to filter MGC-positive genomes, mineral
 
 ### 2. Protein sequences (`{genome}_magnetosome_proteins.faa`)
 
-Amino acid sequences of all magnetosome proteins found in that genome, with detailed header info:
+Amino acid sequences of all magnetosome proteins found in that genome, with concise header metadata:
 ```text
->MGMSRV2_RS11765 [MSR-1_genome] cluster=MSR-1_genome_MGC family=MamE profile=MamE_full score=1000.4 evalue=1.97e-301
-MSERRPVGRTL...
+>gene_00405 cluster=MGC family=MamK profile=MamK score=448.8 evalue=2.40e-135
+MSEGEGQAKNRL...
 ```
 
 ### 3. Interactive visualization (`MGC_align.html`)

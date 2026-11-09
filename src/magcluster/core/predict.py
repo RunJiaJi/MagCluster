@@ -129,7 +129,7 @@ class GenePredictor:
                 if len(trans) * 3 < self.min_gene_len:
                     continue
 
-                gene_id = f"{genome_name}_{global_gene_idx:05d}"
+                gene_id = f"gene_{global_gene_idx:05d}"
                 partial = (g.partial_begin != 0 or g.partial_end != 0)
 
                 pg = PredictedGene(
