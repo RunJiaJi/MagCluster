@@ -20,7 +20,7 @@ def test_msr1_genbank_end_to_end():
     # 2. Search
     searcher = MagnetosomeSearcher()
     hits = searcher.search_genes(parsed.genes)
-    assert len(hits) >= 35
+    assert len(hits) >= 30
 
     # 3. Cluster
     clusterer = ClusterEngine()

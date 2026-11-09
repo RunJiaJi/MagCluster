@@ -187,7 +187,7 @@ def test_same_file_name_in_two_folders(tmp_path, mai_fna):
     assert "genomic_2" in flat(res.output) and "already used" in flat(res.output)
     a = tsv_rows(out / "genomic_mgc_genes.tsv")
     b = tsv_rows(out / "genomic_2_mgc_genes.tsv")
-    assert len(a) == len(b) == 37
+    assert len(a) == len(b) == 35
     assert all(r.split("\t")[0] in ("MGC", "unclustered") for r in a)
     assert all(r.split("\t")[0] in ("MGC", "unclustered") for r in b)
     assert sorted((out / "clusters_gbk").iterdir()) == [
@@ -203,7 +203,7 @@ def test_dotted_versions_do_not_overwrite(tmp_path, mai_fna):
     assert run_cli("run", d, "-o", out, "--no-plot").exit_code == 0
     v1 = tsv_rows(out / "strainX.v1_mgc_genes.tsv")
     v2 = tsv_rows(out / "strainX.v2_mgc_genes.tsv")
-    assert len(v1) == len(v2) == 37                  # nothing lost to ID collisions
+    assert len(v1) == len(v2) == 35                  # nothing lost to ID collisions
     assert all(r.split("\t")[1].startswith("gene_") for r in v1)
     assert all(r.split("\t")[1].startswith("gene_") for r in v2)
 
@@ -354,7 +354,9 @@ def test_clinker_relative_outputs_go_to_outdir(tmp_path, monkeypatch):
 
 @pytest.mark.parametrize("opt", [
     ["-t", "-1"], ["-e", "-1"], ["--max-gap", "-1"], ["-th", "0"], ["-th", "-1"],
-    ["-un", "-2"], ["-i", "1.5"], ["-i", "-0.2"], ["--clinker-opts", "-na 'unterminated"],
+    ["-un", "-2"], ["-i", "1.5"], ["-i", "-0.2"],
+    ["--min-hmm-cov", "-0.1"], ["--min-hmm-cov", "1.5"],
+    ["--clinker-opts", "-na 'unterminated"],
 ])
 def test_invalid_numeric_and_option_values(tmp_path, opt):
     res = run_cli("run", MAI_GZ, "-o", tmp_path / "o", *opt)
@@ -424,7 +426,7 @@ def test_duplicate_inputs_are_deduplicated(tmp_path):
     out = tmp_path / "o"
     res = run_cli("run", MAI_GZ, MAI_GZ, "-o", out, "--no-plot")
     assert res.exit_code == 0 and "duplicate input" in flat(res.output)
-    assert len(tsv_rows(out / "MSR-1_MAI90kb_mgc_genes.tsv")) == 37
+    assert len(tsv_rows(out / "MSR-1_MAI90kb_mgc_genes.tsv")) == 35
 
 
 def test_meta_flag_ignored_notice_for_annotated_input(tmp_path):

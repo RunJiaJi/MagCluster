@@ -40,10 +40,8 @@ MAMK_SEQ = (
 )
 
 FEOB_SEQ = (
-    "MSTIKVAVSGQPNCGKSTMFNAITGGSARVGNYPGITVDRLEGVYQQNGDKIHLVDLPGT"
-    "YSLTSYSMEELVARNVIVDEHPDVVINMIDATALERSLYLAVQFMEIGAPMVLGLNMMDE"
-    "VKRNGVTIDVKKLSTLLGVPVVPCVARVGQGREELMKAVAAAYKASNGKWKPIELSYGPE"
-    "LDPVIERMTAMIAEAGFLTGRHDPRWVAIKYLENDEQVIEEGRAAGSLSAKLEALCKEAE"
+    "MDQQVKIDTLTLADLCPEQQGEIVKIETEDGVFKRRMQSLGVVSGTAVTLDRSAPLGDPR"
+    "IYSLMGYSLGLRNAEARQIRIRLK"
 )
 
 
@@ -322,11 +320,55 @@ def test_per_genome_tsv_and_faa_do_not_repeat_genome_name(tmp_path):
     assert gname not in faa_text
 
     tsv_lines = tsv_text.splitlines()
-    assert tsv_lines[0] == "cluster_id\tgene_id\tcontig\tstart\tend\tstrand\tprofile\tparent_family\trole\tscore\tevalue"
+    assert tsv_lines[0] == (
+        "cluster_id\tgene_id\tcontig\tstart\tend\tstrand\tprofile\t"
+        "parent_family\trole\tscore\tevalue\thmm_cov\tseq_cov"
+    )
     first_cols = tsv_lines[1].split("\t")
     assert first_cols[0] == "MGC"
-    assert first_cols[1] == "gene_00008"
+    assert first_cols[1] == "gene_00022"
+    assert len(first_cols) == 13
+    assert 0.5 <= float(first_cols[11]) <= 1.0
+    assert 0.5 <= float(first_cols[12]) <= 1.0
 
     faa_first = faa_text.splitlines()[0]
-    assert faa_first.startswith(">gene_00008 cluster=MGC family=MamG profile=MamG ")
+    assert faa_first.startswith(">gene_00022 cluster=MGC family=MamY profile=MamY ")
+
+
+def test_hmm_cov_seq_cov_and_min_hmm_cov_threshold(tmp_path):
+    """--min-hmm-cov filters partial-domain hits and outputs hmm_cov/seq_cov in TSV."""
+    from magcluster.core.search import MagnetosomeSearcher
+
+    with pytest.raises(ValueError, match="hmm_cov_cutoff"):
+        MagnetosomeSearcher(hmm_cov_cutoff=-0.1)
+    with pytest.raises(ValueError, match="hmm_cov_cutoff"):
+        MagnetosomeSearcher(hmm_cov_cutoff=1.2)
+
+    # Full-length MamK (348 aa, hmm_cov ~0.99) + truncated 110-aa MamK fragment (hmm_cov ~0.32)
+    partial_mamk = MAMK_SEQ[:110] + "A" * 190
+    faa = tmp_path / "cov_test.faa"
+    faa.write_text(
+        f">full_mamK\n{MAMK_SEQ}\n"
+        f">partial_mamK\n{partial_mamk}\n",
+        encoding="utf-8",
+    )
+
+    # Default --min-hmm-cov 0.5 retains full_mamK and filters out partial_mamK
+    out_def = tmp_path / "out_def"
+    res_def = run_cli("run", faa, "-o", out_def, "--no-plot")
+    assert res_def.exit_code == 0
+    rows_def = (out_def / "cov_test_mgc_genes.tsv").read_text(encoding="utf-8").splitlines()[1:]
+    assert [r.split("\t")[1] for r in rows_def] == ["full_mamK"]
+
+    # Lowering --min-hmm-cov to 0.2 retains both full_mamK and partial_mamK
+    out_low = tmp_path / "out_low"
+    res_low = run_cli("run", faa, "-o", out_low, "--no-plot", "--min-hmm-cov", "0.2")
+    assert res_low.exit_code == 0
+    rows_low = (out_low / "cov_test_mgc_genes.tsv").read_text(encoding="utf-8").splitlines()[1:]
+    by_id = {r.split("\t")[1]: r.split("\t") for r in rows_low}
+    assert set(by_id.keys()) == {"full_mamK", "partial_mamK"}
+    assert float(by_id["full_mamK"][11]) >= 0.95
+    assert 0.25 <= float(by_id["partial_mamK"][11]) < 0.50
+    assert 0.25 <= float(by_id["partial_mamK"][12]) < 0.50
+
 

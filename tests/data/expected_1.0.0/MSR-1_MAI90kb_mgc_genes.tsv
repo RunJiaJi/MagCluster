@@ -1,38 +1,36 @@
-cluster_id	gene_id	contig	start	end	strand	profile	parent_family	role	score	evalue
-MGC	gene_00008	MSR1_MAI_90kb	4134	4769	+	MamG	MamG	accessory	325.3	1.10e-99
-MGC	gene_00009	MSR1_MAI_90kb	4781	5116	+	MamF	MamF	accessory	176.1	1.07e-54
-MGC	gene_00011	MSR1_MAI_90kb	5601	7715	-	FeoB	FeoB	iron_context	961.0	1.97e-291
-MGC	gene_00012	MSR1_MAI_90kb	7752	8006	-	FeoA	FeoA	iron_context	88.0	3.86e-27
-MGC	gene_00015	MSR1_MAI_90kb	9633	10139	+	Mms6	Mms6	accessory	49.1	4.22e-15
-MGC	gene_00022	MSR1_MAI_90kb	16177	17292	+	MamY	MamY	accessory	636.9	6.43e-194
-MGC	gene_00023	MSR1_MAI_90kb	17500	18264	+	MamX	MamX	accessory	406.1	6.27e-124
-MGC	gene_00024	MSR1_MAI_90kb	18248	20179	+	MamZ	MamZ	accessory	1104.8	0.00e+00
-MGC	gene_00044	MSR1_MAI_90kb	33262	34224	+	MamV	MamV	accessory	568.0	3.24e-173
-MGC	gene_00046	MSR1_MAI_90kb	34621	34926	+	MamR	MamR	accessory	103.7	2.46e-32
-MGC	gene_00047	MSR1_MAI_90kb	34923	35882	-	MamM	MamM	core	124.2	3.32e-38
-MGC	gene_00056	MSR1_MAI_90kb	41364	41993	-	Mad29	Mad29	accessory	30.5	1.30e-09
-MGC	gene_00062	MSR1_MAI_90kb	46858	47751	-	MamU	MamU	accessory	538.6	1.80e-164
-MGC	gene_00063	MSR1_MAI_90kb	47793	48317	-	MamT	MamT	accessory	260.8	4.15e-80
-MGC	gene_00064	MSR1_MAI_90kb	48343	48885	-	MamS	MamS	accessory	204.0	1.36e-62
-MGC	gene_00065	MSR1_MAI_90kb	48902	49795	-	MamB	MamB	core	458.5	5.05e-140
-MGC	gene_00066	MSR1_MAI_90kb	49792	50031	-	MamR	MamR	accessory	121.7	6.00e-38
-MGC	gene_00067	MSR1_MAI_90kb	50043	50861	-	MamQ	MamQ	core	296.8	6.31e-91
-MGC	gene_00068	MSR1_MAI_90kb	50912	51565	-	MamA	MamA	core	196.7	3.97e-60
-MGC	gene_00069	MSR1_MAI_90kb	51600	52412	-	MamP	MamP	core	350.5	8.83e-107
-MGC	gene_00070	MSR1_MAI_90kb	52440	54338	-	MamO_full	MamO	core	951.6	1.18e-288
-MGC	gene_00071	MSR1_MAI_90kb	54379	55692	-	MamN	MamN	accessory	698.7	1.42e-212
-MGC	gene_00072	MSR1_MAI_90kb	55693	56649	-	MamM	MamM	core	466.7	1.70e-142
-MGC	gene_00073	MSR1_MAI_90kb	56698	56934	-	MamL	MamL	core	82.9	6.46e-26
-MGC	gene_00074	MSR1_MAI_90kb	56987	58030	-	MamK	MamK	core	543.4	1.00e-165
-MGC	gene_00075	MSR1_MAI_90kb	58074	59474	-	MamJ	MamJ	accessory	612.1	3.42e-186
-MGC	gene_00076	MSR1_MAI_90kb	59490	61808	-	MamE_full	MamE	core	1000.4	5.41e-303
-MGC	gene_00077	MSR1_MAI_90kb	61808	62017	-	MamI	MamI	core	85.6	1.46e-26
-MGC	gene_00078	MSR1_MAI_90kb	62055	63350	-	MamH	MamH	accessory	743.8	3.37e-226
-MGC	gene_00090	MSR1_MAI_90kb	72596	72973	-	MamC	MamC	accessory	192.3	1.27e-59
-MGC	gene_00091	MSR1_MAI_90kb	73003	73947	-	MamD	MamD	accessory	368.0	3.09e-112
-MGC	gene_00092	MSR1_MAI_90kb	74068	74403	-	MamF	MamF	accessory	168.7	2.20e-52
-MGC	gene_00094	MSR1_MAI_90kb	75328	75807	+	Mms6	Mms6	accessory	193.2	1.89e-59
-MGC	gene_00095	MSR1_MAI_90kb	75823	76146	+	MmsF	MmsF	accessory	181.9	1.46e-56
-MGC	gene_00096	MSR1_MAI_90kb	76322	77365	+	Mms36	Mms36	accessory	623.5	5.33e-190
-MGC	gene_00097	MSR1_MAI_90kb	77369	78718	+	Mms48	Mms48	accessory	861.5	1.05e-261
-unclustered	gene_00110	MSR1_MAI_90kb	86952	87368	-	MamW	MamW	accessory	222.6	5.22e-69
+cluster_id	gene_id	contig	start	end	strand	profile	parent_family	role	score	evalue	hmm_cov	seq_cov
+MGC	gene_00022	MSR1_MAI_90kb	16177	17292	+	MamY	MamY	accessory	636.9	6.43e-194	0.99	1.00
+MGC	gene_00023	MSR1_MAI_90kb	17500	18264	+	MamX	MamX	accessory	406.1	6.27e-124	0.96	1.00
+MGC	gene_00024	MSR1_MAI_90kb	18248	20179	+	MamZ	MamZ	accessory	1104.8	0.00e+00	0.98	0.98
+MGC	gene_00044	MSR1_MAI_90kb	33262	34224	+	MamV	MamV	accessory	568.0	3.24e-173	1.00	1.00
+MGC	gene_00046	MSR1_MAI_90kb	34621	34926	+	MamR	MamR	accessory	103.7	2.46e-32	0.98	0.82
+MGC	gene_00047	MSR1_MAI_90kb	34923	35882	-	MamM	MamM	core	124.2	3.32e-38	0.94	0.88
+MGC	gene_00062	MSR1_MAI_90kb	46858	47751	-	MamU	MamU	accessory	538.6	1.80e-164	1.00	1.00
+MGC	gene_00063	MSR1_MAI_90kb	47793	48317	-	MamT	MamT	accessory	260.8	4.15e-80	0.95	0.96
+MGC	gene_00064	MSR1_MAI_90kb	48343	48885	-	MamS	MamS	accessory	204.0	1.36e-62	1.00	0.90
+MGC	gene_00065	MSR1_MAI_90kb	48902	49795	-	MamB	MamB	core	458.5	5.05e-140	0.99	0.98
+MGC	gene_00066	MSR1_MAI_90kb	49792	50031	-	MamR	MamR	accessory	121.7	6.00e-38	0.93	0.99
+MGC	gene_00067	MSR1_MAI_90kb	50043	50861	-	MamQ	MamQ	core	296.8	6.31e-91	0.99	0.94
+MGC	gene_00068	MSR1_MAI_90kb	50912	51565	-	MamA	MamA	core	196.7	3.97e-60	0.98	0.98
+MGC	gene_00069	MSR1_MAI_90kb	51600	52412	-	MamP	MamP	core	350.5	8.83e-107	0.87	1.00
+MGC	gene_00070	MSR1_MAI_90kb	52440	54338	-	MamO_full	MamO	core	951.6	1.18e-288	1.00	0.99
+MGC	gene_00071	MSR1_MAI_90kb	54379	55692	-	MamN	MamN	accessory	698.7	1.42e-212	1.00	1.00
+MGC	gene_00072	MSR1_MAI_90kb	55693	56649	-	MamM	MamM	core	466.7	1.70e-142	0.98	0.93
+MGC	gene_00073	MSR1_MAI_90kb	56698	56934	-	MamL	MamL	core	82.9	6.46e-26	1.00	1.00
+MGC	gene_00074	MSR1_MAI_90kb	56987	58030	-	MamK	MamK	core	543.4	1.00e-165	0.99	0.97
+MGC	gene_00075	MSR1_MAI_90kb	58074	59474	-	MamJ	MamJ	accessory	612.1	3.42e-186	1.00	1.00
+MGC	gene_00076	MSR1_MAI_90kb	59490	61808	-	MamE_full	MamE	core	1000.4	5.41e-303	0.95	1.00
+MGC	gene_00077	MSR1_MAI_90kb	61808	62017	-	MamI	MamI	core	85.6	1.46e-26	0.76	0.88
+MGC	gene_00078	MSR1_MAI_90kb	62055	63350	-	MamH	MamH	accessory	743.8	3.37e-226	0.98	0.98
+MGC	gene_00090	MSR1_MAI_90kb	72596	72973	-	MamC	MamC	accessory	192.3	1.27e-59	1.00	1.00
+MGC	gene_00091	MSR1_MAI_90kb	73003	73947	-	MamD	MamD	accessory	368.0	3.09e-112	0.99	1.00
+MGC	gene_00092	MSR1_MAI_90kb	74068	74403	-	MamF	MamF	accessory	168.7	2.20e-52	1.00	1.00
+MGC	gene_00094	MSR1_MAI_90kb	75328	75807	+	Mms6	Mms6	accessory	193.2	1.89e-59	1.00	1.00
+MGC	gene_00095	MSR1_MAI_90kb	75823	76146	+	MmsF	MmsF	accessory	181.9	1.46e-56	0.99	0.99
+MGC	gene_00096	MSR1_MAI_90kb	76322	77365	+	Mms36	Mms36	accessory	623.5	5.33e-190	1.00	1.00
+MGC	gene_00097	MSR1_MAI_90kb	77369	78718	+	Mms48	Mms48	accessory	861.5	1.05e-261	0.97	1.00
+unclustered	gene_00012	MSR1_MAI_90kb	7752	8006	-	FeoA	FeoA	iron_context	88.0	3.86e-27	0.95	0.99
+unclustered	gene_00011	MSR1_MAI_90kb	5601	7715	-	FeoB	FeoB	iron_context	961.0	1.97e-291	0.99	1.00
+unclustered	gene_00008	MSR1_MAI_90kb	4134	4769	+	MamG	MamG	accessory	325.3	1.10e-99	1.00	1.00
+unclustered	gene_00009	MSR1_MAI_90kb	4781	5116	+	MamF	MamF	accessory	176.1	1.07e-54	1.00	1.00
+unclustered	gene_00110	MSR1_MAI_90kb	86952	87368	-	MamW	MamW	accessory	222.6	5.22e-69	0.99	0.98

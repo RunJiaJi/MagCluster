@@ -2,7 +2,7 @@
 
 [![Python Version](https://img.shields.io/badge/python-3.10%2B-blue?style=flat-square&logo=python)](https://www.python.org/)
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-green.svg?style=flat-square)](https://www.gnu.org/licenses/gpl-3.0)
-[![Version](https://img.shields.io/badge/version-1.1.2-orange?style=flat-square)](https://github.com/RunJiaJi/MagCluster)
+[![Version](https://img.shields.io/badge/version-1.1.3-orange?style=flat-square)](https://github.com/RunJiaJi/MagCluster)
 
 [English](https://github.com/RunJiaJi/MagCluster/blob/main/README.md) | [中文说明](https://github.com/RunJiaJi/MagCluster/blob/main/README_zh.md)
 
@@ -116,6 +116,7 @@ magcluster run [OPTIONS] INPUTS...
 | `--threads` | `-t` | `0` | Number of CPU threads (`0` = all available cores; values above the available cores are capped) |
 | `--evalue` | `-e` | `1e-5` | HMM search E-value cutoff (≥ 0) |
 | `--score` | `-s` | per-profile `trusted_cutoff` (25.0) | Minimum HMM bit score. If omitted, each profile's `trusted_cutoff` from `rules.yaml` is used (25.0 for all 92 built-in profiles). An explicit value replaces it for every profile, including values below 25 |
+| `--min-hmm-cov` | | `0.5` | Minimum fraction of the HMM profile covered by the aligned domain(s) (`0.0–1.0`) |
 | `--max-gap` | | `5` | Maximum non-magnetosome genes allowed between hits in a cluster (≥ 0). Hits must also be ≤ 25 kb apart (fixed) |
 | `--threshold` | `-th`, `--min-families` | `3` | Minimum number of distinct magnetosome families (any non-Feo family) required to call an MGC (≥ 1) |
 | `--flank` | `-un`, `--unmag-num` | `3` | Number of non-magnetosome flanking genes to keep on each side (≥ 0) |
@@ -227,6 +228,7 @@ One row per input genome, making it easy to filter MGC-positive genomes, mineral
 | `parent_family` | Family name (e.g. `MamE`, `MamQ`) |
 | `role` | `core`, `accessory`, or `iron_context` |
 | `score`, `evalue` | HMM match score and E-value |
+| `hmm_cov`, `seq_cov` | Fraction (`0.00–1.00`) of the HMM model and target protein sequence covered by the aligned domain(s) |
 
 ### 2. Protein sequences (`{genome}_magnetosome_proteins.faa`)
 

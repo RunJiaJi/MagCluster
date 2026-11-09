@@ -2,7 +2,7 @@
 
 [![Python Version](https://img.shields.io/badge/python-3.10%2B-blue?style=flat-square&logo=python)](https://www.python.org/)
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-green.svg?style=flat-square)](https://www.gnu.org/licenses/gpl-3.0)
-[![Version](https://img.shields.io/badge/version-1.1.2-orange?style=flat-square)](https://github.com/RunJiaJi/MagCluster)
+[![Version](https://img.shields.io/badge/version-1.1.3-orange?style=flat-square)](https://github.com/RunJiaJi/MagCluster)
 
 [English](https://github.com/RunJiaJi/MagCluster/blob/main/README.md) | [中文说明](https://github.com/RunJiaJi/MagCluster/blob/main/README_zh.md)
 
@@ -120,6 +120,7 @@ magcluster run [选项] 输入文件/文件夹...
 | `--threads` | `-t` | `0` | CPU 线程数（`0` 表示自动检测当前可用/分配的 CPU 核心数，兼容 SLURM 等集群 `os.sched_getaffinity` 配额；超过可用核心数时自动降到可用核心数） |
 | `--evalue` | `-e` | `1e-5` | HMM 比对的 E-value 阈值（≥ 0） |
 | `--score` | `-s` | 各模型的 `trusted_cutoff`（25.0） | HMM 比对的最小 bit score。不指定时使用 `rules.yaml` 里每个模型的 `trusted_cutoff`（92 个内置模型都是 25.0）。指定后对所有模型统一使用这个值，也可以低于 25 |
+| `--min-hmm-cov` | | `0.5` | HMM 模型的最小覆盖比例阈值（`0.0 ~ 1.0`，过滤局部短结构域假阳性命中） |
 | `--max-gap` | | `5` | 基因簇内两个磁小体基因之间允许插入的最大非磁小体基因数（≥ 0）。另有固定的 25 kb 距离上限 |
 | `--threshold` | `-th`、`--min-families` | `3` | 判定一个 MGC 所需的最少磁小体家族数（任意非 Feo 家族都算，≥ 1） |
 | `--flank` | `-un`、`--unmag-num` | `3` | 基因簇两端各保留的非磁小体基因数（≥ 0） |
@@ -235,6 +236,7 @@ results/
 | `parent_family` | 家族名称（如 `MamE`、`MamQ`） |
 | `role` | 基因功能角色：`core`（核心）、`accessory`（辅助）或 `iron_context`（铁转运） |
 | `score`, `evalue` | HMM 检索得分与 E 值 |
+| `hmm_cov`, `seq_cov` | 比对区域覆盖 HMM 模型与目标蛋白序列的比例（`0.00 ~ 1.00`） |
 
 ### 2. 磁小体蛋白序列（`{genome}_magnetosome_proteins.faa`）
 

@@ -2,6 +2,22 @@
 
 All notable changes to MagCluster are documented here.
 
+## [1.1.3] - 2026-11-09
+
+HMM / sequence coverage reporting and `--min-hmm-cov` significance filtering release.
+
+### Added
+- **HMM and protein sequence coverage in `{genome}_mgc_genes.tsv`**:
+  - Added `hmm_cov` (fraction of the HMM profile covered by aligned domain intervals, `0.00–1.00`)
+    and `seq_cov` (fraction of the target protein covered by aligned domain intervals, `0.00–1.00`)
+    to `MagnetosomeHit` and per-genome `{genome}_mgc_genes.tsv` tables, while keeping
+    `{genome}_magnetosome_proteins.faa` headers concise.
+- **Minimum HMM coverage threshold (`--min-hmm-cov`, default `0.5`)**:
+  - Added `--min-hmm-cov` (`0.0–1.0`, default `0.5`) to `magcluster run` alongside `-e/--evalue`
+    (`1e-5`) and `-s/--score` (`25.0`) to filter out spurious partial-motif matches (e.g. generic
+    TPR/ATPase/protease short motif hits covering < 50% of the HMM model) and accurately assign
+    single-domain proteins to domain profiles (such as `MamO_domain` vs `MamO_full`).
+
 ## [1.1.2] - 2026-11-09
 
 Concise, non-redundant per-genome output formatting release. MGC calling rules, HMM profiles and

@@ -103,7 +103,7 @@ def write_genome_cluster_tables(
     written_genes = set()
 
     with open(genes_tsv, "w", encoding="utf-8") as f:
-        f.write("cluster_id\tgene_id\tcontig\tstart\tend\tstrand\tprofile\tparent_family\trole\tscore\tevalue\n")
+        f.write("cluster_id\tgene_id\tcontig\tstart\tend\tstrand\tprofile\tparent_family\trole\tscore\tevalue\thmm_cov\tseq_cov\n")
         for c in clusters:
             if c.genome_name != genome_name:
                 continue
@@ -116,7 +116,8 @@ def write_genome_cluster_tables(
                     strand_str = "+" if g.strand > 0 else ("-" if g.strand < 0 else "-")
                     f.write(
                         f"{short_cid}\t{short_gid}\t{g.contig_id}\t{g.start}\t{g.end}\t"
-                        f"{strand_str}\t{h.profile}\t{h.parent_family}\t{h.role}\t{h.score:.1f}\t{h.evalue:.2e}\n"
+                        f"{strand_str}\t{h.profile}\t{h.parent_family}\t{h.role}\t{h.score:.1f}\t{h.evalue:.2e}\t"
+                        f"{h.hmm_cov:.2f}\t{h.seq_cov:.2f}\n"
                     )
 
         # Also write unclustered magnetosome hits for this genome if any
@@ -131,7 +132,8 @@ def write_genome_cluster_tables(
                         strand_str = "+" if g.strand > 0 else ("-" if g.strand < 0 else "-")
                         f.write(
                             f"unclustered\t{short_gid}\t{g.contig_id}\t{start_str}\t{end_str}\t"
-                            f"{strand_str}\t{h.profile}\t{h.parent_family}\t{h.role}\t{h.score:.1f}\t{h.evalue:.2e}\n"
+                            f"{strand_str}\t{h.profile}\t{h.parent_family}\t{h.role}\t{h.score:.1f}\t{h.evalue:.2e}\t"
+                            f"{h.hmm_cov:.2f}\t{h.seq_cov:.2f}\n"
                         )
     return genes_tsv
 

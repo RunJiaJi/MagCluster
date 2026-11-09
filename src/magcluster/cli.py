@@ -24,7 +24,7 @@ from .core.parser import (
 )
 from .core.predict import GenePredictor
 from .core.scoring import ClusterScorer
-from .core.search import DEFAULT_SCORE_CUTOFF, MagnetosomeSearcher
+from .core.search import DEFAULT_HMM_COV_CUTOFF, DEFAULT_SCORE_CUTOFF, MagnetosomeSearcher
 from .data import get_hmm_path, load_rules
 from .utils.io import (
     GenomeSummaryRow,
@@ -321,6 +321,12 @@ def run_pipeline(
              "trusted cutoffs from rules.yaml are used (25.0 for all built-in profiles).  "
              "\\[default: per-profile cutoff (25.0)]"
     ),
+    min_hmm_cov: float = typer.Option(
+        DEFAULT_HMM_COV_CUTOFF,
+        "--min-hmm-cov",
+        min=0.0, max=1.0,
+        help="Minimum fraction of the HMM profile covered by the alignment (0-1)."
+    ),
     max_gap: int = typer.Option(
         5,
         "--max-gap",
@@ -445,9 +451,9 @@ def run_pipeline(
             start_time=start_time, inputs=inputs, expanded_files=expanded_files,
             skipped_files=skipped_files, duplicate_files=duplicate_files, removed=removed,
             outdir=outdir, log_file=log_file, threads=threads, evalue=evalue, score=score,
-            max_gap=max_gap, threshold=threshold, flank=flank, meta=meta, identity=identity,
-            batch_size=batch_size, clinker_opts=clinker_opts, static_plot=static_plot,
-            no_plot=no_plot, force=force,
+            min_hmm_cov=min_hmm_cov, max_gap=max_gap, threshold=threshold, flank=flank, meta=meta,
+            identity=identity, batch_size=batch_size, clinker_opts=clinker_opts,
+            static_plot=static_plot, no_plot=no_plot, force=force,
         )
     except BaseException as e:
         if not isinstance(e, (typer.Exit, SystemExit)):
@@ -461,7 +467,7 @@ def run_pipeline(
 
 def _run_genomes(
     *, start_time, inputs, expanded_files, skipped_files, duplicate_files, removed,
-    outdir, log_file, threads, evalue, score, max_gap, threshold, flank, meta,
+    outdir, log_file, threads, evalue, score, min_hmm_cov, max_gap, threshold, flank, meta,
     identity, batch_size, clinker_opts, static_plot, no_plot, force,
 ) -> int:
     """Body of `magcluster run` after the output directory and log are ready."""
@@ -484,6 +490,7 @@ def _run_genomes(
         ("evalue", f"{evalue:g}"),
         ("score", f"{score:g} (explicit, applied to all profiles)" if score is not None
                   else f"per-profile trusted cutoff from rules.yaml (default {DEFAULT_SCORE_CUTOFF:g})"),
+        ("min_hmm_cov", f"{min_hmm_cov:g}"),
         ("max_gap", str(max_gap)),
         ("max_distance_bp", "25000 (fixed)"),
         ("threshold (min distinct non-Feo families)", str(threshold)),
@@ -519,7 +526,9 @@ def _run_genomes(
 
     # Initialize engines
     predictor = GenePredictor(meta=meta)
-    searcher = MagnetosomeSearcher(evalue_cutoff=evalue, score_cutoff=score, cpus=eff_threads)
+    searcher = MagnetosomeSearcher(
+        evalue_cutoff=evalue, score_cutoff=score, hmm_cov_cutoff=min_hmm_cov, cpus=eff_threads
+    )
     clusterer = ClusterEngine(
         max_intergenic_genes=max_gap,
         min_distinct_families=threshold,

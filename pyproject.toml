@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "magcluster"
-version = "1.1.2"
+version = "1.1.3"
 description = "Fast, accurate, Prokka-free Magnetosome Gene Cluster (MGC) identification, classification, and visualization"
 readme = "README.md"
 authors = [
