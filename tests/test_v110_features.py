@@ -55,9 +55,9 @@ def run_cli(*args):
 # 1. Version bump
 # --------------------------------------------------------------------------
 def test_version_is_current():
-    assert __version__ == "1.1.1"
+    assert __version__ == "1.1.2"
     res = run_cli("--version")
-    assert res.exit_code == 0 and "1.1.1" in flat(res.output)
+    assert res.exit_code == 0 and "1.1.2" in flat(res.output)
 
 
 # --------------------------------------------------------------------------

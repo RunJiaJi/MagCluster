@@ -2,7 +2,7 @@
 
 [![Python Version](https://img.shields.io/badge/python-3.10%2B-blue?style=flat-square&logo=python)](https://www.python.org/)
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-green.svg?style=flat-square)](https://www.gnu.org/licenses/gpl-3.0)
-[![Version](https://img.shields.io/badge/version-1.1.1-orange?style=flat-square)](https://github.com/RunJiaJi/MagCluster)
+[![Version](https://img.shields.io/badge/version-1.1.2-orange?style=flat-square)](https://github.com/RunJiaJi/MagCluster)
 
 [English](https://github.com/RunJiaJi/MagCluster/blob/main/README.md) | [中文说明](https://github.com/RunJiaJi/MagCluster/blob/main/README_zh.md)
 
