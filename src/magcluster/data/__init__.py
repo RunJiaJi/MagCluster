@@ -1,7 +1,7 @@
 """Access packaged data assets (HMMs and rules)."""
 
 from pathlib import Path
-from typing import Any, Dict
+from typing import Any, Dict, Optional
 import yaml
 
 DATA_DIR = Path(__file__).resolve().parent
@@ -20,7 +20,7 @@ def get_rules_path() -> Path:
         raise FileNotFoundError(f"Rules configuration not found at {p}")
     return p
 
-def load_rules(custom_rules_path: Path = None) -> Dict[str, Any]:
+def load_rules(custom_rules_path: Optional[Path] = None) -> Dict[str, Any]:
     """Load default or custom rules configuration."""
     target = custom_rules_path or get_rules_path()
     with open(target, "r", encoding="utf-8") as f:

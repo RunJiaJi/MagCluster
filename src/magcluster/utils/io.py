@@ -80,15 +80,6 @@ def _short_cluster_id(cluster_id: str, genome_name: str) -> str:
     return cluster_id
 
 
-def _short_gene_id(gene_id: str, genome_name: str) -> str:
-    """Strip a redundant leading ``{genome_name}_`` prefix from *gene_id* for per-genome files."""
-    prefix = f"{genome_name}_"
-    if genome_name and gene_id.startswith(prefix) and len(gene_id) > len(prefix):
-        rest = gene_id[len(prefix):]
-        return f"gene_{rest}" if rest.isdigit() else rest
-    return gene_id
-
-
 def write_genome_cluster_tables(
     genome_name: str,
     clusters: List[MGCCluster],
@@ -108,14 +99,15 @@ def write_genome_cluster_tables(
             if c.genome_name != genome_name:
                 continue
             short_cid = _short_cluster_id(c.cluster_id, genome_name)
+            clustered_ids = c.clustered_hit_ids
+            use_all_genes = not clustered_ids and bool(c.all_genes)
             for g in c.all_genes:
-                if g.gene_id in hits:
+                if g.gene_id in hits and g.gene_id not in written_genes and (use_all_genes or g.gene_id in clustered_ids):
                     written_genes.add(g.gene_id)
                     h = hits[g.gene_id]
-                    short_gid = _short_gene_id(g.gene_id, genome_name)
-                    strand_str = "+" if g.strand > 0 else ("-" if g.strand < 0 else "-")
+                    strand_str = "+" if g.strand > 0 else "-"
                     f.write(
-                        f"{short_cid}\t{short_gid}\t{g.contig_id}\t{g.start}\t{g.end}\t"
+                        f"{short_cid}\t{g.gene_id}\t{g.contig_id}\t{g.start}\t{g.end}\t"
                         f"{strand_str}\t{h.profile}\t{h.parent_family}\t{h.role}\t{h.score:.1f}\t{h.evalue:.2e}\t"
                         f"{h.hmm_cov:.2f}\t{h.seq_cov:.2f}\n"
                     )
@@ -125,13 +117,12 @@ def write_genome_cluster_tables(
             for gene_id, h in hits.items():
                 if gene_id not in written_genes:
                     g = genes_lookup.get(gene_id)
-                    if g and getattr(g, "genome_name", "genome") == genome_name:
-                        short_gid = _short_gene_id(g.gene_id, genome_name)
+                    if g and getattr(g, "genome_name", None) in (None, genome_name):
                         start_str = str(g.start) if g.start > 0 else "-"
                         end_str = str(g.end) if g.end > 0 else "-"
-                        strand_str = "+" if g.strand > 0 else ("-" if g.strand < 0 else "-")
+                        strand_str = "+" if g.strand > 0 else "-"
                         f.write(
-                            f"unclustered\t{short_gid}\t{g.contig_id}\t{start_str}\t{end_str}\t"
+                            f"unclustered\t{g.gene_id}\t{g.contig_id}\t{start_str}\t{end_str}\t"
                             f"{strand_str}\t{h.profile}\t{h.parent_family}\t{h.role}\t{h.score:.1f}\t{h.evalue:.2e}\t"
                             f"{h.hmm_cov:.2f}\t{h.seq_cov:.2f}\n"
                         )
@@ -154,13 +145,14 @@ def export_genome_magnetosome_fasta(
             if c.genome_name != genome_name:
                 continue
             short_cid = _short_cluster_id(c.cluster_id, genome_name)
+            clustered_ids = c.clustered_hit_ids
+            use_all_genes = not clustered_ids and bool(c.all_genes)
             for g in c.all_genes:
-                if g.gene_id in hits and g.gene_id not in seen_genes:
+                if g.gene_id in hits and g.gene_id not in seen_genes and (use_all_genes or g.gene_id in clustered_ids):
                     seen_genes.add(g.gene_id)
                     h = hits[g.gene_id]
-                    short_gid = _short_gene_id(g.gene_id, genome_name)
                     hdr = (
-                        f">{short_gid} cluster={short_cid} "
+                        f">{g.gene_id} cluster={short_cid} "
                         f"family={h.parent_family} profile={h.profile} score={h.score:.1f} evalue={h.evalue:.2e}"
                     )
                     f.write(f"{hdr}\n{g.translation}\n")
@@ -170,11 +162,10 @@ def export_genome_magnetosome_fasta(
             for gene_id, h in hits.items():
                 if gene_id not in seen_genes:
                     g = genes_lookup.get(gene_id)
-                    if g and getattr(g, "genome_name", "genome") == genome_name:
+                    if g and getattr(g, "genome_name", None) in (None, genome_name):
                         seen_genes.add(gene_id)
-                        short_gid = _short_gene_id(g.gene_id, genome_name)
                         hdr = (
-                            f">{short_gid} cluster=unclustered "
+                            f">{g.gene_id} cluster=unclustered "
                             f"family={h.parent_family} profile={h.profile} score={h.score:.1f} evalue={h.evalue:.2e}"
                         )
                         f.write(f"{hdr}\n{g.translation}\n")

@@ -11,6 +11,9 @@ from .predict import PredictedGene
 DEFAULT_SCORE_CUTOFF = 25.0
 #: Default minimum fraction of the HMM profile covered by the alignment (0-1).
 DEFAULT_HMM_COV_CUTOFF = 0.5
+#: Chimeric fusion profiles allowed to fall back to either constituent parent family
+#: when the fusion profile itself fails hmm_cov (e.g. single-domain MamO hitting MamEO).
+FUSION_PROFILE_FAMILIES = {"MamEO": ("MamE", "MamO")}
 
 
 def _merged_span_length(intervals: List[Tuple[int, int]]) -> int:
@@ -162,7 +165,7 @@ class MagnetosomeSearcher:
         # each parent_family (so domain sub-profiles like MamO_domain can win when
         # MamO_full has hmm_cov < hmm_cov_cutoff, without falling back to an unrelated
         # lower-scoring family).
-        best_family_by_gene: Dict[str, Tuple[float, str]] = {}
+        best_family_by_gene: Dict[str, Tuple[float, str, str]] = {}
         best_passing_by_gene_fam: Dict[Tuple[str, str], MagnetosomeHit] = {}
 
         for hmm, top_hits in zip(self.hmms, search_results):
@@ -186,7 +189,7 @@ class MagnetosomeSearcher:
                     continue
 
                 if g_id not in best_family_by_gene or score > best_family_by_gene[g_id][0]:
-                    best_family_by_gene[g_id] = (score, parent_fam)
+                    best_family_by_gene[g_id] = (score, parent_fam, prof_name)
 
                 g_info = gene_lookup[g_id]
                 hmm_cov, seq_cov = _compute_hit_coverages(hit, hmm_len, len(g_info.translation))
@@ -217,9 +220,14 @@ class MagnetosomeSearcher:
                 )
 
         best_hits_by_gene: Dict[str, MagnetosomeHit] = {}
-        for g_id, (_, winning_fam) in best_family_by_gene.items():
-            fam_key = (g_id, winning_fam)
-            if fam_key in best_passing_by_gene_fam:
-                best_hits_by_gene[g_id] = best_passing_by_gene_fam[fam_key]
+        for g_id, (_, winning_fam, winning_prof) in best_family_by_gene.items():
+            candidate_fams = FUSION_PROFILE_FAMILIES.get(winning_prof, (winning_fam,))
+            best_hit: Optional[MagnetosomeHit] = None
+            for fam in candidate_fams:
+                cand = best_passing_by_gene_fam.get((g_id, fam))
+                if cand is not None and (best_hit is None or cand.score > best_hit.score):
+                    best_hit = cand
+            if best_hit is not None:
+                best_hits_by_gene[g_id] = best_hit
 
         return best_hits_by_gene

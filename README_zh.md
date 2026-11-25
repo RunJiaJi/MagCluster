@@ -2,7 +2,7 @@
 
 [![Python Version](https://img.shields.io/badge/python-3.10%2B-blue?style=flat-square&logo=python)](https://www.python.org/)
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-green.svg?style=flat-square)](https://www.gnu.org/licenses/gpl-3.0)
-[![Version](https://img.shields.io/badge/version-1.1.3-orange?style=flat-square)](https://github.com/RunJiaJi/MagCluster)
+[![Version](https://img.shields.io/badge/version-1.1.4-orange?style=flat-square)](https://github.com/RunJiaJi/MagCluster)
 
 [English](https://github.com/RunJiaJi/MagCluster/blob/main/README.md) | [中文说明](https://github.com/RunJiaJi/MagCluster/blob/main/README_zh.md)
 
@@ -14,7 +14,7 @@
 
 - **独立的 `magcluster clinker` 绘图子命令**：不再需要为了调配色、调阈值或换顺序而重跑基因预测和 HMM 比对，直接基于已生成的 `clusters_gbk/` 或 `.gbk` 文件即可秒级重绘，自动保留 8 大磁小体蛋白家族配色和结构域标签；支持用 `-l/--list` 指定基因簇排列顺序（例如按进化树顺序），也支持直接传入外部 GenBank 文件进行磁小体基因自动注释与可视化。
 - **大规模基因组自动分批绘图（`--batch-size`）**：当检测到的 MGC 数量较多时，默认按输入顺序每 **50 个基因簇** 自动拆分为多个交互式网页（`MGC_align_batch01.html`、`MGC_align_batch02.html`……），避免上百个基因簇塞进单张 HTML 导致的渲染与浏览器打开卡顿；设为 `0` 可关闭分批。
-- **全队列汇总表（`mgc_summary.tsv`）**：输出目录新增样本级总表，每个输入基因组占一行，汇总成簇状态、预测基因数、HMM 命中数、亚簇数、各亚簇精确坐标、矿物类型、边界/跨原点标签和 `.gbk` 相对路径，方便大批量筛选统计。
+- **全队列汇总表（`mgc_summary.tsv`）**：输出目录新增样本级总表，每个输入基因组占一行，汇总成簇状态、预测基因数、HMM 命中数、亚簇数、各亚簇精确坐标、5 类矿物类型（`Magnetite` / `Greigite` / `Both` / `Putative_Greigite` / `Unknown`）、质控标签（`Contig_Edge`、`Multi_Contig`、`Spans_Origin`）和 `.gbk` 相对路径，方便大批量筛选统计。
 - **超长基因组名零告警兼容**：针对携带完整物种名的长文件名（如 `GCA_002753255.1_Candidatus_...`），保持 `{cluster_id}.gbk` 文件名及 Clinker 轨道标题完整不变，仅将 `.gbk` 内部 `LOCUS` / `ACCESSION` / `VERSION` 头信息智能缩短为标准登录号，彻底消除 Biopython 长度告警。
 
 ## v1.0 做了哪些更新？
@@ -111,12 +111,12 @@ magcluster clinker results/ -o results/MGC_replot.html --clinker-opts "-na -ufo"
 magcluster run [选项] 输入文件/文件夹...
 ```
 
-`输入` 可以是文件或文件夹。文件夹里只读取带基因组扩展名的文件（`.gbk`、`.gbff`、`.gbf`、`.gb`、`.fa`、`.fasta`、`.fna`、`.fsa`、`.fsa_nt`、`.faa`、`.pep`，都可以再加 `.gz`）。其他文件（例如 `README.txt`）和隐藏文件会跳过，并给出警告。直接写在命令行里的文件没有扩展名也能用，程序会根据第一行判断格式。不支持 GFF3，因为 GFF3 里没有序列，请改用对应的 GenBank/GBFF、FASTA 或 Prodigal `.faa` 文件。
+`输入` 可以是文件或文件夹。文件夹里只读取带基因组扩展名的文件（`.gbk`、`.gbff`、`.gbf`、`.gb`、`.fa`、`.fasta`、`.fna`、`.fsa`、`.fsa_nt`、`.faa`、`.pep`，都可以再加 `.gz`）。其他非隐藏文件（例如 `README.txt`）会给出警告并跳过，`.` 开头的隐藏文件静默跳过。直接写在命令行里的文件没有扩展名也能用，程序会根据第一行判断格式。不支持 GFF3，因为 GFF3 里没有序列，请改用对应的 GenBank/GBFF、FASTA 或 Prodigal `.faa` 文件。
 
 | 参数 | 别名 | 默认值 | 作用说明 |
 | :--- | :--- | :--- | :--- |
 | `--outdir` | `-o` | `magcluster_results` | 输出结果存放目录（不能是已存在的普通文件） |
-| `--force` | `-f` | `False` | 允许使用非空的输出目录。会先删除该目录里上一次 MagCluster 运行的输出（`mgc_summary.tsv`、样本表格、FASTA、`MGC_align*.html`、`clusters_gbk/`、`figures/`、`magcluster.log`），其他文件保留 |
+| `--force` | `-f` | `False` | 允许使用非空的输出目录。会先删除该目录里上一次 MagCluster 运行的输出（`mgc_summary.tsv`、样本表格、FASTA、`MGC_align*.html`、`MGC_align_batches.tsv`、`clusters_gbk/`、`figures/`、`magcluster*.log`），其他文件保留 |
 | `--threads` | `-t` | `0` | CPU 线程数（`0` 表示自动检测当前可用/分配的 CPU 核心数，兼容 SLURM 等集群 `os.sched_getaffinity` 配额；超过可用核心数时自动降到可用核心数） |
 | `--evalue` | `-e` | `1e-5` | HMM 比对的 E-value 阈值（≥ 0） |
 | `--score` | `-s` | 各模型的 `trusted_cutoff`（25.0） | HMM 比对的最小 bit score。不指定时使用 `rules.yaml` 里每个模型的 `trusted_cutoff`（92 个内置模型都是 25.0）。指定后对所有模型统一使用这个值，也可以低于 25 |
@@ -138,7 +138,7 @@ magcluster run [选项] 输入文件/文件夹...
 
 基因组 ID 用于输出文件名和 `mgc_summary.tsv` 汇总表。它取自输入文件名，去掉 `.gz` 和基因组扩展名，例如 `GCF_000513295.1.fna` → `GCF_000513295.1`，`strainX.v1.fna` → `strainX.v1`。空格和特殊字符会替换成 `_`（`my strain.fna` → `my_strain`）。两个输入得到同一个 ID 时（例如 NCBI Datasets 下载的 `genomic.gbff`），后面的会加后缀（`genomic_2`），并给出警告。同一个文件重复输入只处理一次。
 
-退出码：成功为 `0`。有输入文件读不了、Clinker 失败，或者输出目录不可用时为 `1`，其他基因组的结果照常写出。命令行参数不合法时为 `2`。
+退出码：成功为 `0`。未找到输入文件、有输入文件读不了、Clinker 或 `--static-plot` 失败，或者输出目录不可用时为 `1`，其他基因组的结果照常写出。命令行参数不合法时为 `2`。
 
 ### `magcluster clinker`
 
@@ -163,7 +163,7 @@ magcluster clinker [选项] [输入文件/文件夹...]
 | `--clinker-opts` | | `None` | 透传给 Clinker 的附加参数（例如 `"-na -ufo"`、`"-asc"`、`"-mo matrix.tsv"`） |
 | `--clinker-help` | | | 在终端打印 Clinker 常用参数指南并退出 |
 | `--force` | `-f` | `False` | 允许覆盖已存在的目标 HTML 文件（不会删除输出目录中已有的 TSV、FASTA 或 `clusters_gbk/`） |
-| `--log` | | `<outdir>/magcluster_clinker.log` | 把绘图运行日志写到指定文件 |
+| `--log` | | `<outdir>/magcluster_clinker.log`（`-o` 为 `.html` 时默认不生成） | 把绘图运行日志写到指定文件 |
 | `--help` | `-h` | | 显示帮助并退出 |
 
 常用示例：
@@ -207,7 +207,7 @@ results/
     └── {cluster_id}.svg                # 静态基因簇图（pyGenomeViz）
 ```
 
-没有任何磁小体命中的基因组不会生成单样本表格和 FASTA；仅有散落同源基因但未达到成簇阈值的基因组（`mgc_summary.tsv` 中 `status = no_MGC`）仍会生成 `{genome}_mgc_genes.tsv`（`cluster_id` 列记为 `unclustered`）以保留全部命中信息。所有输入基因组都会记录在 `mgc_summary.tsv` 和 `magcluster.log` 里。
+没有任何磁小体命中的基因组不会生成单样本表格和 FASTA；仅有散落同源基因但未达到成簇阈值的基因组（`mgc_summary.tsv` 中 `status = no_MGC`）仍会生成 `{genome}_mgc_genes.tsv`（`cluster_id` 列记为 `unclustered`）和 `{genome}_magnetosome_proteins.faa` 以保留全部命中信息。所有输入基因组都会记录在 `mgc_summary.tsv` 和 `magcluster.log` 里。
 
 ### 0. 全队列汇总表（`mgc_summary.tsv`）
 
@@ -220,7 +220,7 @@ results/
 | `n_genes`, `n_hits`, `n_clustered_hits` | 预测/读取的 CDS 总数、磁小体 HMM 命中总数、归入 MGC 的命中数 |
 | `cluster_id`, `n_subclusters`, `coordinates` | MGC 编号、共线性亚簇数量，以及各亚簇精确基因组区间坐标 |
 | `n_distinct_families`, `families` | MGC 内去重后的非 Feo 磁小体蛋白家族数及排序列表 |
-| `mineral_type`, `flags` | 预测矿物类型（`Magnetite` / `Greigite` / `Putative/Mixed`）及质控标签（`Contig_Edge`、`Spans_Origin`） |
+| `mineral_type`, `flags` | 预测矿物类型（`Magnetite` / `Greigite` / `Both` / `Putative_Greigite` / `Unknown`）及质控标签（`Contig_Edge` 或 `Contig_Edge(loc1;loc3)`、`Multi_Contig`、`Spans_Origin`） |
 | `gbk_file` | 切片 GenBank 文件相对路径（`clusters_gbk/{cluster_id}.gbk`） |
 
 ### 1. 基因注释表格（`{genome}_mgc_genes.tsv`）
@@ -313,8 +313,17 @@ magcluster clinker --clinker-help
 
 1. 同一条 contig 上的磁小体 HMM 命中，如果相邻两个命中之间最多隔 `--max-gap`（默认 5）个非磁小体基因、并且距离不超过 25 kb，就归为一组。Feo（铁转运）命中不能开启或延长一个组。
 2. 一个组里至少要有 `--threshold`（默认 3）个不同的磁小体家族才保留。**任意非 Feo 家族都算**，既包括核心 Mam 家族，也包括 Mad、Mms、Man、Mae、Maq、Mca 等辅助家族；Feo 家族不算。
-3. 保留下来的组两端各延伸 `--flank`（默认 3）个基因。同一个基因组里所有保留的组合并报告为一个 MGC（`{genome}_MGC`），每个组是一个亚簇（`loc1`、`loc2`……）。
-4. 在完整的环状复制子上（GenBank 标注为 `circular`，或者 FASTA 表头含有 "complete genome"、"complete sequence" 或 "circular"），如果 MGC 的亚簇分布在原点两侧，报告的坐标会是 `start > end`，并标注 "(spans origin)"。
+3. 保留下来的组两端各延伸 `--flank`（默认 3）个基因（遇到 > 25 kb 间隔即停止），25 kb 以内相邻或重叠的侧翼切片合并为一个亚簇，但不会把侧翼里的远处散落命中吸纳进 MGC 成员。同一个基因组里所有保留的切片合并报告为一个 MGC（`{genome}_MGC`），每个切片为一个亚簇（`loc1`、`loc2`……）。
+4. 在完整的环状复制子上（GenBank 标注为 `circular`，或 FASTA 表头含 "complete genome"、"complete sequence"、`circular=true`/`is_circular=true` 或 `circular`，且排除 `linear`、`partial`、`non-circular` 与 `circular=false`），如果 MGC 边界亚簇跨 0 bp 原点相距 ≤ 25 kb，报告的坐标会是 `start > end`，标注 "(spans origin)" 并记入 `Spans_Origin` 标签（跨原点拆分的 2+2 磁小体簇在满足 `--max-gap` 和 25 kb 条件时也会被挽救）。
+5. **质控标签（`flags`）**：
+   - `Contig_Edge`（多亚簇时精确标注受影响亚簇，如 `Contig_Edge(loc2)`、`Contig_Edge(loc1;loc3)`）：与 `--flank` 解耦，仅当**线性 contig** 上有成簇磁小体蛋白直接位于该 contig 首或尾基因位置（提示潜在截断）时标记；完整环状复制子不标记 `Contig_Edge`。
+   - `Multi_Contig`：当 MGC 的多个亚簇分布在多条不同 contig 上时附加标记。
+6. **矿物类型预测（`mineral_type`）**：基于簇内去重后的独立蛋白家族统计——greigite 相关家族数（`G`，含 `MamT_greigite`）、排除两类共用的 `MamK` 与单分裂基因互补端后的非 greigite 核心家族数（`M`）、核心家族常规拷贝与 `_greigite` 拷贝是否并存、磁铁矿特异核心家族（`MamL` / `MamM`），以及全部非 greigite 核心家族数（`M_all`）：
+   - `Both`：`G ≥ 3` 且（（存在核心家族常规 + `_greigite` 双拷贝并存且 `M ≥ 2`）或（含有 `MamL`/`MamM` 且 `M ≥ 3`））
+   - `Greigite`：`G ≥ 3`（不满足 `Both` 时）
+   - `Magnetite`：（`G = 0` 且 `M_all ≥ 3`）或（`1 ≤ G ≤ 2` 且 `M ≥ 3`）
+   - `Putative_Greigite`：`1 ≤ G ≤ 2` 且 `M < 3`
+   - `Unknown`：`G = 0` 且 `M_all < 3`（核心矿化证据不足）
 
 `magcluster db` 中列出的 10 个核心判定家族如下：
 

@@ -232,7 +232,7 @@ def test_batch_progress_not_swallowed_and_batch_index_written_and_cleaned(tmp_pa
     out_txt = flat(res.output)
     # Batch label is visible (not stripped by Rich markup)
     assert "(batch 1/2, 2 clusters: strain01_MGC .. strain02_MGC)" in out_txt
-    assert "(batch 2/2, 1 clusters: strain03_MGC)" in out_txt
+    assert "(batch 2/2, 1 cluster: strain03_MGC)" in out_txt
 
     idx_tsv = out_dir / "MGC_align_batches.tsv"
     assert idx_tsv.exists()

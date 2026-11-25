@@ -14,7 +14,7 @@ from Bio.Seq import Seq
 from Bio.SeqFeature import FeatureLocation, SeqFeature
 from Bio.SeqRecord import SeqRecord
 from ..core.cluster import MGCCluster
-from ..core.parser import InputFormatError, _check_not_binary, _short_reason, parse_genbank
+from ..core.parser import InputFormatError, _check_not_binary, _short_reason, has_defined_sequence, parse_genbank
 from ..core.predict import PredictedGene
 from ..core.search import MagnetosomeHit, MagnetosomeSearcher
 from ..data import load_rules
@@ -34,8 +34,9 @@ WHOLE_GENOME_CDS_WARN_THRESHOLD = 500
 # Standard INSDC / RefSeq assembly or sequence accession embedded in genome names.
 _ACCESSION_RE = re.compile(
     r"(?:^|(?<=_))"
-    r"(GC[AF]_\d+(?:\.\d+)?"
-    r"|(?:NC|NZ|NW|NT|NG|CP|AP|AE|AL|AM|BA|BK|BX|CR|CT|CU|FM|FN|FO|FP|FQ|FR|HE|HF|HG|LN|LO|LP|LQ|LR|LS|LT|OU|OV|OW|OX|OY|OZ)_?[A-Z0-9]+(?:\.\d+)?"
+    r"(GC[AF]_\d{6,}(?:\.\d+)?"
+    r"|(?:NC|NZ|NW|NT|NG)_(?:[A-Z]{2,6})?\d{6,}(?:\.\d+)?"
+    r"|(?:CP|AP|AE|AL|AM|BA|BK|BX|CR|CT|CU|FM|FN|FO|FP|FQ|FR|HE|HF|HG|LN|LO|LP|LQ|LR|LS|LT|OU|OV|OW|OX|OY|OZ)\d{6,}(?:\.\d+)?"
     r"|[A-Z]{4,6}\d{8,}(?:\.\d+)?)"
     r"(?=$|[_.-])"
 )
@@ -89,10 +90,8 @@ def get_family_class(gene_name: str, hit: Optional[MagnetosomeHit] = None) -> st
 
     gn = gene_name.lower()
     for prefix in ["mam", "mms", "mad", "man", "mae", "maq", "mca", "feo"]:
-        if prefix in gn:
+        if gn.startswith(prefix):
             return prefix
-    if "iron" in gn:
-        return "feo"
     return "Other"
 
 def get_display_label(hit: MagnetosomeHit) -> str:
@@ -222,7 +221,6 @@ def inspect_genbank_for_clinker(
     if not records:
         raise InputFormatError("no GenBank records found (expected a 'LOCUS' line)")
 
-    is_magcluster_slice = any("Magnetosome Gene Cluster" in (r.description or "") for r in records)
     note_hits: Dict[str, MagnetosomeHit] = {}
 
     gene_idx = 0
@@ -248,7 +246,7 @@ def inspect_genbank_for_clinker(
             if h is not None:
                 note_hits[key] = h
 
-    if note_hits or is_magcluster_slice:
+    if note_hits:
         return note_hits, gene_idx, True
 
     # External GenBank file: annotate CDS features with the built-in magnetosome HMMs
@@ -306,11 +304,11 @@ def export_cluster_to_genbank(
         if not ctg_genes:
             continue
 
-        offset = ctg_genes[0].start - 1  # 0-based slice start
-        end_idx = ctg_genes[-1].end      # 0-based slice end (exclusive)
+        offset = min(g.start for g in ctg_genes) - 1  # 0-based slice start
+        end_idx = max(g.end for g in ctg_genes)        # 0-based slice end (exclusive)
 
         ctg_rec = contigs_dict.get(ctg_id)
-        if ctg_rec and len(ctg_rec.seq) >= end_idx:
+        if ctg_rec and has_defined_sequence(ctg_rec.seq) and len(ctg_rec.seq) >= end_idx:
             sub_seq = ctg_rec.seq[offset:end_idx]
         else:
             span_len = max(1, end_idx - offset)
@@ -373,50 +371,25 @@ def export_cluster_to_genbank(
     out_path.parent.mkdir(parents=True, exist_ok=True)
     SeqIO.write(records_to_write, str(out_path), "genbank")
 
-def export_all_clusters_for_clinker(
-    clusters: List[MGCCluster],
-    contigs_lookup: Dict[str, Dict[str, SeqRecord]],
-    hits: Dict[str, MagnetosomeHit],
-    out_dir: Path,
-    hits_by_genome: Optional[Dict[str, Dict[str, MagnetosomeHit]]] = None,
-) -> List[Path]:
-    """Export sliced GenBank files for clinker visualization without creating extra CSV tables.
-
-    ``hits_by_genome`` (genome name -> hits of that genome) takes precedence over the
-    flat ``hits`` dict so that identical gene IDs in different genomes never mix.
-    """
-    gbk_dir = out_dir / "clusters_gbk"
-    gbk_dir.mkdir(parents=True, exist_ok=True)
-    for old_gbk in gbk_dir.glob("*.gbk"):
-        old_gbk.unlink()
-
-    gbk_files = []
-    for c in clusters:
-        gbk_file = gbk_dir / f"{c.cluster_id}.gbk"
-        genome_contigs = contigs_lookup.get(c.genome_name, {})
-        g_hits = hits_by_genome.get(c.genome_name, {}) if hits_by_genome is not None else hits
-        export_cluster_to_genbank(c, genome_contigs, g_hits, gbk_file)
-        gbk_files.append(gbk_file)
-
-    return gbk_files
 
 def _read_gbk_record_names(gbk_path: Path) -> List[Tuple[str, str]]:
-    """Return ``[(locus_name, accession_id), ...]`` for each GenBank record in *gbk_path*."""
+    """Return ``[(locus_name, version_or_accession), ...]`` for each GenBank record in *gbk_path*."""
     pairs: List[Tuple[str, str]] = []
     cur_locus: Optional[str] = None
     cur_acc: Optional[str] = None
+    opener = gzip.open if str(gbk_path).lower().endswith(".gz") else open
     try:
-        with open(gbk_path, "r", encoding="utf-8", errors="ignore") as f:
+        with opener(gbk_path, "rt", encoding="utf-8", errors="ignore") as f:
             for line in f:
                 if line.startswith("LOCUS"):
                     parts = line.split()
                     cur_locus = parts[1] if len(parts) > 1 else ""
                     cur_acc = None
-                elif line.startswith("VERSION") and cur_locus is not None and not cur_acc:
+                elif line.startswith("ACCESSION") and cur_locus is not None and not cur_acc:
                     parts = line.split()
                     if len(parts) > 1 and parts[1] != ".":
                         cur_acc = parts[1]
-                elif line.startswith("ACCESSION") and cur_locus is not None:
+                elif line.startswith("VERSION") and cur_locus is not None:
                     parts = line.split()
                     if len(parts) > 1 and parts[1] != ".":
                         cur_acc = parts[1]
@@ -477,19 +450,24 @@ def customize_clinker_html(
         c_hits = hits
         if hits_by_cluster is not None:
             c_hits = hits_by_cluster.get(cname, hits)
-        by_coord = {
-            (h.start, h.end, h.strand): h
-            for h in c_hits.values()
-            if h.end > 0
-        }
+        by_locus_coord: Dict[Tuple[str, int, int, int], MagnetosomeHit] = {}
+        coord_hits: Dict[Tuple[int, int, int], List[MagnetosomeHit]] = {}
+        for h in c_hits.values():
+            if h.end > 0:
+                by_locus_coord[(h.contig_id, h.start, h.end, h.strand)] = h
+                coord_hits.setdefault((h.start, h.end, h.strand), []).append(h)
+        by_unique_coord = {k: v[0] for k, v in coord_hits.items() if len(v) == 1}
+        cluster_loci = cluster.get("loci", [])
+        n_loci = len(cluster_loci)
         remaining_pairs = list((locus_names_by_cluster or {}).get(cname, []))
-        for locus in cluster.get("loci", []):
+        for locus in cluster_loci:
             cur_lname = locus.get("name", "")
             for p_idx, (loc_short, loc_full) in enumerate(remaining_pairs):
                 if cur_lname == loc_short or loc_full.startswith(cur_lname):
                     locus["name"] = loc_full
                     remaining_pairs.pop(p_idx)
                     break
+            resolved_lname = locus.get("name", "")
             for gene in locus.get("genes", []):
                 names = gene.get("names", {})
                 lt = names.get("locus_tag")
@@ -500,10 +478,27 @@ def customize_clinker_html(
                     hit = c_hits[lt]
                 elif gn and gn in c_hits:
                     hit = c_hits[gn]
-                elif names.get("note"):
+                if hit is None and names.get("note"):
                     hit = _hit_from_profile_note(names.get("note", ""), gene_id=lt or gn or "")
-                elif by_coord and "start" in gene and "end" in gene:
-                    hit = by_coord.get((int(gene["start"]) + 1, int(gene["end"]), int(gene.get("strand", 1))))
+                # Coordinate fallback only applies when a CDS lacks a locus_tag (or had a
+                # duplicate locus_tag disambiguated during parsing). Never match a non-MGC
+                # gene that already carries a distinct locus_tag, and never leak coordinates
+                # across loci in multi-locus clusters.
+                allow_coord_fallback = (not lt) or (f"{lt}_2" in c_hits)
+                if (
+                    hit is None
+                    and allow_coord_fallback
+                    and (by_locus_coord or by_unique_coord)
+                    and "start" in gene
+                    and "end" in gene
+                ):
+                    g_key = (int(gene["start"]) + 1, int(gene["end"]), int(gene.get("strand") or 1))
+                    hit = (
+                        by_locus_coord.get((resolved_lname, *g_key))
+                        or by_locus_coord.get((cur_lname, *g_key))
+                    )
+                    if hit is None and n_loci == 1:
+                        hit = by_unique_coord.get(g_key)
 
                 if hit:
                     protein_name = get_display_label(hit)

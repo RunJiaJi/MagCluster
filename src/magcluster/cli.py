@@ -536,7 +536,6 @@ def _run_genomes(
     )
 
     all_clusters = []
-    all_scores = {}
     hits_by_genome: Dict[str, Dict] = {}
     gbk_files: List[Path] = []
     written_tsvs: List[Path] = []
@@ -553,7 +552,7 @@ def _run_genomes(
         try:
             status = _process_one_genome(
                 f_path, genome_name, predictor, searcher, clusterer, threshold, meta, outdir,
-                gbk_dir, all_clusters, all_scores, hits_by_genome, gbk_files, written_tsvs,
+                gbk_dir, all_clusters, hits_by_genome, gbk_files, written_tsvs,
                 written_faas, cohort_rows,
             )
         except InputFormatError as e:
@@ -574,8 +573,8 @@ def _run_genomes(
         detail(f"  {genome_name}: {status} [{elapsed_g:.2f}s]")
         summary_rows.append(f"{genome_name}\t{f_path}\t{elapsed_g:.2f}\t{status}")
 
-    # 5. Export results (per-genome tables and FASTA were written right after each genome)
-    say("\n[bold cyan]Writing per-genome reports and magnetosome sequences...[/bold cyan]")
+    # 5. Export cohort summary (per-genome tables, FASTA and GBK slices were written right after each genome)
+    say("\n[bold cyan]Writing cohort summary table...[/bold cyan]")
     summary_tsv = write_cohort_summary_table(cohort_rows, outdir)
 
     clinker_htmls: List[Path] = []
@@ -584,8 +583,6 @@ def _run_genomes(
     figure_files: List[Path] = []
     # 6. Clinker visualization
     if all_clusters:
-        say("[dim]-> Preparing sliced GenBank files for Clinker visualization...[/dim]")
-
         if not no_plot:
             clinker_base_html = outdir / "MGC_align.html"
             hits_by_cluster = {c.cluster_id: hits_by_genome.get(c.genome_name, {}) for c in all_clusters}
@@ -597,8 +594,9 @@ def _run_genomes(
                     first_id = Path(batch_gbks[0]).stem
                     last_id = Path(batch_gbks[-1]).stem
                     span_txt = first_id if len(batch_gbks) == 1 else f"{first_id} .. {last_id}"
+                    unit = "cluster" if len(batch_gbks) == 1 else "clusters"
                     say(
-                        f"[dim]-> Running Clinker (batch {b_idx}/{n_batches}, {len(batch_gbks)} clusters: "
+                        f"[dim]-> Running Clinker (batch {b_idx}/{n_batches}, {len(batch_gbks)} {unit}: "
                         f"{escape(span_txt)}): {escape(target_html.name)}...[/dim]"
                     )
 
@@ -696,8 +694,12 @@ def _run_genomes(
             b_idx_tsv = batch_index_path(outdir / "MGC_align.html")
             if b_idx_tsv.exists():
                 say(f"  • Clinker Batch Index: [underline]{escape(str(b_idx_tsv))}[/underline]")
-    for fig in figure_files:
-        detail(f"  • Static figure: {fig}")
+    if figure_files and not plot_failed:
+        fig_dir = outdir / "figures"
+        unit = "SVG file" if len(figure_files) == 1 else "SVG files"
+        say(f"  • Static Figures: [underline]{escape(str(fig_dir))}[/underline] ({len(figure_files)} {unit})")
+        for fig in figure_files:
+            detail(f"  • Static figure: {fig}")
     for p in gbk_files:
         detail(f"  • Cluster GenBank: {p}")
     console.print(f"  • Run Log: [underline]{escape(str(log_file))}[/underline]")
@@ -715,7 +717,7 @@ def _run_genomes(
 
 def _process_one_genome(
     f_path, genome_name, predictor, searcher, clusterer, threshold, meta, outdir, gbk_dir,
-    all_clusters, all_scores, hits_by_genome, gbk_files, written_tsvs, written_faas, cohort_rows,
+    all_clusters, hits_by_genome, gbk_files, written_tsvs, written_faas, cohort_rows,
 ) -> str:
     """Parse, predict, search and cluster one input; write its outputs. Returns a status line."""
     # 1. Parse input
@@ -766,6 +768,7 @@ def _process_one_genome(
 
     # 4. Cluster
     clusters = []
+    cluster_scores = {}
     if not parsed.has_coordinates:
         say(f"  [yellow]! Input protein FASTA lacks genomic coordinates (contig/start/end).[/yellow]", logging.WARNING)
         say(f"    [dim]Identified {len(hits)} magnetosome protein(s); syntenic cluster detection and Clinker plotting skipped.[/dim]")
@@ -780,7 +783,7 @@ def _process_one_genome(
             for c in clusters:
                 score_obj = ClusterScorer.score_cluster(c)
                 all_clusters.append(c)
-                all_scores[c.cluster_id] = score_obj
+                cluster_scores[c.cluster_id] = score_obj
                 sub_count = len(c.subclusters) if getattr(c, "subclusters", None) else 1
                 sub_info = f" ({sub_count} subclusters, {len(c.all_genes)} genes)" if sub_count > 1 else f" ({len(c.all_genes)} genes)"
                 coord_display = c.format_coordinates(sep=", ")
@@ -807,13 +810,15 @@ def _process_one_genome(
         export_cluster_to_genbank(c, parsed.contigs, hits, gbk_file)
         gbk_files.append(gbk_file)
 
-    n_clustered = len({g.gene_id for c in clusters for g in c.all_genes if g.gene_id in hits})
+    n_clustered = len({
+        gid
+        for c in clusters
+        for gid in (c.clustered_hit_ids or {g.gene_id for g in c.all_genes if g.gene_id in hits})
+        if gid in hits
+    })
     if clusters:
         c = clusters[0]
-        sc = all_scores[c.cluster_id]
-        row_flags = list(sc.flags)
-        if c.wraps_origin and "Spans_Origin" not in row_flags:
-            row_flags.append("Spans_Origin")
+        sc = cluster_scores[c.cluster_id]
         cohort_rows.append(GenomeSummaryRow(
             genome=genome_name,
             input_file=f_path.name,
@@ -826,7 +831,7 @@ def _process_one_genome(
             coordinates=c.format_coordinates(sep=";"),
             n_distinct_families=sc.n_mag_families,
             mineral_type=sc.mineral_type,
-            flags=",".join(row_flags) if row_flags else "-",
+            flags=",".join(sc.flags) if sc.flags else "-",
             families=",".join(sc.magnetosome_families_found) if sc.magnetosome_families_found else "-",
             gbk_file=f"clusters_gbk/{c.cluster_id}.gbk",
         ))
@@ -911,6 +916,7 @@ def clinker_cmd(
         None,
         "--clinker-opts",
         help="Additional options passed directly to clinker (e.g. '--clinker-opts \"-na -ufo\"'). "
+             "Relative output paths (e.g. -mo matrix.tsv) are written inside the output directory. "
              "Tip: use '--clinker-help' to see available clinker options.",
     ),
     clinker_help: Optional[bool] = typer.Option(

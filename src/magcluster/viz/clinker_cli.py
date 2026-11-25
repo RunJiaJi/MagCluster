@@ -208,10 +208,17 @@ def run_clinker_subcommand(
         inputs, list_file=list_file
     )
 
-    if not expanded_files and not missing_entries:
+    if not expanded_files:
         for p, reason in skipped_files:
             console.print(f"[yellow]! Skipped {escape(str(p))}: {reason}.[/yellow]")
-        console.print("[bold red]No GenBank (.gbk/.gbff) files found![/bold red]")
+        for _, reason in missing_entries:
+            console.print(f"  [bold red]Error:[/bold red] {escape(reason)}.")
+        if missing_entries:
+            console.print(
+                f"\n[bold red]✗ No valid GenBank inputs to plot ({len(missing_entries)} failed).[/bold red]"
+            )
+        else:
+            console.print("[bold red]No GenBank (.gbk/.gbff) files found![/bold red]")
         raise typer.Exit(code=1)
 
     existing_htmls = _existing_html_outputs(work_dir, base_html)
@@ -288,12 +295,6 @@ def run_clinker_subcommand(
             failed.append((entry, reason))
             say(f"  [bold red]Error:[/bold red] {escape(reason)}.", logging.ERROR)
 
-        if not expanded_files:
-            log_note = f" See the log: {escape(str(log_file))}" if log_file is not None else ""
-            say(f"\n[bold red]✗ No valid GenBank inputs to plot ({len(failed)} failed).[/bold red]{log_note}",
-                logging.ERROR)
-            raise typer.Exit(code=1)
-
         say(f"Discovered [bold]{len(expanded_files)}[/bold] GenBank cluster file(s).")
 
         hits_by_cluster: Dict[str, Dict] = {}
@@ -342,7 +343,7 @@ def run_clinker_subcommand(
                 detail(f"  {unique_stem} <- {p.resolve()} ({len(c_hits)} magnetosome gene(s))")
 
                 is_gz = str(p).lower().endswith(".gz")
-                needs_staging = is_gz or (unique_stem != p.stem)
+                needs_staging = is_gz or (unique_stem != p.stem) or (not is_genbank_path(p))
                 if needs_staging:
                     staged_path = tmp_dir / f"{unique_stem}.gbk"
                     if is_gz:
@@ -371,8 +372,9 @@ def run_clinker_subcommand(
                     first_id = Path(batch_gbks[0]).stem
                     last_id = Path(batch_gbks[-1]).stem
                     span_txt = first_id if len(batch_gbks) == 1 else f"{first_id} .. {last_id}"
+                    unit = "cluster" if len(batch_gbks) == 1 else "clusters"
                     say(
-                        f"[dim]-> Running Clinker (batch {b_idx}/{n_batches}, {len(batch_gbks)} clusters: "
+                        f"[dim]-> Running Clinker (batch {b_idx}/{n_batches}, {len(batch_gbks)} {unit}: "
                         f"{escape(span_txt)}): {escape(target_html.name)}...[/dim]"
                     )
 

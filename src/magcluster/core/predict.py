@@ -1,10 +1,7 @@
 """Fast, native prokaryotic gene prediction using Pyrodigal (Cython Prodigal)."""
 
-import gzip
 from dataclasses import dataclass
-from pathlib import Path
-from typing import Iterator, List, Optional
-from Bio import SeqIO
+from typing import List, Optional
 from Bio.SeqRecord import SeqRecord
 import pyrodigal
 
@@ -23,6 +20,7 @@ class PredictedGene:
     rbs_motif: Optional[str] = None
     locus_tag: Optional[str] = None
     product: Optional[str] = None
+    genome_name: Optional[str] = None
 
     @property
     def length_bp(self) -> int:
@@ -32,14 +30,6 @@ class PredictedGene:
     def length_aa(self) -> int:
         return len(self.translation)
 
-    def to_gff3_line(self, source: str = "pyrodigal") -> str:
-        strand_char = "+" if self.strand >= 0 else "-"
-        attrs = f"ID={self.gene_id};partial={'true' if self.partial else 'false'}"
-        if self.locus_tag:
-            attrs += f";locus_tag={self.locus_tag}"
-        if self.product:
-            attrs += f";product={self.product}"
-        return f"{self.contig_id}\t{source}\tCDS\t{self.start}\t{self.end}\t{self.score:.1f}\t{strand_char}\t0\t{attrs}"
 
 class GenePredictor:
     """Pyrodigal gene prediction orchestrator."""
@@ -58,15 +48,6 @@ class GenePredictor:
         #: Human-readable reason when single mode had to fall back to meta mode.
         self.last_fallback_reason: Optional[str] = None
 
-    def _open_fasta(self, fasta_path: Path) -> Iterator[SeqRecord]:
-        """Open plain or gzipped FASTA."""
-        if str(fasta_path).endswith(".gz"):
-            with gzip.open(fasta_path, "rt") as f:
-                yield from SeqIO.parse(f, "fasta")
-        else:
-            with open(fasta_path, "rt") as f:
-                yield from SeqIO.parse(f, "fasta")
-
     def predict_from_records(
         self,
         records: List[SeqRecord],
@@ -76,6 +57,19 @@ class GenePredictor:
         if not records:
             return []
 
+        # Filter out records without defined nucleotide sequences (e.g. CONTIG-only GenBank)
+        defined_records = []
+        for r in records:
+            try:
+                if len(r.seq) > 0:
+                    bytes(r.seq[:1])
+                    defined_records.append(r)
+            except Exception:
+                continue
+        if not defined_records:
+            return []
+
+        records = defined_records
         total_bp = sum(len(r.seq) for r in records)
         max_ctg_bp = max(len(r.seq) for r in records)
 
@@ -121,8 +115,9 @@ class GenePredictor:
                 continue
 
             genes = gf.find_genes(seq_bytes)
-            for ctg_gene_idx, g in enumerate(genes):
-                trans = g.translate(translation_table=self.translation_table)
+            ctg_gene_idx = 0
+            for g in genes:
+                trans = g.translate() if use_meta else g.translate(translation_table=self.translation_table)
                 # Remove trailing stop if present
                 trans = trans.rstrip("*")
 
@@ -146,35 +141,7 @@ class GenePredictor:
                     locus_tag=gene_id
                 )
                 predicted_genes.append(pg)
+                ctg_gene_idx += 1
                 global_gene_idx += 1
 
         return predicted_genes
-
-    def predict_from_file(
-        self,
-        fasta_path: Path,
-        genome_name: Optional[str] = None
-    ) -> List[PredictedGene]:
-        """Predict genes directly from a FASTA file."""
-        records = list(self._open_fasta(fasta_path))
-        if genome_name is None:
-            from .parser import genome_name_from_path, sanitize_genome_name
-            genome_name = sanitize_genome_name(genome_name_from_path(fasta_path))
-        prefix = genome_name
-        return self.predict_from_records(records, genome_name=prefix)
-
-    @staticmethod
-    def write_faa(genes: List[PredictedGene], out_path: Path):
-        """Export predicted proteins to FASTA format."""
-        with open(out_path, "w", encoding="utf-8") as f:
-            for g in genes:
-                hdr = f">{g.gene_id} # {g.start} # {g.end} # {g.strand} # ID={g.gene_id};contig={g.contig_id};idx={g.gene_index}"
-                f.write(f"{hdr}\n{g.translation}\n")
-
-    @staticmethod
-    def write_gff3(genes: List[PredictedGene], out_path: Path):
-        """Export predicted genes to GFF3 format."""
-        with open(out_path, "w", encoding="utf-8") as f:
-            f.write("##gff-version 3\n")
-            for g in genes:
-                f.write(f"{g.to_gff3_line()}\n")

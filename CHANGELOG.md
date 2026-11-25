@@ -2,6 +2,34 @@
 
 All notable changes to MagCluster are documented here.
 
+## [1.1.4] - 2026-11-25
+
+Quality-flag refinement (`Contig_Edge`, `Multi_Contig`), 5-class mineral type classification, and edge-case correctness release. Detection outputs on the standard MSR-1 benchmark remain byte-identical to `v1.1.3`.
+
+### Changed
+- **`Contig_Edge` decoupled from `--flank` and restricted to linear contigs**:
+  - `MGCSubcluster.on_edge` now triggers strictly when a clustered magnetosome protein sits directly at the first (`index == 0`) or last (`index == N - 1`) gene of a **linear** contig, independent of `--flank`.
+  - Complete circular replicons are never flagged as `Contig_Edge`, eliminating contradictory `Contig_Edge,Spans_Origin` combinations.
+- **Per-subcluster `Contig_Edge` reporting and new `Multi_Contig` flag**:
+  - Removed coarse genome-wide `any()` aggregation of `on_edge` for multi-subcluster MGCs. Single-subcluster edge hits continue to report `Contig_Edge`, whereas multi-subcluster MGCs report the exact affected subcluster(s) (e.g. `Contig_Edge(loc2)` or `Contig_Edge(loc1;loc3)`).
+  - Added the `Multi_Contig` flag whenever an MGC's subclusters span more than one contig, and unified `Spans_Origin` emission inside `ClusterScorer.score_cluster()`.
+- **Upgraded 5-class `mineral_type` classification (`Magnetite` / `Greigite` / `Both` / `Putative_Greigite` / `Unknown`)**:
+  - Replaced raw greigite hit counting with deduplicated distinct-family evaluation using structured `lineage` metadata (`Desulfo_greigite`, with profile-name fallback), preventing split genes (e.g. `MamE_Nter_greigite` + `MamE_Cter_greigite`) or tandem duplicates from double-counting.
+  - Jointly evaluates distinct greigite-associated families (`G`, including `MamT_greigite`), distinct non-greigite core families excluding shared `MamK` and single split-gene complementary halves (`M`), core regular + `_greigite` dual-copy co-occurrence, magnetite-specific core families (`MamL`/`MamM`), and total non-greigite core family count (`M_all`):
+    - `Both`: `G >= 3` and ((core dual-copy co-occurrence with `M >= 2`) or (`MamL`/`MamM` present with `M >= 3`))
+    - `Greigite`: `G >= 3` (otherwise; prevents tandem `MamT` paralogs or single-copy divergent greigite MGCs lacking `MamL`/`MamM` from falsely triggering `Both`)
+    - `Magnetite`: `1 <= G <= 2` and `M >= 3`, or `G == 0` and `M_all >= 3`
+    - `Putative_Greigite`: `1 <= G <= 2` and `M < 3`
+    - `Unknown`: `G == 0` and `M_all < 3`
+
+### Fixed
+- **Decoupled `--flank` from MGC membership & bounded flank expansion**: distant unclustered magnetosome hits that fall inside flanking context regions are no longer pulled into `core_hits`/`accessory_hits`, `cluster_id=MGC` tables, `n_clustered_hits`, or `mineral_type` scoring; flank expansion and slice merging now stop at gaps `> 25 kb` (e.g. scaffold N-gaps), and `write_genome_cluster_tables()` deduplicates gene IDs consistently with FASTA export and works cleanly when called via Python API without manually setting `g.genome_name`.
+- **Preserved native GenBank/Prodigal gene IDs in TSV/FAA**: removed `_short_gene_id()`, so Prokka/Bakta `locus_tag` values starting with `{genome_name}_` (e.g. `AMB1_0001`) stay consistent across `.tsv`, `.faa`, and `.gbk` instead of being rewritten to `gene_0001`.
+- **GenBank, FASTA, & Pyrodigal edge cases**: handled CDS features with `strand=None`, `UndefinedSequence` (`ORIGIN`-less GenBank records), trailing `*` and stop-only/empty translations, empty `/locus_tag`, corrupted gzip streams (`zlib.error`), circular origin-wrapping `CompoundLocation` CDSs, overlapping/nested CDS slice boundaries (`max(g.end)`), and Pyrodigal meta-mode per-model translation tables.
+- **Circular origin clustering, multi-island coordinates, & FASTA topology detection**: rescued MGCs split across the 0 bp origin on complete circular replicons (including retaining `Spans_Origin` when another replicon also holds a subcluster), synced `cluster_core_start`/`end` and `origin_gap` math for accurate `core_span_bp`, avoided collapsing distant independent islands (`>= 3` subclusters or `> 25 kb` across origin), partitioned overlapping interior flanks of origin-bridged slices on small circular replicons so no genes are duplicated and `span_bp <= contig_length`, excluded `linear`/`partial`/`non-circular`/`circular=false` FASTA headers while recognizing `is_circular=true`, and skipped coordinate-less (`0..0`) genes in mixed `.faa` files.
+- **HMM search (`MamEO` fusion fallback)**: allowed chimeric `MamEO` profile hits that fail `hmm_cov` to fall back to constituent `MamO` hits (e.g. `MamO_domain`) instead of silently dropping valid `MamO` proteins.
+- **GenBank accession extraction, Clinker HTML, run log, & CLI polish**: tightened `_ACCESSION_RE` in `clinker_export.py` so ordinary genome names like `AMB-1`, `BACTERIUM_01`, or `FRESHWATER_MAG12` are never misparsed as INSDC accessions and truncated in `.gbk` headers; fixed `customize_clinker_html()` so ordinary external GenBank `/note` qualifiers no longer short-circuit coordinate fallback and `strand: null` no longer raises `TypeError`; fixed `inspect_genbank_for_clinker()` so external GenBank files titled `"Magnetosome Gene Cluster"` still get HMM-annotated; ensured `magcluster clinker --force` validates `-l/--list` matches before deleting old HTMLs; fixed `PlainFormatter` so `[contig edge]` and bracketed paths are preserved in `magcluster.log`; unified `static_plot.py` colors/coordinates with Clinker; fixed `_read_gbk_record_names()` to prefer `VERSION` over `ACCESSION` and support `.gz`; surfaced `--static-plot` summary in console output; and cleaned unused helper methods and redundant variables.
+
 ## [1.1.3] - 2026-11-09
 
 HMM / sequence coverage reporting and `--min-hmm-cov` significance filtering release.

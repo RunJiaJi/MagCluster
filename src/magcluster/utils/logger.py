@@ -39,16 +39,10 @@ def _strip_markup(msg: str) -> str:
 
 
 class PlainFormatter(logging.Formatter):
-    """File formatter: timestamp + level + message with Rich markup removed."""
+    """File formatter: timestamp + level + plain message (preserves literal brackets in detail logs)."""
 
     def __init__(self):
         super().__init__(fmt="%(asctime)s [%(levelname)s] %(message)s", datefmt="%Y-%m-%d %H:%M:%S")
-
-    def format(self, record: logging.LogRecord) -> str:
-        record = logging.makeLogRecord(record.__dict__)
-        record.msg = _strip_markup(record.getMessage())
-        record.args = None
-        return super().format(record)
 
 
 def setup_logger(level: str = "INFO") -> logging.Logger:
@@ -105,10 +99,11 @@ def detach_log_file(handler: Optional[logging.FileHandler]):
 
 
 def say(msg: str = "", level: int = logging.INFO):
-    """Print *msg* to the console (Rich markup allowed) and mirror it to the run log."""
+    """Print *msg* to the console (Rich markup allowed) and mirror plain text to the run log."""
     console.print(msg)
-    if msg.strip():
-        runlog.log(level, msg.strip())
+    plain = _strip_markup(msg).strip()
+    if plain:
+        runlog.log(level, plain)
 
 
 def detail(msg: str, level: int = logging.INFO):

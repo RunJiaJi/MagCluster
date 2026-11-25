@@ -5,6 +5,7 @@ from typing import Dict, List, Optional
 from ..core.cluster import MGCCluster
 from ..core.search import MagnetosomeHit
 from ..utils.logger import quiet_matplotlib
+from .clinker_export import FAMILY_COLOR_PALETTE, get_display_label, get_family_class
 
 
 def _genome_viz_class():
@@ -23,6 +24,7 @@ def plot_mgc_cluster(
     """Render a single MGC cluster to SVG, PNG, or PDF."""
     GenomeViz = _genome_viz_class()
     gv = GenomeViz(
+        fig_width=fig_width,
         fig_track_height=1.0,
         feature_track_ratio=0.8,
         link_track_ratio=0.8,
@@ -41,16 +43,19 @@ def plot_mgc_cluster(
 
         for g in s.all_genes:
             g_start = max(0, g.start - offset)
-            g_end = min(track_size, g.end - offset)
+            g_end = min(track_size, g.end - offset + 1)
+            if g_end <= g_start:
+                continue
             strand = g.strand
 
-            # Determine color and label
+            # Determine unified 8-family color and label matching Clinker HTML
             if g.gene_id in hits:
                 hit = hits[g.gene_id]
-                color = hit.color
-                label = hit.profile[:-5] if hit.profile.endswith("_full") else hit.profile
+                f_class = get_family_class(hit.parent_family, hit)
+                color = FAMILY_COLOR_PALETTE.get(f_class, FAMILY_COLOR_PALETTE["Other"])
+                label = get_display_label(hit)
             else:
-                color = "#E0E0E0"  # gray for intervening non-MGC genes
+                color = FAMILY_COLOR_PALETTE["Other"]
                 label = ""
 
             text_kws = {
@@ -63,6 +68,7 @@ def plot_mgc_cluster(
                 start=g_start,
                 end=g_end,
                 strand=strand,
+                plotstyle=feature_style,
                 label=label,
                 text_kws=text_kws,
                 facecolor=color,

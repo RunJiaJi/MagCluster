@@ -7,6 +7,7 @@ FASTA or Prodigal-style protein FASTA instead.
 
 import gzip
 import re
+import zlib
 from collections import Counter
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -31,7 +32,25 @@ PRODIGAL_HDR_RE = re.compile(
 )
 
 # Header keywords that mark a FASTA record as a complete (circular) replicon.
-CIRCULAR_HDR_RE = re.compile(r"complete\s+(genome|sequence)|\bcircular\b|topology=circular", re.IGNORECASE)
+CIRCULAR_HDR_RE = re.compile(
+    r"complete\s+(?:genome|sequence)"
+    r"|(?:^|[\s_;,|])(?:topology\s*=\s*circular|(?:is_)?circular\s*=\s*(?:true|yes|y|1)\b)"
+    r"|\bcircular\b(?!\s*=)",
+    re.IGNORECASE,
+)
+NON_CIRCULAR_HDR_RE = re.compile(
+    r"\blinear\b|topology\s*=\s*linear|\bpartial\b"
+    r"|(?:^|[\s_;,|])(?:is_)?circular\s*=\s*(?:false|no|n|0)\b"
+    r"|\bnon[-_]?circular\b",
+    re.IGNORECASE,
+)
+
+
+def _is_circular_fasta_header(description: str) -> bool:
+    """True when a FASTA header indicates a complete circular replicon (excluding linear/partial/circular=false)."""
+    if NON_CIRCULAR_HDR_RE.search(description):
+        return False
+    return bool(CIRCULAR_HDR_RE.search(description))
 
 # Characters kept in genome IDs; everything else (whitespace, shell/filesystem
 # specials) is replaced by '_'.  \w is Unicode-aware, so e.g. Chinese is kept.
@@ -41,6 +60,17 @@ _UNSAFE_NAME_RE = re.compile(r"[^\w.\-]+")
 _AA_ONLY_CHARS = frozenset("EFILPQZJO")
 _NT_CORE_CHARS = frozenset("ACGTUN")
 _PROT_ACC_RE = re.compile(r"\b(?:[A-Z]{2}_[A-Z0-9]+(?:\.\d+)?|[A-Z]{3}\d{5,}(?:\.\d+)?)\b")
+
+
+def has_defined_sequence(seq) -> bool:
+    """True when *seq* is non-empty and backed by actual bases (not Biopython UndefinedSequence)."""
+    if seq is None or len(seq) == 0:
+        return False
+    try:
+        bytes(seq[:1])
+        return True
+    except Exception:
+        return False
 
 
 def _unique_id(candidate: str, used: Dict[str, int]) -> str:
@@ -160,7 +190,7 @@ def _check_not_binary(path: Path):
     try:
         with opener(path, "rb") as f:
             chunk = f.read(8192)
-    except (OSError, EOFError) as e:
+    except (OSError, EOFError, zlib.error) as e:
         raise InputFormatError(f"cannot read file ({_short_reason(e)})") from None
     if b"\x00" in chunk:
         raise InputFormatError("binary file, not a FASTA/GenBank text file")
@@ -194,7 +224,7 @@ def detect_file_type(path: Path) -> str:
                 if first_line.startswith("##gff"):
                     return "gff"
                 break
-    except (OSError, EOFError):
+    except (OSError, EOFError, zlib.error):
         pass
     return "unknown"
 
@@ -236,18 +266,38 @@ def parse_genbank(gbk_path: Path, genome_name: Optional[str] = None) -> ParsedGe
             if feat.type != "CDS":
                 continue
 
-            # Safely extract coordinates (compatible with all Biopython versions)
-            start_pos = int(feat.location.start) + 1  # convert to 1-based closed
-            end_pos = int(feat.location.end)          # 1-based closed
-            strand = 1 if feat.location.strand >= 0 else -1
+            # Safely extract coordinates (compatible with all Biopython versions).
+            # Anchor origin-wrapping CompoundLocation CDSs (join(end..len, 1..start))
+            # to their longer part so linear coordinates never span the whole chromosome.
+            parts = getattr(feat.location, "parts", None)
+            rec_len = len(rec.seq)
+            if (
+                circular[ctg_id]
+                and rec_len > 0
+                and parts
+                and len(parts) >= 2
+                and int(feat.location.start) == 0
+                and int(feat.location.end) == rec_len
+                and sum(len(p) for p in parts) < rec_len // 2
+            ):
+                anchor = max(parts, key=len)
+                start_pos = int(anchor.start) + 1
+                end_pos = int(anchor.end)
+            else:
+                start_pos = int(feat.location.start) + 1  # convert to 1-based closed
+                end_pos = int(feat.location.end)          # 1-based closed
+            raw_strand = feat.location.strand
+            strand = 1 if (raw_strand is None or raw_strand >= 0) else -1
 
             # Extract translation
             trans = feat.qualifiers.get("translation", [None])[0]
+            if trans:
+                trans = str(trans).rstrip("*")
             if not trans:
                 if "pseudo" in feat.qualifiers or "pseudogene" in feat.qualifiers:
                     continue
                 # If translation is missing on a non-pseudo CDS, translate in silico after trimming partial codons
-                if len(rec.seq) > 0:
+                if has_defined_sequence(rec.seq):
                     try:
                         sub_seq = feat.extract(rec.seq)
                         codon_start = max(0, int(feat.qualifiers.get("codon_start", [1])[0]) - 1)
@@ -260,12 +310,14 @@ def parse_genbank(gbk_path: Path, genome_name: Optional[str] = None) -> ParsedGe
                             continue
                         table_id = int(feat.qualifiers.get("transl_table", [11])[0])
                         trans = str(sub_seq.translate(table=table_id)).rstrip("*")
+                        if not trans:
+                            continue
                     except Exception:
                         continue
                 else:
                     continue
 
-            locus_tag = feat.qualifiers.get("locus_tag", [f"{ctg_id}_{gene_idx}"])[0]
+            locus_tag = (feat.qualifiers.get("locus_tag", [None])[0] or "").strip() or f"{ctg_id}_{gene_idx}"
             product = feat.qualifiers.get("product", [None])[0]
             gene_id = _unique_id(locus_tag, used_genes)
             if gene_id != locus_tag:
@@ -293,13 +345,14 @@ def parse_genbank(gbk_path: Path, genome_name: Optional[str] = None) -> ParsedGe
             f"(e.g. '{raw0}' -> '{new0}')."
         )
 
+    has_defined_contigs = any(has_defined_sequence(r.seq) for r in contigs.values())
     return ParsedGenome(
         name=prefix,
         file_path=gbk_path,
         file_type="genbank",
         contigs=contigs,
         genes=genes,
-        needs_prediction=len(genes) == 0,
+        needs_prediction=(len(genes) == 0 and has_defined_contigs),
         circular_contigs=circular,
         notices=notices,
     )
@@ -338,6 +391,9 @@ def _parse_faa_records(
 
     raw_ids = []
     for rec in records:
+        trans = str(rec.seq).rstrip("*")
+        if not trans:
+            continue
         m = PRODIGAL_HDR_RE.match(rec.description)
         raw_ids.append(m["id"] if m else rec.id)
     id_counts = Counter(raw_ids)
@@ -349,6 +405,9 @@ def _parse_faa_records(
     any_prodigal = False
 
     for rec in records:
+        trans = str(rec.seq).rstrip("*")
+        if not trans:
+            continue
         m = PRODIGAL_HDR_RE.match(rec.description)
         if m:
             any_prodigal = True
@@ -359,7 +418,7 @@ def _parse_faa_records(
             strand = int(m["strand"])
             attr = m["attr"]
             ctg_match = re.search(r"contig=([^;]+)", attr)
-            ctg_id = ctg_match.group(1) if ctg_match else raw_id.rsplit("_", 1)[0]
+            ctg_id = ctg_match.group(1).strip() if ctg_match else raw_id.rsplit("_", 1)[0]
         else:
             raw_id = rec.id
             cand_id = _disambiguate_faa_id(rec) if id_counts[raw_id] > 1 else raw_id
@@ -382,7 +441,7 @@ def _parse_faa_records(
             end=end,
             strand=strand,
             gene_index=c_idx,
-            translation=str(rec.seq).rstrip("*"),
+            translation=trans,
             locus_tag=gene_id
         )
         genes.append(pg)
@@ -436,7 +495,7 @@ def parse_fasta(fasta_path: Path, genome_name: Optional[str] = None) -> ParsedGe
             dup_contigs.append((raw_id, ctg_id))
             rec.id = ctg_id
         contigs[ctg_id] = rec
-        circular[ctg_id] = bool(CIRCULAR_HDR_RE.search(rec.description))
+        circular[ctg_id] = _is_circular_fasta_header(rec.description)
 
     if dup_contigs:
         raw0, new0 = dup_contigs[0]

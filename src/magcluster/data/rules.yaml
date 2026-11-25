@@ -2,10 +2,12 @@
 # Keys read by MagCluster:
 #   - version: database rules version
 #   - core_families: 10 canonical core families displayed by `magcluster db`
-#   - profiles.<name>.parent_family / role / lineage / color / trusted_cutoff
-#     (trusted_cutoff is the default bit-score cutoff; replaced by -s/--score when given)
-# Reference statistics (informational):
-#   - profiles.<name>.n_reference_seqs / median_length
+#   - profiles.<name>.parent_family / role / lineage / trusted_cutoff / median_length
+#     (trusted_cutoff is the default bit-score cutoff, replaced by -s/--score when given;
+#      median_length caps sparse HMM lengths when computing hmm_cov)
+#   - profiles.<name>.n_reference_seqs (displayed & sorted by `magcluster db`)
+# Informational only (figures use FAMILY_COLOR_PALETTE in clinker_export.py):
+#   - profiles.<name>.color
 version: 1.0.0
 core_families:
 - MamA

@@ -2,7 +2,7 @@
 
 [![Python Version](https://img.shields.io/badge/python-3.10%2B-blue?style=flat-square&logo=python)](https://www.python.org/)
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-green.svg?style=flat-square)](https://www.gnu.org/licenses/gpl-3.0)
-[![Version](https://img.shields.io/badge/version-1.1.3-orange?style=flat-square)](https://github.com/RunJiaJi/MagCluster)
+[![Version](https://img.shields.io/badge/version-1.1.4-orange?style=flat-square)](https://github.com/RunJiaJi/MagCluster)
 
 [English](https://github.com/RunJiaJi/MagCluster/blob/main/README.md) | [中文说明](https://github.com/RunJiaJi/MagCluster/blob/main/README_zh.md)
 
@@ -14,7 +14,7 @@
 
 - **Standalone `magcluster clinker` command**: plot or re-plot sliced MGC GenBank files (`clusters_gbk/*.gbk`) anytime—with MagCluster's 8-family color scheme and domain labels—without re-running gene calling or HMM search.
 - **Automatic batch plotting (`--batch-size 50`)**: large datasets (> 50 MGC clusters) are automatically split in input order into `MGC_align_batch01.html`, `MGC_align_batch02.html`, … so Clinker alignments stay fast and browser rendering never freezes.
-- **Cohort summary table (`mgc_summary.tsv`)**: every `magcluster run` writes a single overview table across all input genomes, including MGC status, subcluster counts, coordinates, predicted mineral type (`Magnetite` / `Greigite` / `Putative/Mixed`), and `.gbk` paths.
+- **Cohort summary table (`mgc_summary.tsv`)**: every `magcluster run` writes a single overview table across all input genomes, including MGC status, subcluster counts, coordinates, predicted mineral type (`Magnetite` / `Greigite` / `Both` / `Putative_Greigite` / `Unknown`), quality flags (`Contig_Edge`, `Multi_Contig`, `Spans_Origin`), and `.gbk` paths.
 - **One-step Prokka-free pipeline** (v1.0): `magcluster run` predicts genes natively with [Pyrodigal](https://github.com/althonos/pyrodigal) and searches 92 curated magnetosome HMMs (`Mam`, `Mms`, `Mad`, `Man`, `Mae`, `Maq`, `Mca`, `Feo`) in memory via [PyHMMER](https://github.com/althonos/pyhmmer).
 - **Flexible inputs & run log**: accepts GenBank (`.gbk`/`.gbff`), nucleotide FASTA contigs (`.fasta`/`.fna`/`.fa`), and protein FASTA (`.faa`), including `.gz` compressed files, and records full provenance in `magcluster.log`. See [CHANGELOG.md](https://github.com/RunJiaJi/MagCluster/blob/main/CHANGELOG.md).
 
@@ -107,12 +107,12 @@ magcluster run genome.gbff -o results/ --force
 magcluster run [OPTIONS] INPUTS...
 ```
 
-`INPUTS` can be files or folders. In a folder, only files with a genome extension are used (`.gbk`, `.gbff`, `.gbf`, `.gb`, `.fa`, `.fasta`, `.fna`, `.fsa`, `.fsa_nt`, `.faa`, `.pep`, each optionally `.gz`). Other files (e.g. `README.txt`) and hidden files are skipped with a warning. A file given explicitly is used even without an extension; its format is detected from the first line. GFF3 files are not supported because they contain no sequences. Use the matching GenBank/GBFF, FASTA or Prodigal `.faa` file instead.
+`INPUTS` can be files or folders. In a folder, only files with a genome extension are used (`.gbk`, `.gbff`, `.gbf`, `.gb`, `.fa`, `.fasta`, `.fna`, `.fsa`, `.fsa_nt`, `.faa`, `.pep`, each optionally `.gz`). Other non-hidden files (e.g. `README.txt`) are skipped with a warning, and hidden files (starting with `.`) are skipped silently. A file given explicitly is used even without an extension; its format is detected from the first line. GFF3 files are not supported because they contain no sequences. Use the matching GenBank/GBFF, FASTA or Prodigal `.faa` file instead.
 
 | Option | Aliases | Default | Description |
 | :--- | :--- | :--- | :--- |
 | `--outdir` | `-o` | `magcluster_results` | Output directory (must not be an existing file) |
-| `--force` | `-f` | `False` | Allow a non-empty output directory. Outputs of a previous MagCluster run there (`mgc_summary.tsv`, per-genome tables, FASTA, `MGC_align*.html`, `clusters_gbk/`, `figures/`, `magcluster*.log`) are deleted first; other files are kept |
+| `--force` | `-f` | `False` | Allow a non-empty output directory. Outputs of a previous MagCluster run there (`mgc_summary.tsv`, per-genome tables, FASTA, `MGC_align*.html`, `MGC_align_batches.tsv`, `clusters_gbk/`, `figures/`, `magcluster*.log`) are deleted first; other files are kept |
 | `--threads` | `-t` | `0` | Number of CPU threads (`0` = all available cores; values above the available cores are capped) |
 | `--evalue` | `-e` | `1e-5` | HMM search E-value cutoff (≥ 0) |
 | `--score` | `-s` | per-profile `trusted_cutoff` (25.0) | Minimum HMM bit score. If omitted, each profile's `trusted_cutoff` from `rules.yaml` is used (25.0 for all 92 built-in profiles). An explicit value replaces it for every profile, including values below 25 |
@@ -134,7 +134,7 @@ Global options: `magcluster --version` (`-v`) and `magcluster --help` (`-h`).
 
 Genome IDs (used in output file names and `mgc_summary.tsv`) are taken from the input file name minus `.gz` and the genome extension, e.g. `GCF_000513295.1.fna` → `GCF_000513295.1` and `strainX.v1.fna` → `strainX.v1`. Spaces and special characters are replaced by `_` (e.g. `my strain.fna` → `my_strain`). If two inputs give the same ID (e.g. NCBI Datasets' `genomic.gbff`), the later one gets a suffix (`genomic_2`) and a warning is printed. The same input file listed twice is used once.
 
-Exit status: `0` on success. `1` if any input could not be read, Clinker failed, or the output directory cannot be used. Results of the other genomes are still written. `2` for invalid command-line options.
+Exit status: `0` on success. `1` if no inputs were found, any input could not be read, Clinker or `--static-plot` failed, or the output directory cannot be used. Results of the other genomes are still written. `2` for invalid command-line options.
 
 ### `magcluster clinker`
 
@@ -156,7 +156,7 @@ magcluster clinker [OPTIONS] [INPUTS]...
 | `--clinker-opts` | | `None` | Extra arguments passed to Clinker (e.g. `"-na -ufo"`) |
 | `--clinker-help` | | | Show available Clinker options guide and exit |
 | `--force` | `-f` | `False` | Overwrite existing Clinker HTML output file(s) (never deletes TSV/FASTA/GBK files) |
-| `--log` | | `<outdir>/magcluster_clinker.log` | Write the Clinker run log to another file |
+| `--log` | | `<outdir>/magcluster_clinker.log` (omitted when `-o` is `.html`) | Write the Clinker run log to a specific file |
 | `--help` | `-h` | | Show help and exit |
 
 Examples:
@@ -199,7 +199,7 @@ results/
     └── {cluster_id}.svg                # Static cluster map (pyGenomeViz)
 ```
 
-Genomes without any magnetosome hit produce no per-genome table or FASTA file, while genomes with only isolated homologs (`unclustered`, `status = no_MGC` in `mgc_summary.tsv`) still write `{genome}_mgc_genes.tsv` so scattered hits are not lost. Every input genome is recorded in `mgc_summary.tsv` and `magcluster.log`.
+Genomes without any magnetosome hit produce no per-genome table or FASTA file, while genomes with only isolated homologs (`unclustered`, `status = no_MGC` in `mgc_summary.tsv`) still write `{genome}_mgc_genes.tsv` and `{genome}_magnetosome_proteins.faa` so scattered hits are not lost. Every input genome is recorded in `mgc_summary.tsv` and `magcluster.log`.
 
 ### 0. Cohort summary (`mgc_summary.tsv`)
 
@@ -212,7 +212,7 @@ One row per input genome, making it easy to filter MGC-positive genomes, mineral
 | `n_genes`, `n_hits`, `n_clustered_hits` | Total CDSs, total HMM hits, and hits inside the MGC |
 | `cluster_id`, `n_subclusters`, `coordinates` | MGC identifier, number of syntenic slices, and genomic coordinates |
 | `n_distinct_families`, `families` | Count and sorted list of distinct non-Feo magnetosome families in the MGC |
-| `mineral_type`, `flags` | `Magnetite` / `Greigite` / `Putative/Mixed`, and quality flags (`Contig_Edge`, `Spans_Origin`) |
+| `mineral_type`, `flags` | `Magnetite` / `Greigite` / `Both` / `Putative_Greigite` / `Unknown`, and quality flags (`Contig_Edge` or `Contig_Edge(loc1;loc3)`, `Multi_Contig`, `Spans_Origin`) |
 | `gbk_file` | Relative path to the sliced GenBank file (`clusters_gbk/{cluster_id}.gbk`) |
 
 ### 1. Gene table (`{genome}_mgc_genes.tsv`)
@@ -305,8 +305,17 @@ magcluster clinker --clinker-help
 
 1. Magnetosome HMM hits on the same contig are grouped when at most `--max-gap` (default 5) non-magnetosome genes and at most 25 kb separate consecutive hits. Feo (iron-transport) hits do not start or extend a group.
 2. A group is kept if it contains at least `--threshold` (default 3) distinct magnetosome families. **Any non-Feo family counts** (core Mam families as well as accessory families such as Mad, Mms, Man, Mae, Maq, Mca). Feo families never count.
-3. Each kept group is extended by `--flank` (default 3) genes on each side. All kept groups of one genome are reported together as one MGC (`{genome}_MGC`) with one subcluster (`loc1`, `loc2`, …) per group.
-4. On a complete circular replicon (GenBank `circular` topology, or a FASTA header containing "complete genome", "complete sequence" or "circular"), an MGC whose subclusters lie on both sides of the origin is reported with `start > end` and marked "(spans origin)".
+3. Each kept group is extended by `--flank` (default 3) genes on each side (stopping at gaps > 25 kb); adjacent or overlapping flanking slices within 25 kb are merged into one subcluster without pulling distant unclustered hits into MGC membership. All kept groups of one genome are reported together as one MGC (`{genome}_MGC`) with one subcluster (`loc1`, `loc2`, …) per slice.
+4. On a complete circular replicon (GenBank `circular` topology, or a FASTA header indicating "complete genome", "complete sequence", `circular=true`/`is_circular=true`, or `circular`, excluding `linear`, `partial`, `non-circular`, and `circular=false`), an MGC whose boundary subclusters bridge across the 0 bp origin within 25 kb is reported with `start > end`, marked "(spans origin)", and flagged `Spans_Origin` (splitting 2+2 across the origin within `--max-gap` and 25 kb is also rescued).
+5. **Quality flags**:
+   - `Contig_Edge` (or `Contig_Edge(loc2)` / `Contig_Edge(loc1;loc3)` when an MGC has multiple subclusters): set strictly when a clustered magnetosome protein sits directly at the first or last gene of a **linear** contig (independent of `--flank`; never set on complete circular replicons).
+   - `Multi_Contig`: set when an MGC's subclusters span more than one contig.
+6. **Mineral type prediction (`mineral_type`)**: evaluated from deduplicated distinct families in the MGC—greigite-associated families (`G`, `Desulfo_greigite` profiles including `MamT_greigite`), non-greigite core families excluding shared `MamK` and single split-gene halves (`M`), regular + `_greigite` core dual-copy co-occurrence, magnetite-specific core families (`MamL` / `MamM`), and total non-greigite core families (`M_all`):
+   - `Both`: `G ≥ 3` and ((core dual-copy co-occurrence with `M ≥ 2`) or (`MamL`/`MamM` present with `M ≥ 3`))
+   - `Greigite`: `G ≥ 3` (otherwise)
+   - `Magnetite`: (`G = 0` and `M_all ≥ 3`) or (`1 ≤ G ≤ 2` and `M ≥ 3`)
+   - `Putative_Greigite`: `1 ≤ G ≤ 2` and `M < 3`
+   - `Unknown`: `G = 0` and `M_all < 3` (insufficient core mineral evidence)
 
 The 10 core defining families shown by `magcluster db` are:
 
