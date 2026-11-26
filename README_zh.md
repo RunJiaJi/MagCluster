@@ -1,8 +1,13 @@
 # MagCluster <img src='https://raw.githubusercontent.com/RunJiaJi/MagCluster/main/docs/_static/logo_new.svg' align='right' width=220 alt="MagCluster Logo" />
 
-[![Python Version](https://img.shields.io/badge/python-3.10%2B-blue?style=flat-square&logo=python)](https://www.python.org/)
+[![PyPI Version](https://img.shields.io/pypi/v/magcluster?style=flat-square&logo=pypi&logoColor=white&label=PyPI)](https://pypi.org/project/magcluster/)
+[![PyPI Downloads](https://img.shields.io/pepy/dt/magcluster?style=flat-square&logo=pypi&logoColor=white&label=PyPI%20downloads)](https://pepy.tech/project/magcluster)
+[![Bioconda Version](https://img.shields.io/conda/vn/bioconda/magcluster?style=flat-square&logo=anaconda&logoColor=white&label=Bioconda)](https://anaconda.org/bioconda/magcluster)
+[![Bioconda Downloads](https://img.shields.io/conda/dn/bioconda/magcluster?style=flat-square&logo=anaconda&logoColor=white&label=Bioconda%20downloads)](https://anaconda.org/bioconda/magcluster)
+[![Python Version](https://img.shields.io/badge/python-3.10%2B-blue?style=flat-square&logo=python&logoColor=white)](https://www.python.org/)
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-green.svg?style=flat-square)](https://www.gnu.org/licenses/gpl-3.0)
-[![Version](https://img.shields.io/badge/version-1.1.4-orange?style=flat-square)](https://github.com/RunJiaJi/MagCluster)
+[![DOI](https://img.shields.io/badge/DOI-10.1128%2Fmra.01031--21-blue?style=flat-square)](https://doi.org/10.1128/mra.01031-21)
+[![Citations](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fapi.crossref.org%2Fworks%2F10.1128%2Fmra.01031-21&query=%24.message.is-referenced-by-count&label=Citations&color=blue&style=flat-square)](https://doi.org/10.1128/mra.01031-21)
 
 [English](https://github.com/RunJiaJi/MagCluster/blob/main/README.md) | [中文说明](https://github.com/RunJiaJi/MagCluster/blob/main/README_zh.md)
 
